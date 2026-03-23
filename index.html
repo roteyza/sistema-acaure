@@ -612,6 +612,59 @@
         </div>
       </div>
 
+      <!-- MOVIMIENTOS INVENTARIO -->
+      <div class="page" id="page-movimientos">
+        <div class="page-title">Movimientos de inventario</div>
+        <div class="page-sub">Registrá entradas, salidas, traslados y mermas</div>
+        <div class="form-card">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:600;margin-bottom:16px;">Registrar movimiento</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tipo</label>
+              <select id="mi-tipo" onchange="toggleMovFields()">
+                <option value="entrada">Entrada (compra / producción)</option>
+                <option value="salida">Salida (venta / consumo)</option>
+                <option value="traslado">Traslado entre sedes</option>
+                <option value="merma">Merma / pérdida</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Producto</label>
+              <select id="mi-producto"></select>
+            </div>
+            <div class="form-group">
+              <label>Cantidad (kg)</label>
+              <input type="number" id="mi-cantidad" placeholder="0.00" step="0.01" min="0.01">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" id="field-origen">
+              <label>Sede origen</label>
+              <select id="mi-origen"></select>
+            </div>
+            <div class="form-group" id="field-destino">
+              <label>Sede destino</label>
+              <select id="mi-destino"></select>
+            </div>
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" id="mi-fecha">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Referencia / Nota</label>
+              <input type="text" id="mi-referencia" placeholder="Ej: Compra Minco semana 12, Despacho RF...">
+            </div>
+          </div>
+          <button class="btn-action" onclick="guardarMovInventario()">Registrar movimiento</button>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Historial de movimientos</div></div>
+          <div id="mi-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
       <!-- PRODUCTOS -->
       <div class="page" id="page-productos">
         <div class="page-title">Catálogo de productos</div>
@@ -748,6 +801,7 @@ const NAV = {
   admin: [
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
     { id: 'inventario', label: 'Inventario', icon: '▦' },
+    { id: 'movimientos', label: 'Movimientos', icon: '⇄' },
     { id: 'productos', label: 'Productos', icon: '◉' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
     { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
@@ -756,6 +810,7 @@ const NAV = {
   operaciones: [
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
     { id: 'inventario', label: 'Inventario', icon: '▦' },
+    { id: 'movimientos', label: 'Movimientos', icon: '⇄' },
     { id: 'productos', label: 'Productos', icon: '◉' },
   ],
   finanzas: [
@@ -825,6 +880,7 @@ async function loadApp(user) {
 
   loadDashboard();
   loadCuentasSelect();
+  loadMovimientosSelects();
 }
 
 function buildNav() {
@@ -852,6 +908,7 @@ function navigate(pageId) {
     if(n.dataset.page === pageId) n.classList.add('active');
   });
 
+  if(pageId === 'movimientos') loadMovimientos();
   if(pageId === 'dashboard') loadDashboard();
   if(pageId === 'inventario') loadInventario();
   if(pageId === 'productos') loadProductos();
@@ -1037,6 +1094,134 @@ async function loadMaestros() {
   document.getElementById('clientes-table').innerHTML = `<table>
     <tr><th>Nombre</th><th>Tipo</th><th>Canal</th></tr>
     ${(clientes.data||[]).map(c=>`<tr><td style="color:var(--text)">${c.nombre}</td><td>${c.tipo}</td><td>${c.canal}</td></tr>`).join('')}
+  </table>`;
+}
+
+// MOVIMIENTOS INVENTARIO
+async function loadMovimientosSelects() {
+  const [prods, sedes] = await Promise.all([
+    sb.from('productos').select('id,nombre,tipo').order('tipo').order('nombre'),
+    sb.from('sedes').select('*')
+  ]);
+
+  const selProd = document.getElementById('mi-producto');
+  if(selProd) selProd.innerHTML = (prods.data||[]).map(p =>
+    `<option value="${p.id}">${p.nombre} (${p.tipo})</option>`).join('');
+
+  ['mi-origen','mi-destino'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(sel) sel.innerHTML = (sedes.data||[]).map(s =>
+      `<option value="${s.id}">${s.nombre}</option>`).join('');
+  });
+
+  toggleMovFields();
+}
+
+function toggleMovFields() {
+  const tipo = document.getElementById('mi-tipo')?.value;
+  const origen = document.getElementById('field-origen');
+  const destino = document.getElementById('field-destino');
+  if(!origen || !destino) return;
+
+  if(tipo === 'entrada') {
+    origen.style.display = 'none';
+    destino.style.display = 'block';
+    document.querySelector('#field-destino label').textContent = 'Sede destino (donde entra)';
+  } else if(tipo === 'salida' || tipo === 'merma') {
+    origen.style.display = 'block';
+    destino.style.display = 'none';
+    document.querySelector('#field-origen label').textContent = 'Sede origen (donde sale)';
+  } else if(tipo === 'traslado') {
+    origen.style.display = 'block';
+    destino.style.display = 'block';
+    document.querySelector('#field-origen label').textContent = 'Sede origen';
+    document.querySelector('#field-destino label').textContent = 'Sede destino';
+  }
+}
+
+async function guardarMovInventario() {
+  const tipo      = document.getElementById('mi-tipo').value;
+  const producto_id = document.getElementById('mi-producto').value;
+  const cantidad  = parseFloat(document.getElementById('mi-cantidad').value);
+  const fecha     = document.getElementById('mi-fecha').value;
+  const referencia = document.getElementById('mi-referencia').value;
+  const origen_id = document.getElementById('mi-origen').value;
+  const destino_id = document.getElementById('mi-destino').value;
+
+  if(!cantidad || cantidad <= 0) { alert('Ingresá una cantidad válida.'); return; }
+  if(!fecha) { alert('Seleccioná una fecha.'); return; }
+
+  // 1. Guardar movimiento
+  const { error: errMov } = await sb.from('movimientos_inventario').insert({
+    tipo,
+    producto_id,
+    cantidad_kg: cantidad,
+    fecha,
+    referencia: referencia || null,
+    sede_origen_id:  (tipo === 'entrada') ? null : origen_id,
+    sede_destino_id: (tipo === 'salida' || tipo === 'merma') ? null : destino_id,
+    usuario_id: currentUser?.id || null
+  });
+
+  if(errMov) { alert('Error al guardar movimiento: ' + errMov.message); return; }
+
+  // 2. Actualizar inventario
+  if(tipo === 'entrada') {
+    await upsertInventario(producto_id, destino_id, cantidad);
+  } else if(tipo === 'salida' || tipo === 'merma') {
+    await upsertInventario(producto_id, origen_id, -cantidad);
+  } else if(tipo === 'traslado') {
+    await upsertInventario(producto_id, origen_id, -cantidad);
+    await upsertInventario(producto_id, destino_id, cantidad);
+  }
+
+  showToast('Movimiento registrado ✓');
+  document.getElementById('mi-cantidad').value = '';
+  document.getElementById('mi-referencia').value = '';
+  loadMovimientos();
+  loadInventario();
+}
+
+async function upsertInventario(producto_id, sede_id, delta) {
+  const { data: existing } = await sb.from('inventario')
+    .select('id, cantidad_kg')
+    .eq('producto_id', producto_id)
+    .eq('sede_id', sede_id)
+    .single();
+
+  if(existing) {
+    const nueva = Math.max(0, (existing.cantidad_kg || 0) + delta);
+    await sb.from('inventario').update({ cantidad_kg: nueva, actualizado_at: new Date().toISOString() }).eq('id', existing.id);
+  } else {
+    await sb.from('inventario').insert({ producto_id, sede_id, cantidad_kg: Math.max(0, delta), actualizado_at: new Date().toISOString() });
+  }
+}
+
+async function loadMovimientos() {
+  const { data } = await sb.from('movimientos_inventario')
+    .select('*, productos(nombre), sedes_origen:sede_origen_id(codigo), sedes_destino:sede_destino_id(codigo)')
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  const tb = document.getElementById('mi-table');
+  if(!data || !data.length) {
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">⇄</div><p>Sin movimientos registrados aún.</p></div>';
+    return;
+  }
+
+  const colorTipo = { entrada: '#27a66a', salida: '#e74c3c', traslado: '#5dade2', merma: '#af7ac5' };
+
+  tb.innerHTML = `<table>
+    <tr><th>Fecha</th><th>Tipo</th><th>Producto</th><th>Cantidad</th><th>Origen</th><th>Destino</th><th>Referencia</th></tr>
+    ${data.map(m => `<tr>
+      <td style="color:var(--text3)">${m.fecha}</td>
+      <td><span class="badge" style="background:${colorTipo[m.tipo]}22;color:${colorTipo[m.tipo]}">${m.tipo}</span></td>
+      <td style="color:var(--text)">${m.productos?.nombre || '—'}</td>
+      <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--accent2)">${Number(m.cantidad_kg).toFixed(1)} kg</td>
+      <td style="color:var(--text3)">${m.sedes_origen?.codigo || '—'}</td>
+      <td style="color:var(--text3)">${m.sedes_destino?.codigo || '—'}</td>
+      <td style="color:var(--text3);font-size:12px">${m.referencia || '—'}</td>
+    </tr>`).join('')}
   </table>`;
 }
 
