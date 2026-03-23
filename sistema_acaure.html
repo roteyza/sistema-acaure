@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Acaure</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1814;
+    --surface2: #242118;
+    --border: #2e2b24;
+    --accent: #c8922a;
+    --accent2: #e8b84b;
+    --text: #f0ece3;
+    --text2: #9a9184;
+    --text3: #5a554d;
+    --danger: #c0392b;
+    --success: #27a66a;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ===== LOGIN ===== */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% -10%, rgba(200,146,42,0.15) 0%, transparent 70%),
+      var(--bg);
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px 40px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .login-logo {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .login-logo .brand {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--accent2);
+  }
+
+  .login-logo .sub {
+    font-size: 12px;
+    color: var(--text3);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .login-sep {
+    width: 40px;
+    height: 2px;
+    background: var(--accent);
+    margin: 20px auto;
+    border-radius: 2px;
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus {
+    border-color: var(--accent);
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #0f0e0c;
+    border: none;
+    border-radius: var(--radius);
+    padding: 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .error-msg {
+    background: rgba(192,57,43,0.15);
+    border: 1px solid rgba(192,57,43,0.3);
+    color: #e74c3c;
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* ===== APP ===== */
+  #app-screen { display: none; min-height: 100vh; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-brand {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent2);
+    letter-spacing: -0.5px;
+  }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .user-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+  }
+
+  .btn-logout {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+  .layout {
+    display: flex;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    flex-shrink: 0;
+  }
+
+  .nav-section {
+    padding: 0 12px;
+    margin-bottom: 8px;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0 12px;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 13px;
+    font-weight: 400;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+
+  .nav-item.active {
+    background: rgba(200,146,42,0.12);
+    color: var(--accent2);
+    font-weight: 500;
+  }
+
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* MAIN */
+  .main {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+    background:
+      radial-gradient(ellipse 40% 30% at 80% 10%, rgba(200,146,42,0.04) 0%, transparent 60%),
+      var(--bg);
+  }
+
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+  }
+
+  .page-sub {
+    color: var(--text3);
+    font-size: 13px;
+    margin-bottom: 28px;
+  }
+
+  /* CARDS */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--accent); }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  .stat-desc {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .table-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .table-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    text-align: left;
+    padding: 12px 20px;
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 13px 20px;
+    border-bottom: 1px solid rgba(46,43,36,0.5);
+    color: var(--text2);
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); color: var(--text); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  .badge-premium  { background: rgba(200,146,42,0.15); color: var(--accent2); }
+  .badge-primera  { background: rgba(39,166,106,0.12); color: #2ecc71; }
+  .badge-segunda  { background: rgba(52,152,219,0.12); color: #5dade2; }
+  .badge-tercera  { background: rgba(142,68,173,0.12); color: #af7ac5; }
+  .badge-descarte { background: rgba(90,85,77,0.3);    color: var(--text3); }
+  .badge-canal    { background: rgba(192,57,43,0.12);  color: #e74c3c; }
+  .badge-corte    { background: rgba(200,146,42,0.12); color: var(--accent); }
+  .badge-preparado{ background: rgba(39,166,106,0.12); color: #27a66a; }
+
+  /* FORM */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus { border-color: var(--accent); }
+
+  .form-group select option { background: var(--surface2); }
+
+  .btn-action {
+    background: var(--accent);
+    color: #0f0e0c;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-action:hover { background: var(--accent2); }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 8px;
+  }
+
+  .btn-secondary:hover { color: var(--text); border-color: var(--text3); }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text3);
+    font-size: 13px;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--text3);
+  }
+
+  .empty-icon { font-size: 32px; margin-bottom: 12px; }
+
+  .success-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--success);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+  }
+
+  .success-toast.show { transform: translateY(0); opacity: 1; }
+
+  .role-chip {
+    background: rgba(200,146,42,0.15);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="brand">ACAURE</div>
+      <div class="sub">Sistema de Gestión</div>
+      <div class="login-sep"></div>
+    </div>
+    <div class="field">
+      <label>Correo electrónico</label>
+      <input type="email" id="email" placeholder="usuario@acaure.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="btn-login" onclick="doLogin()">Entrar al sistema</button>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-brand">ACAURE</div>
+    <div class="topbar-user">
+      <div class="user-badge">
+        <div class="user-dot"></div>
+        <span id="user-name">—</span>
+        <span class="role-chip" id="user-role">—</span>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Resumen general del sistema</div>
+        <div class="cards-grid" id="dash-cards">
+          <div class="stat-card">
+            <div class="stat-label">Productos activos</div>
+            <div class="stat-value" id="stat-productos">—</div>
+            <div class="stat-desc">en catálogo</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Clientes</div>
+            <div class="stat-value" id="stat-clientes">—</div>
+            <div class="stat-desc">registrados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Proveedores</div>
+            <div class="stat-value" id="stat-proveedores">—</div>
+            <div class="stat-desc">registrados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Cuentas</div>
+            <div class="stat-value" id="stat-cuentas">—</div>
+            <div class="stat-desc">activas</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Última tasa de cambio registrada</div></div>
+          <div id="tasa-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
+      <!-- INVENTARIO -->
+      <div class="page" id="page-inventario">
+        <div class="page-title">Inventario</div>
+        <div class="page-sub">Stock actual por sede y producto</div>
+        <div class="table-wrap">
+          <div class="table-head">
+            <div class="table-title">Stock actual</div>
+          </div>
+          <div id="inv-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
+      <!-- PRODUCTOS -->
+      <div class="page" id="page-productos">
+        <div class="page-title">Catálogo de productos</div>
+        <div class="page-sub">Todos los productos registrados en el sistema</div>
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Productos</div></div>
+          <div id="prod-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
+      <!-- MOVIMIENTOS FINANCIEROS -->
+      <div class="page" id="page-finanzas">
+        <div class="page-title">Movimientos financieros</div>
+        <div class="page-sub">Registro de ingresos y egresos</div>
+
+        <div class="form-card" id="form-finanzas">
+          <div style="font-family: 'Syne', sans-serif; font-size:14px; font-weight:600; margin-bottom:16px;">Registrar movimiento</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tipo</label>
+              <select id="mf-tipo">
+                <option value="ingreso">Ingreso</option>
+                <option value="egreso">Egreso</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Cuenta</label>
+              <select id="mf-cuenta"></select>
+            </div>
+            <div class="form-group">
+              <label>Moneda</label>
+              <select id="mf-moneda">
+                <option value="usd">USD</option>
+                <option value="bs">Bs</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Monto</label>
+              <input type="number" id="mf-monto" placeholder="0.00" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>Contraparte (receptor/emisor)</label>
+              <input type="text" id="mf-contraparte" placeholder="Nombre">
+            </div>
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" id="mf-fecha">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="grid-column: 1/-1;">
+              <label>Concepto</label>
+              <input type="text" id="mf-concepto" placeholder="Descripción del movimiento">
+            </div>
+          </div>
+          <button class="btn-action" onclick="guardarMovFinanciero()">Registrar movimiento</button>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Historial</div></div>
+          <div id="mf-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
+      <!-- TASAS -->
+      <div class="page" id="page-tasas">
+        <div class="page-title">Tasas de cambio</div>
+        <div class="page-sub">Registrá la tasa del día antes de operar</div>
+        <div class="form-card">
+          <div style="font-family: 'Syne', sans-serif; font-size:14px; font-weight:600; margin-bottom:16px;">Nueva tasa</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre</label>
+              <select id="t-nombre">
+                <option value="BCV">BCV</option>
+                <option value="Paralelo">Paralelo</option>
+                <option value="Interno">Interno</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Valor (Bs por $1)</label>
+              <input type="number" id="t-valor" placeholder="ej: 95.50" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" id="t-fecha">
+            </div>
+          </div>
+          <button class="btn-action" onclick="guardarTasa()">Guardar tasa</button>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Historial de tasas</div></div>
+          <div id="tasas-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
+      <!-- MAESTROS -->
+      <div class="page" id="page-maestros">
+        <div class="page-title">Datos maestros</div>
+        <div class="page-sub">Sedes, proveedores y clientes</div>
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Sedes</div></div>
+          <div id="sedes-table"><div class="loading">Cargando...</div></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Proveedores</div></div>
+          <div id="prov-table"><div class="loading">Cargando...</div></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Clientes</div></div>
+          <div id="clientes-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="success-toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://rthwwkqilzqoeblpgzdw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0aHd3a3FpbHpxb2VibHBnemR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzAzOTksImV4cCI6MjA4OTg0NjM5OX0.bqhfJS24pn8uuEgsz1RTvpewG8WtCRv65PFacvrUbVs';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let currentRole = null;
+
+// NAV CONFIG por rol
+const NAV = {
+  admin: [
+    { id: 'dashboard', label: 'Dashboard', icon: '◈' },
+    { id: 'inventario', label: 'Inventario', icon: '▦' },
+    { id: 'productos', label: 'Productos', icon: '◉' },
+    { id: 'finanzas', label: 'Finanzas', icon: '◎' },
+    { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
+    { id: 'maestros', label: 'Datos maestros', icon: '◫' },
+  ],
+  operaciones: [
+    { id: 'dashboard', label: 'Dashboard', icon: '◈' },
+    { id: 'inventario', label: 'Inventario', icon: '▦' },
+    { id: 'productos', label: 'Productos', icon: '◉' },
+  ],
+  finanzas: [
+    { id: 'dashboard', label: 'Dashboard', icon: '◈' },
+    { id: 'finanzas', label: 'Finanzas', icon: '◎' },
+    { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
+    { id: 'maestros', label: 'Datos maestros', icon: '◫' },
+  ],
+  ventas: [
+    { id: 'dashboard', label: 'Dashboard', icon: '◈' },
+    { id: 'inventario', label: 'Inventario', icon: '▦' },
+    { id: 'productos', label: 'Productos', icon: '◉' },
+  ],
+  socio: [
+    { id: 'dashboard', label: 'Dashboard', icon: '◈' },
+  ]
+};
+
+// LOGIN
+async function doLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('btn-login');
+  const err = document.getElementById('error-msg');
+
+  err.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    err.textContent = 'Correo o contraseña incorrectos.';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Entrar al sistema';
+    return;
+  }
+
+  await loadApp(data.user);
+}
+
+async function loadApp(user) {
+  const { data: userData } = await sb
+    .from('usuarios')
+    .select('*')
+    .eq('email', user.email)
+    .single();
+
+  currentUser = userData || { nombre: user.email, rol: 'admin', email: user.email };
+  currentRole = currentUser.rol || 'admin';
+
+  document.getElementById('user-name').textContent = currentUser.nombre;
+  document.getElementById('user-role').textContent = currentRole;
+
+  buildNav();
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+
+  // set today on date fields
+  const today = new Date().toISOString().split('T')[0];
+  ['mf-fecha','t-fecha'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = today;
+  });
+
+  loadDashboard();
+  loadCuentasSelect();
+}
+
+function buildNav() {
+  const items = NAV[currentRole] || NAV.admin;
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = '<div class="nav-label" style="padding:0 24px">Menú</div>';
+  const sec = document.createElement('div');
+  sec.className = 'nav-section';
+  items.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-item' + (item.id === 'dashboard' ? ' active' : '');
+    btn.dataset.page = item.id;
+    btn.innerHTML = `<span class="nav-icon">${item.icon}</span>${item.label}`;
+    btn.onclick = () => navigate(item.id);
+    sec.appendChild(btn);
+  });
+  sidebar.appendChild(sec);
+}
+
+function navigate(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if(n.dataset.page === pageId) n.classList.add('active');
+  });
+
+  if(pageId === 'dashboard') loadDashboard();
+  if(pageId === 'inventario') loadInventario();
+  if(pageId === 'productos') loadProductos();
+  if(pageId === 'finanzas') loadFinanzas();
+  if(pageId === 'tasas') loadTasas();
+  if(pageId === 'maestros') loadMaestros();
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('email').value = '';
+  document.getElementById('password').value = '';
+}
+
+// DASHBOARD
+async function loadDashboard() {
+  const [prods, clientes, provs, cuentas, tasas] = await Promise.all([
+    sb.from('productos').select('id', {count:'exact'}),
+    sb.from('clientes').select('id', {count:'exact'}),
+    sb.from('proveedores').select('id', {count:'exact'}),
+    sb.from('cuentas').select('id', {count:'exact'}),
+    sb.from('tasas_cambio').select('*').order('fecha', {ascending:false}).limit(5)
+  ]);
+
+  document.getElementById('stat-productos').textContent = prods.count || 0;
+  document.getElementById('stat-clientes').textContent = clientes.count || 0;
+  document.getElementById('stat-proveedores').textContent = provs.count || 0;
+  document.getElementById('stat-cuentas').textContent = cuentas.count || 0;
+
+  const tb = document.getElementById('tasa-table');
+  if(!tasas.data || !tasas.data.length) {
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>No hay tasas registradas aún</div>';
+    return;
+  }
+  tb.innerHTML = `<table>
+    <tr><th>Fecha</th><th>Nombre</th><th>Valor (Bs/$)</th></tr>
+    ${tasas.data.map(t => `<tr>
+      <td>${t.fecha}</td>
+      <td>${t.nombre}</td>
+      <td style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600">${Number(t.valor).toFixed(2)}</td>
+    </tr>`).join('')}
+  </table>`;
+}
+
+// PRODUCTOS
+async function loadProductos() {
+  const { data } = await sb.from('productos').select('*').order('tipo').order('categoria').order('nombre');
+  const tb = document.getElementById('prod-table');
+  if(!data || !data.length) { tb.innerHTML = '<div class="loading">Sin datos</div>'; return; }
+  tb.innerHTML = `<table>
+    <tr><th>Nombre</th><th>Tipo</th><th>Categoría</th><th>Unidad</th></tr>
+    ${data.map(p => `<tr>
+      <td style="color:var(--text)">${p.nombre}</td>
+      <td><span class="badge badge-${p.tipo}">${p.tipo}</span></td>
+      <td>${p.categoria ? `<span class="badge badge-${p.categoria}">${p.categoria}</span>` : '<span style="color:var(--text3)">—</span>'}</td>
+      <td style="color:var(--text3)">${p.unidad}</td>
+    </tr>`).join('')}
+  </table>`;
+}
+
+// INVENTARIO
+async function loadInventario() {
+  const { data } = await sb.from('inventario').select('*, productos(nombre,tipo,categoria), sedes(nombre,codigo)').order('cantidad_kg', {ascending:false});
+  const tb = document.getElementById('inv-table');
+  if(!data || !data.length) {
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><p>Sin movimientos de inventario aún.</p></div>';
+    return;
+  }
+  tb.innerHTML = `<table>
+    <tr><th>Producto</th><th>Sede</th><th>Categoría</th><th>Stock (kg)</th><th>Actualizado</th></tr>
+    ${data.map(i => `<tr>
+      <td style="color:var(--text)">${i.productos?.nombre || '—'}</td>
+      <td><span style="color:var(--text3)">${i.sedes?.codigo || '—'}</span></td>
+      <td>${i.productos?.categoria ? `<span class="badge badge-${i.productos.categoria}">${i.productos.categoria}</span>` : '—'}</td>
+      <td style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600">${Number(i.cantidad_kg).toFixed(1)} kg</td>
+      <td style="color:var(--text3);font-size:12px">${i.actualizado_at ? new Date(i.actualizado_at).toLocaleDateString('es-VE') : '—'}</td>
+    </tr>`).join('')}
+  </table>`;
+}
+
+// CUENTAS SELECT
+async function loadCuentasSelect() {
+  const { data } = await sb.from('cuentas').select('*').eq('activo', true);
+  const sel = document.getElementById('mf-cuenta');
+  if(!sel) return;
+  sel.innerHTML = data.map(c => `<option value="${c.id}">${c.nombre} (${c.moneda.toUpperCase()})</option>`).join('');
+}
+
+// FINANZAS
+async function loadFinanzas() {
+  const { data } = await sb.from('movimientos_financieros').select('*, cuentas(nombre)').order('fecha', {ascending:false}).limit(50);
+  const tb = document.getElementById('mf-table');
+  if(!data || !data.length) {
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><p>Sin movimientos registrados aún.</p></div>';
+    return;
+  }
+  tb.innerHTML = `<table>
+    <tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Contraparte</th><th>Cuenta</th><th>Monto</th><th>Status</th></tr>
+    ${data.map(m => `<tr>
+      <td style="color:var(--text3)">${m.fecha}</td>
+      <td><span class="badge" style="background:${m.tipo==='ingreso'?'rgba(39,166,106,0.15)':'rgba(192,57,43,0.15)'};color:${m.tipo==='ingreso'?'#27a66a':'#e74c3c'}">${m.tipo}</span></td>
+      <td style="color:var(--text)">${m.concepto}</td>
+      <td style="color:var(--text2)">${m.contraparte || '—'}</td>
+      <td style="color:var(--text3)">${m.cuentas?.nombre || '—'}</td>
+      <td style="font-family:'Syne',sans-serif;font-weight:600;color:${m.tipo==='ingreso'?'#27a66a':'#e74c3c'}">${m.tipo==='ingreso'?'+':'-'}${Number(m.monto).toFixed(2)} ${m.moneda.toUpperCase()}</td>
+      <td><span class="badge" style="background:rgba(90,85,77,0.3);color:var(--text3)">${m.status}</span></td>
+    </tr>`).join('')}
+  </table>`;
+}
+
+async function guardarMovFinanciero() {
+  const tipo = document.getElementById('mf-tipo').value;
+  const cuenta_id = document.getElementById('mf-cuenta').value;
+  const moneda = document.getElementById('mf-moneda').value;
+  const monto = parseFloat(document.getElementById('mf-monto').value);
+  const contraparte = document.getElementById('mf-contraparte').value;
+  const fecha = document.getElementById('mf-fecha').value;
+  const concepto = document.getElementById('mf-concepto').value;
+
+  if(!monto || !concepto || !fecha) { alert('Completá todos los campos requeridos.'); return; }
+
+  const { error } = await sb.from('movimientos_financieros').insert({
+    tipo, cuenta_id, moneda, monto, contraparte, fecha, concepto,
+    status: 'registrado'
+  });
+
+  if(error) { alert('Error al guardar: ' + error.message); return; }
+
+  showToast('Movimiento registrado ✓');
+  document.getElementById('mf-monto').value = '';
+  document.getElementById('mf-contraparte').value = '';
+  document.getElementById('mf-concepto').value = '';
+  loadFinanzas();
+}
+
+// TASAS
+async function loadTasas() {
+  const { data } = await sb.from('tasas_cambio').select('*').order('fecha', {ascending:false}).limit(30);
+  const tb = document.getElementById('tasas-table');
+  if(!data || !data.length) { tb.innerHTML = '<div class="empty"><div>Sin tasas registradas.</div></div>'; return; }
+  tb.innerHTML = `<table>
+    <tr><th>Fecha</th><th>Nombre</th><th>Valor (Bs/$)</th></tr>
+    ${data.map(t => `<tr>
+      <td>${t.fecha}</td>
+      <td>${t.nombre}</td>
+      <td style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600">${Number(t.valor).toFixed(2)}</td>
+    </tr>`).join('')}
+  </table>`;
+}
+
+async function guardarTasa() {
+  const nombre = document.getElementById('t-nombre').value;
+  const valor = parseFloat(document.getElementById('t-valor').value);
+  const fecha = document.getElementById('t-fecha').value;
+  if(!valor || !fecha) { alert('Completá todos los campos.'); return; }
+  const { error } = await sb.from('tasas_cambio').insert({ nombre, valor, fecha });
+  if(error) { alert('Error: ' + error.message); return; }
+  showToast('Tasa guardada ✓');
+  document.getElementById('t-valor').value = '';
+  loadTasas();
+}
+
+// MAESTROS
+async function loadMaestros() {
+  const [sedes, provs, clientes] = await Promise.all([
+    sb.from('sedes').select('*'),
+    sb.from('proveedores').select('*'),
+    sb.from('clientes').select('*')
+  ]);
+
+  document.getElementById('sedes-table').innerHTML = `<table>
+    <tr><th>Nombre</th><th>Código</th></tr>
+    ${(sedes.data||[]).map(s=>`<tr><td style="color:var(--text)">${s.nombre}</td><td style="color:var(--text3)">${s.codigo}</td></tr>`).join('')}
+  </table>`;
+
+  document.getElementById('prov-table').innerHTML = `<table>
+    <tr><th>Nombre</th><th>Tipo</th></tr>
+    ${(provs.data||[]).map(p=>`<tr><td style="color:var(--text)">${p.nombre}</td><td><span class="badge badge-${p.tipo||'canal'}">${p.tipo||'—'}</span></td></tr>`).join('')}
+  </table>`;
+
+  document.getElementById('clientes-table').innerHTML = `<table>
+    <tr><th>Nombre</th><th>Tipo</th><th>Canal</th></tr>
+    ${(clientes.data||[]).map(c=>`<tr><td style="color:var(--text)">${c.nombre}</td><td>${c.tipo}</td><td>${c.canal}</td></tr>`).join('')}
+  </table>`;
+}
+
+// TOAST
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Verificar sesión activa al cargar
+sb.auth.getSession().then(({ data: { session } }) => {
+  if(session) loadApp(session.user);
+});
+</script>
+</body>
+</html>
