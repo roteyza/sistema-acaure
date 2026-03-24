@@ -570,33 +570,65 @@
 
       <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
-        <div class="page-title">Dashboard</div>
-        <div class="page-sub">Resumen general del sistema</div>
-        <div class="cards-grid" id="dash-cards">
-          <div class="stat-card">
-            <div class="stat-label">Productos activos</div>
-            <div class="stat-value" id="stat-productos">—</div>
-            <div class="stat-desc">en catálogo</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="page-title">Dashboard</div>
+          <div style="font-size:12px;color:var(--text3)" id="dash-periodo">Últimos 30 días</div>
+        </div>
+        <div class="page-sub">Métricas en tiempo real — base USD BCV equivalente</div>
+
+        <!-- TASAS ACTIVAS -->
+        <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap" id="dash-tasas"></div>
+
+        <!-- VENTAS POR CANAL -->
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Ventas últimos 30 días</div>
+        <div class="cards-grid" style="margin-bottom:24px">
+          <div class="stat-card" style="border-color:rgba(200,146,42,0.3)">
+            <div class="stat-label">Total ventas</div>
+            <div class="stat-value" id="dash-ventas-total">—</div>
+            <div class="stat-desc" id="dash-ventas-kg">— kg</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Clientes</div>
-            <div class="stat-value" id="stat-clientes">—</div>
-            <div class="stat-desc">registrados</div>
+            <div class="stat-label">Mayor CCS (RF)</div>
+            <div class="stat-value" style="font-size:20px" id="dash-ventas-rf">—</div>
+            <div class="stat-desc" id="dash-ventas-rf-kg">— kg</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Proveedores</div>
-            <div class="stat-value" id="stat-proveedores">—</div>
-            <div class="stat-desc">registrados</div>
+            <div class="stat-label">Mayor Acarigua</div>
+            <div class="stat-value" style="font-size:20px" id="dash-ventas-aca">—</div>
+            <div class="stat-desc" id="dash-ventas-aca-kg">— kg</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Cuentas</div>
-            <div class="stat-value" id="stat-cuentas">—</div>
-            <div class="stat-desc">activas</div>
+            <div class="stat-label">Detal CCS</div>
+            <div class="stat-value" style="font-size:20px" id="dash-ventas-detal">—</div>
+            <div class="stat-desc" id="dash-ventas-detal-kg">— kg</div>
           </div>
         </div>
+
+        <!-- COMPRAS Y MARGEN -->
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Compras y margen</div>
+        <div class="cards-grid" style="margin-bottom:24px">
+          <div class="stat-card">
+            <div class="stat-label">Total compras</div>
+            <div class="stat-value" id="dash-compras-total">—</div>
+            <div class="stat-desc" id="dash-compras-kg">— kg</div>
+          </div>
+          <div class="stat-card" id="dash-margen-card">
+            <div class="stat-label">Margen bruto</div>
+            <div class="stat-value" id="dash-margen">—</div>
+            <div class="stat-desc" id="dash-margen-pct">—</div>
+          </div>
+        </div>
+
+        <!-- CUENTAS -->
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Saldo de cuentas</div>
+        <div class="table-wrap" style="margin-bottom:24px">
+          <div id="dash-cuentas"><div class="loading">Cargando...</div></div>
+        </div>
+
+        <!-- CARTERA CxC -->
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Cartera — ventas por cobrar</div>
         <div class="table-wrap">
-          <div class="table-head"><div class="table-title">Última tasa de cambio registrada</div></div>
-          <div id="tasa-table"><div class="loading">Cargando...</div></div>
+          <div id="dash-cartera"><div class="loading">Cargando...</div></div>
         </div>
       </div>
 
@@ -1133,32 +1165,163 @@ async function doLogout() {
 
 // DASHBOARD
 async function loadDashboard() {
-  const [prods, clientes, provs, cuentas, tasas] = await Promise.all([
-    sb.from('productos').select('id', {count:'exact'}),
-    sb.from('clientes').select('id', {count:'exact'}),
-    sb.from('proveedores').select('id', {count:'exact'}),
-    sb.from('cuentas').select('id', {count:'exact'}),
-    sb.from('tasas_cambio').select('*').order('fecha', {ascending:false}).limit(5)
+  const hoy = new Date();
+  const hace30 = new Date(hoy);
+  hace30.setDate(hace30.getDate() - 30);
+  const desde = hace30.toISOString().split('T')[0];
+  const hasta = hoy.toISOString().split('T')[0];
+
+  document.getElementById('dash-periodo').textContent = `${desde} → ${hasta}`;
+
+  // Cargar todo en paralelo
+  const [ventas, ventasDetalle, compras, comprasDetalle, cuentas, movFin, tasas, cartera] = await Promise.all([
+    sb.from('ventas').select('id,fecha,notas,status').gte('fecha', desde).lte('fecha', hasta),
+    sb.from('ventas_detalle').select('venta_id,cantidad,precio,moneda'),
+    sb.from('compras').select('id,fecha,notas').gte('fecha', desde).lte('fecha', hasta),
+    sb.from('compras_detalle').select('compra_id,cantidad_kg,precio,moneda,tasa_id'),
+    sb.from('cuentas').select('*').eq('activo', true),
+    sb.from('movimientos_financieros').select('cuenta_id,tipo,monto,moneda,tasa_id'),
+    sb.from('tasas_cambio').select('*').order('fecha',{ascending:false}).limit(6),
+    sb.from('ventas').select('*, clientes(nombre), sedes(codigo)').in('status',['pendiente','parcial']).order('fecha',{ascending:false})
   ]);
 
-  document.getElementById('stat-productos').textContent = prods.count || 0;
-  document.getElementById('stat-clientes').textContent = clientes.count || 0;
-  document.getElementById('stat-proveedores').textContent = provs.count || 0;
-  document.getElementById('stat-cuentas').textContent = cuentas.count || 0;
+  // TASAS ACTIVAS
+  const tasasEl = document.getElementById('dash-tasas');
+  const latestTasas = {};
+  (tasas.data||[]).forEach(t => { if(!latestTasas[t.nombre]) latestTasas[t.nombre] = t; });
+  tasasEl.innerHTML = Object.values(latestTasas).map(t => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 16px;display:flex;gap:12px;align-items:center">
+      <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">${t.nombre}</span>
+      <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2)">Bs ${Number(t.valor).toFixed(2)}</span>
+      <span style="font-size:11px;color:var(--text3)">${t.fecha}</span>
+    </div>`).join('');
 
-  const tb = document.getElementById('tasa-table');
-  if(!tasas.data || !tasas.data.length) {
-    tb.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>No hay tasas registradas aún</div>';
-    return;
+  const bcvTasa = latestTasas['BCV']?.valor || 1;
+  const parTasa = latestTasas['Paralelo']?.valor || bcvTasa;
+
+  // Función para calcular USD BCV equiv de una venta/compra
+  function calcUSDBCV(monto, moneda, tasa_valor) {
+    if(!monto) return 0;
+    const t = tasa_valor || bcvTasa;
+    if(moneda === 'usd' || moneda === 'zelle') return monto;
+    if(moneda === 'cash') return monto * (parTasa / bcvTasa);
+    if(moneda === 'bs_bcv' || moneda === 'bs') return monto / t;
+    if(moneda === 'bs_paralelo') return monto / bcvTasa;
+    return monto;
   }
-  tb.innerHTML = `<table>
-    <tr><th>Fecha</th><th>Nombre</th><th>Valor (Bs/$)</th></tr>
-    ${tasas.data.map(t => `<tr>
-      <td>${t.fecha}</td>
-      <td>${t.nombre}</td>
-      <td style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600">${Number(t.valor).toFixed(2)}</td>
-    </tr>`).join('')}
-  </table>`;
+
+  // VENTAS por canal
+  const ventasMap = {};
+  (ventas.data||[]).forEach(v => { ventasMap[v.id] = v; });
+
+  let totalVentasUSD = 0, totalVentasKG = 0;
+  const canales = { mayor_ccs: {usd:0,kg:0}, mayor_acarigua: {usd:0,kg:0}, detal_ccs: {usd:0,kg:0} };
+
+  (ventasDetalle.data||[]).forEach(d => {
+    const v = ventasMap[d.venta_id];
+    if(!v) return;
+    const subtotal = Number(d.cantidad) * Number(d.precio);
+    const usd = calcUSDBCV(subtotal, d.moneda, bcvTasa);
+    const kg = Number(d.cantidad);
+    totalVentasUSD += usd;
+    totalVentasKG  += kg;
+
+    const notas = (v.notas||'').toLowerCase();
+    if(notas.includes('mayor ccs'))       { canales.mayor_ccs.usd += usd; canales.mayor_ccs.kg += kg; }
+    else if(notas.includes('mayor acarigua')) { canales.mayor_acarigua.usd += usd; canales.mayor_acarigua.kg += kg; }
+    else if(notas.includes('detal ccs'))  { canales.detal_ccs.usd += usd; canales.detal_ccs.kg += kg; }
+  });
+
+  document.getElementById('dash-ventas-total').textContent = `$${totalVentasUSD.toFixed(0)}`;
+  document.getElementById('dash-ventas-kg').textContent    = `${totalVentasKG.toFixed(0)} kg`;
+  document.getElementById('dash-ventas-rf').textContent    = `$${canales.mayor_ccs.usd.toFixed(0)}`;
+  document.getElementById('dash-ventas-rf-kg').textContent = `${canales.mayor_ccs.kg.toFixed(0)} kg`;
+  document.getElementById('dash-ventas-aca').textContent   = `$${canales.mayor_acarigua.usd.toFixed(0)}`;
+  document.getElementById('dash-ventas-aca-kg').textContent= `${canales.mayor_acarigua.kg.toFixed(0)} kg`;
+  document.getElementById('dash-ventas-detal').textContent = `$${canales.detal_ccs.usd.toFixed(0)}`;
+  document.getElementById('dash-ventas-detal-kg').textContent = `${canales.detal_ccs.kg.toFixed(0)} kg`;
+
+  // COMPRAS
+  let totalComprasUSD = 0, totalComprasKG = 0;
+  (comprasDetalle.data||[]).forEach(d => {
+    const subtotal = Number(d.cantidad_kg) * Number(d.precio);
+    totalComprasUSD += calcUSDBCV(subtotal, d.moneda, bcvTasa);
+    totalComprasKG  += Number(d.cantidad_kg);
+  });
+
+  document.getElementById('dash-compras-total').textContent = `$${totalComprasUSD.toFixed(0)}`;
+  document.getElementById('dash-compras-kg').textContent    = `${totalComprasKG.toFixed(0)} kg`;
+
+  // MARGEN
+  const margen = totalVentasUSD - totalComprasUSD;
+  const margenPct = totalVentasUSD > 0 ? (margen / totalVentasUSD * 100) : 0;
+  const margenEl = document.getElementById('dash-margen');
+  const margenCard = document.getElementById('dash-margen-card');
+  margenEl.textContent = `$${margen.toFixed(0)}`;
+  margenEl.style.color = margen >= 0 ? 'var(--success)' : '#e74c3c';
+  document.getElementById('dash-margen-pct').textContent = `${margenPct.toFixed(1)}% margen`;
+  margenCard.style.borderColor = margen >= 0 ? 'rgba(39,166,106,0.3)' : 'rgba(192,57,43,0.3)';
+
+  // CUENTAS — saldo calculado desde movimientos financieros
+  const saldos = {};
+  (cuentas.data||[]).forEach(c => { saldos[c.id] = { cuenta: c, ingresos: 0, egresos: 0 }; });
+  (movFin.data||[]).forEach(m => {
+    if(!saldos[m.cuenta_id]) return;
+    const monto = Number(m.monto);
+    if(m.tipo === 'ingreso') saldos[m.cuenta_id].ingresos += monto;
+    else saldos[m.cuenta_id].egresos += monto;
+  });
+
+  const cuentasEl = document.getElementById('dash-cuentas');
+  const cuentasArr = Object.values(saldos);
+  if(!cuentasArr.length) {
+    cuentasEl.innerHTML = '<div class="empty">Sin cuentas</div>';
+  } else {
+    const totalUSD = cuentasArr.filter(c=>c.cuenta.moneda==='usd').reduce((s,c)=>s+(c.ingresos-c.egresos),0);
+    const totalBS  = cuentasArr.filter(c=>c.cuenta.moneda==='bs').reduce((s,c)=>s+(c.ingresos-c.egresos),0);
+    cuentasEl.innerHTML = `
+      <table>
+        <tr><th>Cuenta</th><th>Tipo</th><th>Ingresos</th><th>Egresos</th><th>Saldo</th></tr>
+        ${cuentasArr.map(({cuenta,ingresos,egresos}) => {
+          const saldo = ingresos - egresos;
+          const mon = cuenta.moneda === 'usd' ? '$' : 'Bs';
+          return `<tr>
+            <td style="color:var(--text)">${cuenta.nombre}</td>
+            <td style="color:var(--text3);font-size:12px">${cuenta.tipo}</td>
+            <td style="color:var(--success)">${mon}${ingresos.toFixed(2)}</td>
+            <td style="color:#e74c3c">${mon}${egresos.toFixed(2)}</td>
+            <td style="font-family:'Syne',sans-serif;font-weight:700;color:${saldo>=0?'var(--accent2)':'#e74c3c'}">${mon}${saldo.toFixed(2)}</td>
+          </tr>`;
+        }).join('')}
+        <tr style="border-top:2px solid var(--border)">
+          <td colspan="4" style="color:var(--text3);font-size:12px">Total USD</td>
+          <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2)">$${totalUSD.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td colspan="4" style="color:var(--text3);font-size:12px">Total Bs</td>
+          <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2)">Bs ${totalBS.toFixed(2)}</td>
+        </tr>
+      </table>`;
+  }
+
+  // CARTERA CxC
+  const carteraEl = document.getElementById('dash-cartera');
+  if(!cartera.data || !cartera.data.length) {
+    carteraEl.innerHTML = '<div class="empty" style="padding:24px;text-align:center;color:var(--success)">✓ Sin ventas pendientes de cobro</div>';
+  } else {
+    carteraEl.innerHTML = `
+      <table>
+        <tr><th>Fecha</th><th>Cliente</th><th>Sede</th><th>Detalle</th><th>Status</th><th></th></tr>
+        ${cartera.data.map(v=>`<tr>
+          <td style="color:var(--text3)">${v.fecha}</td>
+          <td style="color:var(--text)">${v.clientes?.nombre||'Detal'}</td>
+          <td style="color:var(--text3)">${v.sedes?.codigo||'—'}</td>
+          <td style="color:var(--text2);font-size:12px">${v.notas||'—'}</td>
+          <td><span class="badge" style="background:${v.status==='parcial'?'rgba(232,184,75,0.15)':'rgba(192,57,43,0.12)'};color:${v.status==='parcial'?'var(--accent2)':'#e74c3c'}">${v.status}</span></td>
+          <td><button onclick="marcarPagada('${v.id}')" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">✓ Cobrada</button></td>
+        </tr>`).join('')}
+      </table>`;
+  }
 }
 
 // PRODUCTOS
