@@ -775,6 +775,102 @@
         </div>
       </div>
 
+      <!-- VENTAS -->
+      <div class="page" id="page-ventas">
+        <div class="page-title">Ventas</div>
+        <div class="page-sub">Registro de ventas por canal</div>
+
+        <div class="form-card">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:600;margin-bottom:16px;">Nueva venta</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Canal</label>
+              <select id="v-canal" onchange="toggleVentaCanal()">
+                <option value="mayor_ccs">Mayor CCS (Roca Firme)</option>
+                <option value="mayor_acarigua">Mayor Acarigua</option>
+                <option value="detal_ccs">Detal CCS</option>
+              </select>
+            </div>
+            <div class="form-group" id="v-field-cliente">
+              <label>Cliente</label>
+              <select id="v-cliente"></select>
+            </div>
+            <div class="form-group" id="v-field-cliente-libre" style="display:none">
+              <label>Nombre cliente</label>
+              <input type="text" id="v-cliente-libre" placeholder="Nombre del cliente">
+            </div>
+            <div class="form-group">
+              <label>Sede origen</label>
+              <select id="v-sede"></select>
+            </div>
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" id="v-fecha">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Status pago</label>
+              <select id="v-status">
+                <option value="pendiente">Pendiente</option>
+                <option value="parcial">Pago parcial</option>
+                <option value="pagada">Pagada</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Notas / referencia</label>
+              <input type="text" id="v-notas" placeholder="Ej: Despacho RF semana 12, pedido #45...">
+            </div>
+          </div>
+
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin:20px 0 12px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;">Productos vendidos</div>
+          <div id="venta-items"></div>
+          <button class="btn-secondary" onclick="agregarItemVenta()" style="margin:0 0 20px">+ Agregar producto</button>
+
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">
+              <div>
+                <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Total venta</div>
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--accent2)" id="v-total-usd">—</div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Total en Bs (ref.)</div>
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text2)" id="v-total-bs">—</div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Kg totales</div>
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text2)" id="v-total-kg">—</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-action" onclick="guardarVenta()">Registrar venta</button>
+        </div>
+
+        <!-- TABS -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <button class="btn-action" id="tab-todas" onclick="filtrarVentas('todas')" style="font-size:12px;padding:8px 16px">Todas</button>
+          <button class="btn-secondary" id="tab-mayor_ccs" onclick="filtrarVentas('mayor_ccs')" style="font-size:12px;padding:8px 16px">Mayor CCS</button>
+          <button class="btn-secondary" id="tab-mayor_acarigua" onclick="filtrarVentas('mayor_acarigua')" style="font-size:12px;padding:8px 16px">Mayor Acarigua</button>
+          <button class="btn-secondary" id="tab-detal_ccs" onclick="filtrarVentas('detal_ccs')" style="font-size:12px;padding:8px 16px">Detal CCS</button>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Historial de ventas</div></div>
+          <div id="ventas-table"><div class="loading">Cargando...</div></div>
+        </div>
+
+        <div id="venta-detalle-panel" style="display:none">
+          <div class="table-wrap" style="margin-top:16px">
+            <div class="table-head">
+              <div class="table-title" id="venta-detalle-titulo">Detalle venta</div>
+              <button class="btn-secondary" onclick="document.getElementById('venta-detalle-panel').style.display='none'" style="font-size:12px;padding:6px 12px">Cerrar</button>
+            </div>
+            <div id="venta-detalle-contenido"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- MOVIMIENTOS FINANCIEROS -->
       <div class="page" id="page-finanzas">
         <div class="page-title">Movimientos financieros</div>
@@ -903,6 +999,7 @@ const NAV = {
     { id: 'inventario', label: 'Inventario', icon: '▦' },
     { id: 'movimientos', label: 'Movimientos', icon: '⇄' },
     { id: 'compras', label: 'Compras', icon: '◳' },
+    { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
     { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
@@ -913,10 +1010,12 @@ const NAV = {
     { id: 'inventario', label: 'Inventario', icon: '▦' },
     { id: 'movimientos', label: 'Movimientos', icon: '⇄' },
     { id: 'compras', label: 'Compras', icon: '◳' },
+    { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
   ],
   finanzas: [
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
+    { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
     { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
     { id: 'maestros', label: 'Datos maestros', icon: '◫' },
@@ -924,6 +1023,7 @@ const NAV = {
   ventas: [
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
     { id: 'inventario', label: 'Inventario', icon: '▦' },
+    { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
   ],
   socio: [
@@ -984,6 +1084,7 @@ async function loadApp(user) {
   loadCuentasSelect();
   loadMovimientosSelects();
   loadComprasSelects();
+  loadVentasSelects();
 }
 
 function buildNav() {
@@ -1013,6 +1114,7 @@ function navigate(pageId) {
 
   if(pageId === 'movimientos') loadMovimientos();
   if(pageId === 'compras') loadCompras();
+  if(pageId === 'ventas') { loadVentas(); }
   if(pageId === 'dashboard') loadDashboard();
   if(pageId === 'inventario') loadInventario();
   if(pageId === 'productos') loadProductos();
@@ -1198,6 +1300,311 @@ async function loadMaestros() {
   document.getElementById('clientes-table').innerHTML = `<table>
     <tr><th>Nombre</th><th>Tipo</th><th>Canal</th></tr>
     ${(clientes.data||[]).map(c=>`<tr><td style="color:var(--text)">${c.nombre}</td><td>${c.tipo}</td><td>${c.canal}</td></tr>`).join('')}
+  </table>`;
+}
+
+// VENTAS
+let ventaItems = [];
+let clientesData = [];
+let ventaFiltroActual = 'todas';
+
+async function loadVentasSelects() {
+  const [clientes, sedes, prods, tasas] = await Promise.all([
+    sb.from('clientes').select('*').order('nombre'),
+    sb.from('sedes').select('*'),
+    sb.from('productos').select('id,nombre,tipo').order('tipo').order('nombre'),
+    sb.from('tasas_cambio').select('*').order('fecha',{ascending:false}).limit(20)
+  ]);
+
+  clientesData = clientes.data || [];
+
+  const selSede = document.getElementById('v-sede');
+  if(selSede) selSede.innerHTML = (sedes.data||[]).map(s=>`<option value="${s.id}">${s.nombre}</option>`).join('');
+
+  const today = new Date().toISOString().split('T')[0];
+  const vf = document.getElementById('v-fecha');
+  if(vf) vf.value = today;
+
+  ventaItems = [];
+  agregarItemVenta();
+  toggleVentaCanal();
+}
+
+function toggleVentaCanal() {
+  const canal = document.getElementById('v-canal')?.value;
+  const fieldCliente = document.getElementById('v-field-cliente');
+  const fieldClienteLibre = document.getElementById('v-field-cliente-libre');
+  const selCliente = document.getElementById('v-cliente');
+
+  if(canal === 'detal_ccs') {
+    if(fieldCliente) fieldCliente.style.display = 'none';
+    if(fieldClienteLibre) fieldClienteLibre.style.display = 'block';
+  } else {
+    if(fieldCliente) fieldCliente.style.display = 'block';
+    if(fieldClienteLibre) fieldClienteLibre.style.display = 'none';
+    const mayorClientes = clientesData.filter(c => c.tipo === 'b2b');
+    if(selCliente) selCliente.innerHTML = mayorClientes.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  }
+}
+
+function agregarItemVenta() {
+  const idx = ventaItems.length;
+  ventaItems.push({ producto_id:'', cantidad:0, precio:0, moneda:'usd', valor_tasa:0, usd_bcv_equiv:0 });
+
+  const container = document.getElementById('venta-items');
+  const div = document.createElement('div');
+  div.id = `vitem-${idx}`;
+  div.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;';
+
+  const tasasBCV = (tasasData||[]).find(t=>t.nombre==='BCV');
+  const tasasPar = (tasasData||[]).find(t=>t.nombre==='Paralelo');
+
+  div.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Producto ${idx+1}</span>
+      ${idx > 0 ? `<button onclick="eliminarItemVenta(${idx})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1">×</button>` : ''}
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Producto</label>
+        <select id="vitem-prod-${idx}" onchange="updateItemVenta(${idx})">
+          ${(productosData||[]).map(p=>`<option value="${p.id}">${p.nombre} (${p.tipo})</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cantidad (kg)</label>
+        <input type="number" id="vitem-kg-${idx}" placeholder="0.00" step="0.01" min="0.01" oninput="updateItemVenta(${idx})">
+      </div>
+      <div class="form-group">
+        <label>Precio / kg</label>
+        <input type="number" id="vitem-precio-${idx}" placeholder="0.00" step="0.01" oninput="updateItemVenta(${idx})">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Forma de pago</label>
+        <select id="vitem-moneda-${idx}" onchange="updateItemVenta(${idx})">
+          <option value="usd">USD (factura)</option>
+          <option value="bs_bcv">Bs a BCV</option>
+          <option value="bs_paralelo">Bs a Paralelo</option>
+          <option value="zelle">Zelle USD</option>
+          <option value="cash">Cash USD</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tasa (Bs/$)</label>
+        <input type="number" id="vitem-tasa-${idx}" placeholder="${tasasBCV?tasasBCV.valor:'0'}" step="0.01" oninput="updateItemVenta(${idx})" value="${tasasBCV?tasasBCV.valor:''}">
+      </div>
+      <div class="form-group">
+        <label>Subtotal USD BCV equiv.</label>
+        <input type="text" id="vitem-subtotal-${idx}" readonly style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600;background:var(--surface);" value="—">
+      </div>
+    </div>`;
+
+  container.appendChild(div);
+  updateItemVenta(idx);
+}
+
+function eliminarItemVenta(idx) {
+  const el = document.getElementById(`vitem-${idx}`);
+  if(el) el.remove();
+  ventaItems[idx] = null;
+  calcularTotalesVenta();
+}
+
+function updateItemVenta(idx) {
+  const kg     = parseFloat(document.getElementById(`vitem-kg-${idx}`)?.value) || 0;
+  const precio = parseFloat(document.getElementById(`vitem-precio-${idx}`)?.value) || 0;
+  const moneda = document.getElementById(`vitem-moneda-${idx}`)?.value || 'usd';
+  const tasa   = parseFloat(document.getElementById(`vitem-tasa-${idx}`)?.value) || 1;
+  const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
+  const bcvVal = bcvTasa ? bcvTasa.valor : tasa;
+
+  const total_original = kg * precio;
+  let usd_bcv_equiv = 0;
+
+  if(moneda === 'usd' || moneda === 'zelle')     usd_bcv_equiv = total_original;
+  else if(moneda === 'cash')                      usd_bcv_equiv = bcvVal > 0 ? total_original * (tasa / bcvVal) : total_original;
+  else if(moneda === 'bs_bcv')                    usd_bcv_equiv = tasa > 0 ? total_original / tasa : 0;
+  else if(moneda === 'bs_paralelo')               usd_bcv_equiv = bcvVal > 0 ? total_original / bcvVal : 0;
+
+  const subtotalEl = document.getElementById(`vitem-subtotal-${idx}`);
+  if(subtotalEl) subtotalEl.value = usd_bcv_equiv > 0 ? `$${usd_bcv_equiv.toFixed(2)}` : '—';
+
+  if(ventaItems[idx] !== null) {
+    ventaItems[idx] = {
+      producto_id: document.getElementById(`vitem-prod-${idx}`)?.value,
+      cantidad: kg,
+      precio,
+      moneda,
+      valor_tasa: tasa,
+      usd_bcv_equiv
+    };
+  }
+
+  calcularTotalesVenta();
+}
+
+function calcularTotalesVenta() {
+  const items = ventaItems.filter(Boolean).filter(i => i.usd_bcv_equiv > 0);
+  const totalUSD = items.reduce((s,i) => s+(i.usd_bcv_equiv||0), 0);
+  const totalKG  = items.reduce((s,i) => s+(i.cantidad||0), 0);
+  const bcvTasa  = (tasasData||[]).find(t=>t.nombre==='BCV');
+  const totalBS  = bcvTasa ? totalUSD * bcvTasa.valor : 0;
+
+  document.getElementById('v-total-usd').textContent = totalUSD > 0 ? `$${totalUSD.toFixed(2)} USD` : '—';
+  document.getElementById('v-total-bs').textContent  = totalBS  > 0 ? `Bs ${totalBS.toFixed(0)}` : '—';
+  document.getElementById('v-total-kg').textContent  = totalKG  > 0 ? `${totalKG.toFixed(1)} kg` : '—';
+}
+
+async function guardarVenta() {
+  const canal    = document.getElementById('v-canal').value;
+  const fecha    = document.getElementById('v-fecha').value;
+  const status   = document.getElementById('v-status').value;
+  const notas    = document.getElementById('v-notas').value;
+  const sede_id  = document.getElementById('v-sede').value;
+
+  let cliente_id = null;
+  if(canal === 'detal_ccs') {
+    // buscar o usar cliente genérico detal
+    const clienteDetal = clientesData.find(c => c.canal === 'detal');
+    cliente_id = clienteDetal?.id || null;
+  } else {
+    cliente_id = document.getElementById('v-cliente').value;
+  }
+
+  const items = ventaItems.filter(Boolean).filter(i => i.cantidad > 0 && i.precio > 0);
+
+  if(!fecha)           { alert('Seleccioná una fecha.'); return; }
+  if(items.length===0) { alert('Agregá al menos un producto con cantidad y precio.'); return; }
+
+  const total_usd = items.reduce((s,i) => s+(i.usd_bcv_equiv||0), 0);
+  const tipo = canal.startsWith('mayor') ? 'mayor' : 'detal';
+
+  // 1. Insertar venta cabecera
+  const { data: venta, error: errV } = await sb.from('ventas').insert({
+    fecha,
+    cliente_id,
+    sede_id,
+    tipo,
+    status,
+    usuario_id: currentUser?.id || null,
+    notas: `${canal.replace('_',' ')}${notas?' | '+notas:''} | Total: $${total_usd.toFixed(2)} USD BCV`
+  }).select().single();
+
+  if(errV) { alert('Error al guardar venta: ' + errV.message); return; }
+
+  // 2. Insertar detalle
+  const detalles = items.map(i => ({
+    venta_id:   venta.id,
+    producto_id: i.producto_id,
+    cantidad:   i.cantidad,
+    precio:     i.precio,
+    moneda:     i.moneda.startsWith('bs') ? 'bs' : 'usd'
+  }));
+
+  const { error: errD } = await sb.from('ventas_detalle').insert(detalles);
+  if(errD) { alert('Error en detalle: ' + errD.message); return; }
+
+  // 3. Descontar inventario
+  for(const item of items) {
+    await upsertInventario(item.producto_id, sede_id, -item.cantidad);
+  }
+
+  showToast('Venta registrada ✓');
+
+  // reset
+  ventaItems = [];
+  document.getElementById('venta-items').innerHTML = '';
+  document.getElementById('v-notas').value = '';
+  agregarItemVenta();
+  loadVentas();
+}
+
+async function loadVentas(filtro) {
+  if(filtro) ventaFiltroActual = filtro;
+
+  let query = sb.from('ventas')
+    .select('*, clientes(nombre), sedes(codigo)')
+    .order('fecha', {ascending:false})
+    .limit(100);
+
+  if(ventaFiltroActual !== 'todas') {
+    query = query.ilike('notas', `%${ventaFiltroActual.replace('_',' ')}%`);
+  }
+
+  const { data } = await query;
+  const tb = document.getElementById('ventas-table');
+
+  if(!data || !data.length) {
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">◐</div><p>Sin ventas registradas aún.</p></div>';
+    return;
+  }
+
+  const statusColor = { pagada:'#27a66a', parcial:'#e8b84b', pendiente:'#e74c3c' };
+
+  tb.innerHTML = `<table>
+    <tr><th>Fecha</th><th>Cliente</th><th>Sede</th><th>Notas</th><th>Status</th><th></th></tr>
+    ${data.map(v=>`<tr>
+      <td style="color:var(--text3)">${v.fecha}</td>
+      <td style="color:var(--text)">${v.clientes?.nombre || 'Detal'}</td>
+      <td style="color:var(--text3)">${v.sedes?.codigo||'—'}</td>
+      <td style="color:var(--text2);font-size:12px">${v.notas||'—'}</td>
+      <td><span class="badge" style="background:${statusColor[v.status]||'#888'}22;color:${statusColor[v.status]||'#888'}">${v.status}</span></td>
+      <td>
+        <button onclick="verDetalleVenta('${v.id}','${v.clientes?.nombre||'Detal'} - ${v.fecha}')" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;margin-right:4px">Ver</button>
+        ${v.status !== 'pagada' ? `<button onclick="marcarPagada('${v.id}')" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">✓ Pagada</button>` : ''}
+      </td>
+    </tr>`).join('')}
+  </table>`;
+}
+
+async function filtrarVentas(filtro) {
+  ventaFiltroActual = filtro;
+  document.querySelectorAll('[id^="tab-"]').forEach(b => {
+    b.className = b.id === `tab-${filtro}` ? 'btn-action' : 'btn-secondary';
+    b.style.cssText = 'font-size:12px;padding:8px 16px';
+  });
+  await loadVentas(filtro);
+}
+
+async function marcarPagada(venta_id) {
+  const { error } = await sb.from('ventas').update({ status:'pagada' }).eq('id', venta_id);
+  if(error) { alert('Error: ' + error.message); return; }
+  showToast('Venta marcada como pagada ✓');
+  loadVentas();
+}
+
+async function verDetalleVenta(venta_id, titulo) {
+  const { data } = await sb.from('ventas_detalle')
+    .select('*, productos(nombre,tipo)')
+    .eq('venta_id', venta_id);
+
+  document.getElementById('venta-detalle-titulo').textContent = titulo;
+  document.getElementById('venta-detalle-panel').style.display = 'block';
+
+  if(!data || !data.length) {
+    document.getElementById('venta-detalle-contenido').innerHTML = '<div class="empty">Sin detalle</div>';
+    return;
+  }
+
+  const totalKG = data.reduce((s,d) => s+Number(d.cantidad), 0);
+
+  document.getElementById('venta-detalle-contenido').innerHTML = `<table>
+    <tr><th>Producto</th><th>Tipo</th><th>Cantidad (kg)</th><th>Precio / kg</th><th>Moneda</th><th>Subtotal</th></tr>
+    ${data.map(d=>`<tr>
+      <td style="color:var(--text)">${d.productos?.nombre||'—'}</td>
+      <td><span class="badge badge-${d.productos?.tipo||'canal'}">${d.productos?.tipo||'—'}</span></td>
+      <td style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600">${Number(d.cantidad).toFixed(1)} kg</td>
+      <td>${Number(d.precio).toFixed(2)}</td>
+      <td style="color:var(--text3)">${d.moneda?.toUpperCase()}</td>
+      <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--accent2)">$${(Number(d.cantidad)*Number(d.precio)).toFixed(2)}</td>
+    </tr>`).join('')}
+    <tr style="border-top:1px solid var(--border)">
+      <td colspan="2" style="color:var(--text3);font-size:12px">TOTAL</td>
+      <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2)">${totalKG.toFixed(1)} kg</td>
+      <td colspan="3"></td>
+    </tr>
   </table>`;
 }
 
