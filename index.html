@@ -665,6 +665,106 @@
         </div>
       </div>
 
+      <!-- COMPRAS -->
+      <div class="page" id="page-compras">
+        <div class="page-title">Compras</div>
+        <div class="page-sub">Registro de compras de materia prima</div>
+
+        <div class="form-card">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:600;margin-bottom:16px;">Nueva compra</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Proveedor</label>
+              <select id="c-proveedor"></select>
+            </div>
+            <div class="form-group">
+              <label>Tipo documento</label>
+              <select id="c-tipo-doc">
+                <option value="factura">Factura formal</option>
+                <option value="nota_entrega">Nota de entrega</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Nº documento</label>
+              <input type="text" id="c-num-doc" placeholder="Ej: 0001234">
+            </div>
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" id="c-fecha">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Condición de pago</label>
+              <select id="c-condicion" onchange="toggleCreditoFields()">
+                <option value="credito">Crédito</option>
+                <option value="contado">Contado</option>
+              </select>
+            </div>
+            <div class="form-group" id="field-dias-credito">
+              <label>Días de crédito</label>
+              <input type="number" id="c-dias" placeholder="Ej: 15" min="1">
+            </div>
+            <div class="form-group">
+              <label>Sede destino</label>
+              <select id="c-sede"></select>
+            </div>
+            <div class="form-group">
+              <label>Notas</label>
+              <input type="text" id="c-notas" placeholder="Opcional">
+            </div>
+          </div>
+
+          <!-- DETALLE DE ITEMS -->
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin:20px 0 12px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;">Detalle de productos</div>
+
+          <div id="compra-items">
+            <!-- items dinámicos -->
+          </div>
+
+          <button class="btn-secondary" onclick="agregarItemCompra()" style="margin:0 0 20px">+ Agregar producto</button>
+
+          <!-- TOTALES -->
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;" id="compra-totales">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">
+              <div>
+                <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Total factura</div>
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text)" id="total-factura">—</div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Equivalente USD BCV</div>
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--accent2)" id="total-usd-bcv">—</div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Vence</div>
+                <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:600;color:var(--text2)" id="total-vence">—</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-action" onclick="guardarCompra()">Registrar compra</button>
+        </div>
+
+        <!-- LISTADO -->
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Historial de compras</div></div>
+          <div id="compras-table"><div class="loading">Cargando...</div></div>
+        </div>
+
+        <!-- DETALLE MODAL -->
+        <div id="compra-detalle-panel" style="display:none">
+          <div class="table-wrap" style="margin-top:16px">
+            <div class="table-head">
+              <div class="table-title" id="detalle-titulo">Detalle</div>
+              <button class="btn-secondary" onclick="document.getElementById('compra-detalle-panel').style.display='none'" style="font-size:12px;padding:6px 12px">Cerrar</button>
+            </div>
+            <div id="compra-detalle-contenido"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- PRODUCTOS -->
       <div class="page" id="page-productos">
         <div class="page-title">Catálogo de productos</div>
@@ -802,6 +902,7 @@ const NAV = {
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
     { id: 'inventario', label: 'Inventario', icon: '▦' },
     { id: 'movimientos', label: 'Movimientos', icon: '⇄' },
+    { id: 'compras', label: 'Compras', icon: '◳' },
     { id: 'productos', label: 'Productos', icon: '◉' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
     { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
@@ -811,6 +912,7 @@ const NAV = {
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
     { id: 'inventario', label: 'Inventario', icon: '▦' },
     { id: 'movimientos', label: 'Movimientos', icon: '⇄' },
+    { id: 'compras', label: 'Compras', icon: '◳' },
     { id: 'productos', label: 'Productos', icon: '◉' },
   ],
   finanzas: [
@@ -881,6 +983,7 @@ async function loadApp(user) {
   loadDashboard();
   loadCuentasSelect();
   loadMovimientosSelects();
+  loadComprasSelects();
 }
 
 function buildNav() {
@@ -909,6 +1012,7 @@ function navigate(pageId) {
   });
 
   if(pageId === 'movimientos') loadMovimientos();
+  if(pageId === 'compras') loadCompras();
   if(pageId === 'dashboard') loadDashboard();
   if(pageId === 'inventario') loadInventario();
   if(pageId === 'productos') loadProductos();
@@ -1094,6 +1198,282 @@ async function loadMaestros() {
   document.getElementById('clientes-table').innerHTML = `<table>
     <tr><th>Nombre</th><th>Tipo</th><th>Canal</th></tr>
     ${(clientes.data||[]).map(c=>`<tr><td style="color:var(--text)">${c.nombre}</td><td>${c.tipo}</td><td>${c.canal}</td></tr>`).join('')}
+  </table>`;
+}
+
+// COMPRAS
+let compraItems = [];
+let sedesData = [];
+let tasasData = [];
+let productosData = [];
+
+async function loadComprasSelects() {
+  const [provs, sedes, tasas, prods] = await Promise.all([
+    sb.from('proveedores').select('*').order('nombre'),
+    sb.from('sedes').select('*'),
+    sb.from('tasas_cambio').select('*').order('fecha', {ascending:false}).limit(20),
+    sb.from('productos').select('id,nombre,tipo').order('tipo').order('nombre')
+  ]);
+
+  sedesData = sedes.data || [];
+  tasasData = tasas.data || [];
+  productosData = prods.data || [];
+
+  const selProv = document.getElementById('c-proveedor');
+  if(selProv) selProv.innerHTML = (provs.data||[]).map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+
+  const selSede = document.getElementById('c-sede');
+  if(selSede) selSede.innerHTML = sedesData.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
+
+  // set fecha
+  const today = new Date().toISOString().split('T')[0];
+  const cf = document.getElementById('c-fecha');
+  if(cf) cf.value = today;
+
+  // init items
+  compraItems = [];
+  agregarItemCompra();
+}
+
+function toggleCreditoFields() {
+  const cond = document.getElementById('c-condicion')?.value;
+  const field = document.getElementById('field-dias-credito');
+  if(field) field.style.display = cond === 'credito' ? 'block' : 'none';
+  calcularTotalesCompra();
+}
+
+function agregarItemCompra() {
+  const idx = compraItems.length;
+  compraItems.push({ producto_id:'', cantidad_kg:0, precio:0, moneda:'usd', tipo_tasa:'BCV', valor_tasa:0 });
+
+  const container = document.getElementById('compra-items');
+  const div = document.createElement('div');
+  div.id = `item-${idx}`;
+  div.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;';
+
+  // get latest tasas
+  const bcvTasa = tasasData.find(t => t.nombre === 'BCV');
+  const parTasa = tasasData.find(t => t.nombre === 'Paralelo');
+
+  div.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Producto ${idx+1}</span>
+      ${idx > 0 ? `<button onclick="eliminarItemCompra(${idx})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1">×</button>` : ''}
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Producto</label>
+        <select id="item-prod-${idx}" onchange="updateItem(${idx})">
+          ${productosData.map(p => `<option value="${p.id}">${p.nombre} (${p.tipo})</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cantidad (kg)</label>
+        <input type="number" id="item-kg-${idx}" placeholder="0.00" step="0.01" min="0.01" oninput="updateItem(${idx})">
+      </div>
+      <div class="form-group">
+        <label>Precio unitario</label>
+        <input type="number" id="item-precio-${idx}" placeholder="0.00" step="0.01" min="0" oninput="updateItem(${idx})">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Moneda factura</label>
+        <select id="item-moneda-${idx}" onchange="updateItem(${idx})">
+          <option value="usd">USD dólar</option>
+          <option value="bs_bcv">Bs a BCV</option>
+          <option value="bs_paralelo">Bs a Paralelo</option>
+          <option value="usd_efectivo">USD efectivo (paralelo)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tasa usada (Bs/$)</label>
+        <input type="number" id="item-tasa-${idx}" placeholder="${bcvTasa ? bcvTasa.valor : '0.00'}" step="0.01" oninput="updateItem(${idx})" value="${bcvTasa ? bcvTasa.valor : ''}">
+      </div>
+      <div class="form-group">
+        <label>Subtotal USD BCV equiv.</label>
+        <input type="text" id="item-subtotal-${idx}" readonly style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600;background:var(--surface);" value="—">
+      </div>
+    </div>`;
+
+  container.appendChild(div);
+  updateItem(idx);
+}
+
+function eliminarItemCompra(idx) {
+  const el = document.getElementById(`item-${idx}`);
+  if(el) el.remove();
+  compraItems[idx] = null;
+  calcularTotalesCompra();
+}
+
+function updateItem(idx) {
+  const kg    = parseFloat(document.getElementById(`item-kg-${idx}`)?.value) || 0;
+  const precio = parseFloat(document.getElementById(`item-precio-${idx}`)?.value) || 0;
+  const moneda = document.getElementById(`item-moneda-${idx}`)?.value || 'usd';
+  const tasa  = parseFloat(document.getElementById(`item-tasa-${idx}`)?.value) || 1;
+  const bcvTasa = tasasData.find(t => t.nombre === 'BCV');
+  const bcvVal = bcvTasa ? bcvTasa.valor : tasa;
+
+  const total_original = kg * precio;
+  let usd_bcv_equiv = 0;
+
+  if(moneda === 'usd')           usd_bcv_equiv = total_original;
+  else if(moneda === 'bs_bcv')   usd_bcv_equiv = tasa > 0 ? total_original / tasa : 0;
+  else if(moneda === 'bs_paralelo') usd_bcv_equiv = tasa > 0 ? total_original / bcvVal : 0;
+  else if(moneda === 'usd_efectivo') usd_bcv_equiv = bcvVal > 0 ? total_original * (tasa / bcvVal) : total_original;
+
+  const subtotalEl = document.getElementById(`item-subtotal-${idx}`);
+  if(subtotalEl) subtotalEl.value = usd_bcv_equiv > 0 ? `$${usd_bcv_equiv.toFixed(2)}` : '—';
+
+  if(compraItems[idx]) {
+    compraItems[idx] = {
+      producto_id: document.getElementById(`item-prod-${idx}`)?.value,
+      cantidad_kg: kg,
+      precio,
+      moneda,
+      valor_tasa: tasa,
+      usd_bcv_equiv
+    };
+  }
+
+  calcularTotalesCompra();
+}
+
+function calcularTotalesCompra() {
+  const items = compraItems.filter(Boolean).filter(i => i.usd_bcv_equiv > 0);
+  const totalUSD = items.reduce((s, i) => s + (i.usd_bcv_equiv || 0), 0);
+
+  // calcular moneda principal del primer item para mostrar total original
+  const fecha = document.getElementById('c-fecha')?.value;
+  const dias  = parseInt(document.getElementById('c-dias')?.value) || 0;
+  const cond  = document.getElementById('c-condicion')?.value;
+
+  document.getElementById('total-usd-bcv').textContent = totalUSD > 0 ? `$${totalUSD.toFixed(2)} USD` : '—';
+  document.getElementById('total-factura').textContent = totalUSD > 0 ? `$${totalUSD.toFixed(2)}` : '—';
+
+  if(cond === 'credito' && fecha && dias > 0) {
+    const vence = new Date(fecha);
+    vence.setDate(vence.getDate() + dias);
+    document.getElementById('total-vence').textContent = vence.toLocaleDateString('es-VE');
+  } else if(cond === 'contado') {
+    document.getElementById('total-vence').textContent = 'Contado';
+  } else {
+    document.getElementById('total-vence').textContent = '—';
+  }
+}
+
+async function guardarCompra() {
+  const proveedor_id = document.getElementById('c-proveedor').value;
+  const tipo_doc     = document.getElementById('c-tipo-doc').value;
+  const num_doc      = document.getElementById('c-num-doc').value;
+  const fecha        = document.getElementById('c-fecha').value;
+  const condicion    = document.getElementById('c-condicion').value;
+  const dias         = parseInt(document.getElementById('c-dias')?.value) || 0;
+  const sede_id      = document.getElementById('c-sede').value;
+  const notas        = document.getElementById('c-notas').value;
+
+  const items = compraItems.filter(Boolean).filter(i => i.cantidad_kg > 0 && i.precio > 0);
+
+  if(!fecha) { alert('Seleccioná una fecha.'); return; }
+  if(items.length === 0) { alert('Agregá al menos un producto con cantidad y precio.'); return; }
+
+  // fecha de vencimiento
+  let fecha_vence = null;
+  if(condicion === 'credito' && dias > 0) {
+    const v = new Date(fecha);
+    v.setDate(v.getDate() + dias);
+    fecha_vence = v.toISOString().split('T')[0];
+  }
+
+  const total_usd_bcv = items.reduce((s, i) => s + (i.usd_bcv_equiv || 0), 0);
+
+  // 1. Insertar cabecera
+  const { data: compra, error: errC } = await sb.from('compras').insert({
+    proveedor_id,
+    fecha,
+    usuario_id: currentUser?.id || null,
+    notas: `${tipo_doc}${num_doc ? ' #'+num_doc : ''}${condicion === 'credito' ? ' | Crédito '+dias+'d' : ' | Contado'}${fecha_vence ? ' | Vence: '+fecha_vence : ''}${notas ? ' | '+notas : ''} | Total: $${total_usd_bcv.toFixed(2)} USD BCV`
+  }).select().single();
+
+  if(errC) { alert('Error al guardar compra: ' + errC.message); return; }
+
+  // 2. Insertar detalle
+  const detalles = items.map(i => ({
+    compra_id: compra.id,
+    producto_id: i.producto_id,
+    cantidad_kg: i.cantidad_kg,
+    precio: i.precio,
+    moneda: i.moneda.startsWith('bs') ? 'bs' : 'usd',
+    tasa_id: null
+  }));
+
+  const { error: errD } = await sb.from('compras_detalle').insert(detalles);
+  if(errD) { alert('Error en detalle: ' + errD.message); return; }
+
+  // 3. Actualizar inventario — entra como materia prima
+  for(const item of items) {
+    await upsertInventario(item.producto_id, sede_id, item.cantidad_kg);
+  }
+
+  showToast('Compra registrada ✓');
+
+  // reset form
+  compraItems = [];
+  document.getElementById('compra-items').innerHTML = '';
+  document.getElementById('c-num-doc').value = '';
+  document.getElementById('c-notas').value = '';
+  document.getElementById('c-dias').value = '';
+  agregarItemCompra();
+  loadCompras();
+}
+
+async function loadCompras() {
+  const { data } = await sb.from('compras')
+    .select('*, proveedores(nombre)')
+    .order('fecha', {ascending:false})
+    .limit(50);
+
+  const tb = document.getElementById('compras-table');
+  if(!data || !data.length) {
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">◳</div><p>Sin compras registradas aún.</p></div>';
+    return;
+  }
+
+  tb.innerHTML = `<table>
+    <tr><th>Fecha</th><th>Proveedor</th><th>Documento / Notas</th><th>Status</th><th></th></tr>
+    ${data.map(c => `<tr>
+      <td style="color:var(--text3)">${c.fecha}</td>
+      <td style="color:var(--text)">${c.proveedores?.nombre || '—'}</td>
+      <td style="color:var(--text2);font-size:12px">${c.notas || '—'}</td>
+      <td><span class="badge" style="background:rgba(39,166,106,0.12);color:#27a66a">registrada</span></td>
+      <td><button onclick="verDetalleCompra('${c.id}','${c.proveedores?.nombre || ''} - ${c.fecha}')" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Ver detalle</button></td>
+    </tr>`).join('')}
+  </table>`;
+}
+
+async function verDetalleCompra(compra_id, titulo) {
+  const { data } = await sb.from('compras_detalle')
+    .select('*, productos(nombre,tipo)')
+    .eq('compra_id', compra_id);
+
+  document.getElementById('detalle-titulo').textContent = titulo;
+  document.getElementById('compra-detalle-panel').style.display = 'block';
+
+  if(!data || !data.length) {
+    document.getElementById('compra-detalle-contenido').innerHTML = '<div class="empty">Sin detalle</div>';
+    return;
+  }
+
+  document.getElementById('compra-detalle-contenido').innerHTML = `<table>
+    <tr><th>Producto</th><th>Tipo</th><th>Cantidad (kg)</th><th>Precio unit.</th><th>Moneda</th></tr>
+    ${data.map(d => `<tr>
+      <td style="color:var(--text)">${d.productos?.nombre || '—'}</td>
+      <td><span class="badge badge-${d.productos?.tipo||'canal'}">${d.productos?.tipo||'—'}</span></td>
+      <td style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600">${Number(d.cantidad_kg).toFixed(1)} kg</td>
+      <td>${Number(d.precio).toFixed(2)}</td>
+      <td style="color:var(--text3)">${d.moneda?.toUpperCase()}</td>
+    </tr>`).join('')}
   </table>`;
 }
 
