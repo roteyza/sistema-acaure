@@ -1036,7 +1036,7 @@
             </div>
             <div class="form-group">
               <label>Moneda</label>
-              <select id="mf-moneda">
+              <select id="mf-moneda" onchange="toggleTasaFinanzas()">
                 <option value="usd">USD</option>
                 <option value="bs">Bs</option>
               </select>
@@ -1045,15 +1045,23 @@
           <div class="form-row">
             <div class="form-group">
               <label>Monto</label>
-              <input type="number" id="mf-monto" placeholder="0.00" step="0.01">
+              <input type="number" id="mf-monto" placeholder="0.00" step="0.01" oninput="calcularEquivFinanzas()">
             </div>
             <div class="form-group">
-              <label>Contraparte (receptor/emisor)</label>
+              <label>Receptor / Emisor</label>
               <input type="text" id="mf-contraparte" placeholder="Nombre">
             </div>
             <div class="form-group">
               <label>Fecha</label>
               <input type="date" id="mf-fecha">
+            </div>
+            <div class="form-group" id="field-tasa-fin" style="display:none">
+              <label>Tasa BCV (Bs/$)</label>
+              <input type="number" id="mf-tasa" placeholder="0.00" step="0.01" oninput="calcularEquivFinanzas()">
+            </div>
+            <div class="form-group" id="field-equiv-fin" style="display:none">
+              <label>Equivalente USD</label>
+              <input type="text" id="mf-equiv-usd" readonly style="color:var(--azul);font-weight:600;background:var(--surface2);" value="—">
             </div>
           </div>
           <div class="form-row">
@@ -1571,6 +1579,35 @@ async function loadFinanzas() {
       <td><span class="badge" style="background:rgba(90,85,77,0.3);color:var(--text3)">${m.status}</span></td>
     </tr>`).join('')}
   </table>`;
+}
+
+function toggleTasaFinanzas() {
+  const moneda = document.getElementById('mf-moneda')?.value;
+  const fieldTasa  = document.getElementById('field-tasa-fin');
+  const fieldEquiv = document.getElementById('field-equiv-fin');
+  if(moneda === 'bs') {
+    fieldTasa.style.display  = 'block';
+    fieldEquiv.style.display = 'block';
+    // pre-cargar tasa BCV
+    const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
+    const tasaEl = document.getElementById('mf-tasa');
+    if(tasaEl && bcvTasa && !tasaEl.value) tasaEl.value = bcvTasa.valor;
+    calcularEquivFinanzas();
+  } else {
+    fieldTasa.style.display  = 'none';
+    fieldEquiv.style.display = 'none';
+    document.getElementById('mf-equiv-usd').value = '—';
+  }
+}
+
+function calcularEquivFinanzas() {
+  const moneda = document.getElementById('mf-moneda')?.value;
+  if(moneda !== 'bs') return;
+  const monto = parseFloat(document.getElementById('mf-monto')?.value) || 0;
+  const tasa  = parseFloat(document.getElementById('mf-tasa')?.value) || 0;
+  const equiv = tasa > 0 ? monto / tasa : 0;
+  const equivEl = document.getElementById('mf-equiv-usd');
+  if(equivEl) equivEl.value = equiv > 0 ? `$${equiv.toFixed(2)} USD` : '—';
 }
 
 async function guardarMovFinanciero() {
