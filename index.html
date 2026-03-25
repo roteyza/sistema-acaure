@@ -714,14 +714,46 @@
           </div>
         </div>
 
+        <!-- GASTOS 30 DÍAS -->
+        <div style="font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Gastos últimos 30 días</div>
+        <div class="cards-grid" style="margin-bottom:24px">
+          <div class="stat-card">
+            <div class="stat-label">Materia prima</div>
+            <div class="stat-value" id="dash-gasto-mp">—</div>
+            <div class="stat-desc" id="dash-gasto-mp-kg">— kg</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Otros gastos</div>
+            <div class="stat-value" id="dash-gasto-otros">—</div>
+            <div class="stat-desc">nómina, servicios, alquileres...</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(0,58,112,0.2)">
+            <div class="stat-label">Total gastos</div>
+            <div class="stat-value" id="dash-gasto-total">—</div>
+            <div class="stat-desc" id="dash-gasto-margen-neto">—</div>
+          </div>
+        </div>
+
         <!-- CUENTAS -->
-        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Saldo de cuentas</div>
+        <div style="font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Saldo de cuentas</div>
+        <div class="cards-grid" style="margin-bottom:16px">
+          <div class="stat-card" style="border-color:rgba(0,58,112,0.2)">
+            <div class="stat-label">Total USD</div>
+            <div class="stat-value" id="dash-total-usd-cuentas">—</div>
+            <div class="stat-desc">suma cuentas en dólares</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(0,58,112,0.2)">
+            <div class="stat-label">Total Bs</div>
+            <div class="stat-value" id="dash-total-bs-cuentas">—</div>
+            <div class="stat-desc">suma cuentas en bolívares</div>
+          </div>
+        </div>
         <div class="table-wrap" style="margin-bottom:24px">
           <div id="dash-cuentas"><div class="loading">Cargando...</div></div>
         </div>
 
         <!-- CARTERA CxC -->
-        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Cartera — ventas por cobrar</div>
+        <div style="font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Cartera — ventas por cobrar</div>
         <div class="table-wrap">
           <div id="dash-cartera"><div class="loading">Cargando...</div></div>
         </div>
@@ -1459,6 +1491,34 @@ async function loadDashboard() {
   document.getElementById('dash-margen-pct').textContent = `${margenPct.toFixed(1)}% margen`;
   margenCard.style.borderColor = margen >= 0 ? 'rgba(39,166,106,0.3)' : 'rgba(192,57,43,0.3)';
 
+  // GASTOS — MP (compras) y Otros (egresos en movimientos financieros)
+  const gastosMP    = totalComprasUSD;
+  const gastosKgMP  = totalComprasKG;
+
+  // Otros gastos = egresos en movimientos financieros del período
+  const movFinPeriodo = (movFin.data||[]).filter(m => {
+    if(m.tipo !== 'egreso') return false;
+    return true; // todos los egresos registrados
+  });
+
+  let gastosOtros = 0;
+  movFinPeriodo.forEach(m => {
+    const monto = Number(m.monto);
+    if(m.moneda === 'usd') gastosOtros += monto;
+    else gastosOtros += monto / bcvTasa;
+  });
+
+  const gastoTotal   = gastosMP + gastosOtros;
+  const margenNeto   = totalVentasUSD - gastoTotal;
+  const margenNetoPct = totalVentasUSD > 0 ? (margenNeto / totalVentasUSD * 100) : 0;
+
+  document.getElementById('dash-gasto-mp').textContent     = `$${gastosMP.toFixed(0)}`;
+  document.getElementById('dash-gasto-mp-kg').textContent  = `${gastosKgMP.toFixed(0)} kg materia prima`;
+  document.getElementById('dash-gasto-otros').textContent  = `$${gastosOtros.toFixed(0)}`;
+  document.getElementById('dash-gasto-total').textContent  = `$${gastoTotal.toFixed(0)}`;
+  document.getElementById('dash-gasto-margen-neto').textContent = `Margen neto: $${margenNeto.toFixed(0)} (${margenNetoPct.toFixed(1)}%)`;
+  document.getElementById('dash-gasto-total').style.color = margenNeto >= 0 ? 'var(--azul)' : 'var(--danger)';
+
   // CUENTAS — saldo calculado desde movimientos financieros
   const saldos = {};
   (cuentas.data||[]).forEach(c => { saldos[c.id] = { cuenta: c, ingresos: 0, egresos: 0 }; });
@@ -1476,6 +1536,13 @@ async function loadDashboard() {
   } else {
     const totalUSD = cuentasArr.filter(c=>c.cuenta.moneda==='usd').reduce((s,c)=>s+(c.ingresos-c.egresos),0);
     const totalBS  = cuentasArr.filter(c=>c.cuenta.moneda==='bs').reduce((s,c)=>s+(c.ingresos-c.egresos),0);
+
+    // Tarjetas grandes de totales
+    document.getElementById('dash-total-usd-cuentas').textContent = `$${totalUSD.toFixed(2)}`;
+    document.getElementById('dash-total-bs-cuentas').textContent  = `Bs ${totalBS.toFixed(2)}`;
+    document.getElementById('dash-total-usd-cuentas').style.color = totalUSD >= 0 ? 'var(--azul)' : 'var(--danger)';
+    document.getElementById('dash-total-bs-cuentas').style.color  = totalBS  >= 0 ? 'var(--azul)' : 'var(--danger)';
+
     cuentasEl.innerHTML = `
       <table>
         <tr><th>Cuenta</th><th>Tipo</th><th>Ingresos</th><th>Egresos</th><th>Saldo</th></tr>
@@ -1486,18 +1553,10 @@ async function loadDashboard() {
             <td style="color:var(--text)">${cuenta.nombre}</td>
             <td style="color:var(--text3);font-size:12px">${cuenta.tipo}</td>
             <td style="color:var(--success)">${mon}${ingresos.toFixed(2)}</td>
-            <td style="color:#e74c3c">${mon}${egresos.toFixed(2)}</td>
-            <td style="font-family:'Syne',sans-serif;font-weight:700;color:${saldo>=0?'var(--accent2)':'#e74c3c'}">${mon}${saldo.toFixed(2)}</td>
+            <td style="color:var(--danger)">${mon}${egresos.toFixed(2)}</td>
+            <td style="font-family:'Sora',sans-serif;font-weight:700;color:${saldo>=0?'var(--azul)':'var(--danger)'}">${mon}${saldo.toFixed(2)}</td>
           </tr>`;
         }).join('')}
-        <tr style="border-top:2px solid var(--border)">
-          <td colspan="4" style="color:var(--text3);font-size:12px">Total USD</td>
-          <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2)">$${totalUSD.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td colspan="4" style="color:var(--text3);font-size:12px">Total Bs</td>
-          <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2)">Bs ${totalBS.toFixed(2)}</td>
-        </tr>
       </table>`;
   }
 
