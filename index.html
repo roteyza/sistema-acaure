@@ -1015,6 +1015,65 @@
 
 <div class="success-toast" id="toast"></div>
 
+<!-- MODAL COBRO -->
+<div id="modal-cobro" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:480px;margin:24px;animation:fadeUp 0.3s ease">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">Registrar cobro</div>
+    <div style="color:var(--text3);font-size:13px;margin-bottom:24px" id="modal-cobro-venta">—</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Forma de pago</label>
+        <select id="cobro-moneda">
+          <option value="usd">USD factura</option>
+          <option value="bs_bcv">Bs a BCV</option>
+          <option value="bs_paralelo">Bs a Paralelo</option>
+          <option value="zelle">Zelle USD</option>
+          <option value="cash">Cash USD</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tasa (Bs/$)</label>
+        <input type="number" id="cobro-tasa" placeholder="0.00" step="0.01">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Monto cobrado</label>
+        <input type="number" id="cobro-monto" placeholder="0.00" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Cuenta destino</label>
+        <select id="cobro-cuenta"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fecha cobro</label>
+        <input type="date" id="cobro-fecha">
+      </div>
+      <div class="form-group">
+        <label>¿Queda saldo pendiente?</label>
+        <select id="cobro-status">
+          <option value="pagada">No — venta completamente pagada</option>
+          <option value="parcial">Sí — pago parcial</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Nota</label>
+        <input type="text" id="cobro-nota" placeholder="Ej: Transferencia RF semana 12">
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn-action" onclick="confirmarCobro()">Confirmar cobro</button>
+      <button class="btn-secondary" onclick="cerrarModalCobro()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://rthwwkqilzqoeblpgzdw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0aHd3a3FpbHpxb2VibHBnemR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzAzOTksImV4cCI6MjA4OTg0NjM5OX0.bqhfJS24pn8uuEgsz1RTvpewG8WtCRv65PFacvrUbVs';
@@ -1023,6 +1082,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
 let currentRole = null;
+let cuentasSelectData = [];
 
 // NAV CONFIG por rol
 const NAV = {
@@ -1318,7 +1378,7 @@ async function loadDashboard() {
           <td style="color:var(--text3)">${v.sedes?.codigo||'—'}</td>
           <td style="color:var(--text2);font-size:12px">${v.notas||'—'}</td>
           <td><span class="badge" style="background:${v.status==='parcial'?'rgba(232,184,75,0.15)':'rgba(192,57,43,0.12)'};color:${v.status==='parcial'?'var(--accent2)':'#e74c3c'}">${v.status}</span></td>
-          <td><button onclick="marcarPagada('${v.id}')" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">✓ Cobrada</button></td>
+          <td><button onclick="abrirModalCobro('${v.id}','${(v.clientes?.nombre||'Detal')+' — '+v.fecha}')" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button></td>
         </tr>`).join('')}
       </table>`;
   }
@@ -1363,9 +1423,10 @@ async function loadInventario() {
 // CUENTAS SELECT
 async function loadCuentasSelect() {
   const { data } = await sb.from('cuentas').select('*').eq('activo', true);
+  cuentasSelectData = data || [];
   const sel = document.getElementById('mf-cuenta');
   if(!sel) return;
-  sel.innerHTML = data.map(c => `<option value="${c.id}">${c.nombre} (${c.moneda.toUpperCase()})</option>`).join('');
+  sel.innerHTML = cuentasSelectData.map(c => `<option value="${c.id}">${c.nombre} (${c.moneda.toUpperCase()})</option>`).join('');
 }
 
 // FINANZAS
@@ -1716,7 +1777,7 @@ async function loadVentas(filtro) {
       <td><span class="badge" style="background:${statusColor[v.status]||'#888'}22;color:${statusColor[v.status]||'#888'}">${v.status}</span></td>
       <td>
         <button onclick="verDetalleVenta('${v.id}','${v.clientes?.nombre||'Detal'} - ${v.fecha}')" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;margin-right:4px">Ver</button>
-        ${v.status !== 'pagada' ? `<button onclick="marcarPagada('${v.id}')" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">✓ Pagada</button>` : ''}
+        ${v.status !== 'pagada' ? `<button onclick="abrirModalCobro('${v.id}','${(v.clientes?.nombre||'Detal')+' — '+v.fecha}')" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button>` : ''}
       </td>
     </tr>`).join('')}
   </table>`;
@@ -2173,6 +2234,70 @@ async function loadMovimientos() {
       <td style="color:var(--text3);font-size:12px">${m.referencia || '—'}</td>
     </tr>`).join('')}
   </table>`;
+}
+
+// COBRO DE VENTAS
+let cobroVentaId = null;
+
+function abrirModalCobro(venta_id, descripcion) {
+  cobroVentaId = venta_id;
+  document.getElementById('modal-cobro-venta').textContent = descripcion;
+  document.getElementById('modal-cobro').style.display = 'flex';
+
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('cobro-fecha').value = today;
+
+  const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
+  if(bcvTasa) document.getElementById('cobro-tasa').value = bcvTasa.valor;
+
+  // cargar cuentas en el select
+  const selCuenta = document.getElementById('cobro-cuenta');
+  if(selCuenta && cuentasSelectData) {
+    selCuenta.innerHTML = cuentasSelectData.map(c=>`<option value="${c.id}">${c.nombre} (${c.moneda.toUpperCase()})</option>`).join('');
+  }
+}
+
+function cerrarModalCobro() {
+  document.getElementById('modal-cobro').style.display = 'none';
+  cobroVentaId = null;
+}
+
+async function confirmarCobro() {
+  const moneda  = document.getElementById('cobro-moneda').value;
+  const tasa    = parseFloat(document.getElementById('cobro-tasa').value) || 1;
+  const monto   = parseFloat(document.getElementById('cobro-monto').value);
+  const cuenta_id = document.getElementById('cobro-cuenta').value;
+  const fecha   = document.getElementById('cobro-fecha').value;
+  const status  = document.getElementById('cobro-status').value;
+  const nota    = document.getElementById('cobro-nota').value;
+
+  if(!monto || monto <= 0) { alert('Ingresá un monto válido.'); return; }
+  if(!fecha)               { alert('Seleccioná una fecha.'); return; }
+  if(!cobroVentaId)        { alert('Error: no hay venta seleccionada.'); return; }
+
+  // 1. Registrar movimiento financiero
+  const { error: errMF } = await sb.from('movimientos_financieros').insert({
+    fecha,
+    cuenta_id,
+    tipo: 'ingreso',
+    concepto: `Cobro venta${nota ? ' — '+nota : ''}`,
+    monto,
+    moneda: moneda.startsWith('bs') ? 'bs' : 'usd',
+    contraparte: nota || null,
+    status: 'registrado',
+    usuario_id: currentUser?.id || null
+  });
+
+  if(errMF) { alert('Error registrando movimiento: ' + errMF.message); return; }
+
+  // 2. Actualizar status de la venta
+  const { error: errV } = await sb.from('ventas').update({ status }).eq('id', cobroVentaId);
+  if(errV) { alert('Error actualizando venta: ' + errV.message); return; }
+
+  cerrarModalCobro();
+  showToast('Cobro registrado ✓');
+  loadVentas();
+  loadDashboard();
 }
 
 // TOAST
