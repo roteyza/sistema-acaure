@@ -1619,10 +1619,10 @@ async function guardarMovFinanciero() {
   const fecha = document.getElementById('mf-fecha').value;
   const concepto = document.getElementById('mf-concepto').value;
 
-  if(!monto || !concepto || !fecha) { alert('Completá todos los campos requeridos.'); return; }
+  if(!monto || !fecha) { alert('Completá monto y fecha.'); return; }
 
   const { error } = await sb.from('movimientos_financieros').insert({
-    tipo, cuenta_id, moneda, monto, contraparte, fecha, concepto,
+    tipo, cuenta_id, moneda, monto, contraparte, fecha, concepto: concepto || '—',
     status: 'registrado'
   });
 
