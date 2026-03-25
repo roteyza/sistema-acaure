@@ -2412,7 +2412,15 @@ function showToast(msg) {
 
 // Verificar sesión activa al cargar
 sb.auth.getSession().then(({ data: { session } }) => {
-  if(session) loadApp(session.user);
+  if(session) {
+    loadApp(session.user);
+  } else {
+    const btn = document.getElementById('btn-login');
+    if(btn) { btn.disabled = false; btn.textContent = 'Entrar al sistema'; }
+  }
+}).catch(() => {
+  const btn = document.getElementById('btn-login');
+  if(btn) { btn.disabled = false; btn.textContent = 'Entrar al sistema'; }
 });
 </script>
 </body>
