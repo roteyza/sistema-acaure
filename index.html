@@ -1410,7 +1410,7 @@ async function loadDashboard() {
     sb.from('compras_detalle').select('compra_id,cantidad_kg,precio,moneda,tasa_id'),
     sb.from('cuentas').select('*').eq('activo', true),
     sb.from('movimientos_financieros').select('cuenta_id,tipo,monto,moneda,tasa_id'),
-    sb.from('tasas_cambio').select('*').order('fecha',{ascending:false}).limit(6),
+    sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(10),
     sb.from('ventas').select('*, clientes(nombre), sedes(codigo)').in('status',['pendiente','parcial']).order('fecha',{ascending:false})
   ]);
 
@@ -1703,7 +1703,7 @@ async function guardarMovFinanciero() {
 
 // TASAS
 async function loadTasas() {
-  const { data } = await sb.from('tasas_cambio').select('*').order('fecha', {ascending:false}).limit(30);
+  const { data } = await sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(30);
   const tb = document.getElementById('tasas-table');
   if(!data || !data.length) { tb.innerHTML = '<div class="empty"><div>Sin tasas registradas.</div></div>'; return; }
   tb.innerHTML = `<table>
@@ -1762,7 +1762,7 @@ async function loadVentasSelects() {
     sb.from('clientes').select('*').order('nombre'),
     sb.from('sedes').select('*'),
     sb.from('productos').select('id,nombre,tipo').order('tipo').order('nombre'),
-    sb.from('tasas_cambio').select('*').order('fecha',{ascending:false}).limit(20)
+    sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(20)
   ]);
 
   clientesData = clientes.data || [];
@@ -2074,7 +2074,7 @@ async function loadComprasSelects() {
   const [provs, sedes, tasas, prods] = await Promise.all([
     sb.from('proveedores').select('*').order('nombre'),
     sb.from('sedes').select('*'),
-    sb.from('tasas_cambio').select('*').order('fecha', {ascending:false}).limit(20),
+    sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(20),
     sb.from('productos').select('id,nombre,tipo').order('tipo').order('nombre')
   ]);
 
