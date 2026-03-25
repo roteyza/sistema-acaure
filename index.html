@@ -3,23 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema Acaure</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>Rastro — Acaure</title>
+<link rel="icon" type="image/png" href="./RESPONSIVE-03.png">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
-    --bg: #0f0e0c;
-    --surface: #1a1814;
-    --surface2: #242118;
-    --border: #2e2b24;
-    --accent: #c8922a;
-    --accent2: #e8b84b;
-    --text: #f0ece3;
-    --text2: #9a9184;
-    --text3: #5a554d;
-    --danger: #c0392b;
-    --success: #27a66a;
-    --radius: 10px;
+    /* Acaure Brand Colors */
+    --azul:      #003A70;
+    --azul-dark: #002650;
+    --azul-mid:  #004d99;
+    --naranja:   #FF671D;
+    --naranja2:  #e8551a;
+    --crema:     #F2EEED;
+    --gris:      #272A31;
+    --taupe:     #91807A;
+
+    /* UI tokens */
+    --bg:       #F2EEED;
+    --surface:  #ffffff;
+    --surface2: #f7f5f4;
+    --border:   #e2dedd;
+    --border2:  #d0cac8;
+    --text:     #1a1a1a;
+    --text2:    #4a4542;
+    --text3:    #91807A;
+    --sidebar-bg: #003A70;
+    --sidebar-text: rgba(255,255,255,0.7);
+    --sidebar-active: #ffffff;
+    --sidebar-hover: rgba(255,255,255,0.1);
+    --sidebar-border: rgba(255,255,255,0.08);
+    --danger:   #c0392b;
+    --success:  #1a8c5a;
+    --radius:   10px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -27,7 +43,7 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Sora', sans-serif;
     font-size: 14px;
     min-height: 100vh;
   }
@@ -36,61 +52,89 @@
   #login-screen {
     min-height: 100vh;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background:
-      radial-gradient(ellipse 60% 50% at 50% -10%, rgba(200,146,42,0.15) 0%, transparent 70%),
-      var(--bg);
+    align-items: stretch;
+    background: var(--azul);
   }
 
-  .login-box {
-    width: 100%;
-    max-width: 420px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
+  .login-left {
+    flex: 1;
+    background: linear-gradient(to bottom, rgba(0,30,60,0.55) 0%, rgba(0,20,40,0.7) 100%),
+      url('./A02.png') center center / cover no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 48px;
+    position: relative;
+  }
+
+  .login-left-logo {
+    font-family: 'Sora', sans-serif;
+    font-size: 64px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -2px;
+    line-height: 1;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.4);
+  }
+
+  .login-left-logo span { color: var(--naranja); }
+
+  .login-left-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+
+  .login-left-tagline {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+
+  .login-left-coords {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 24px;
+    letter-spacing: 1px;
+  }
+
+  .login-right {
+    width: 460px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 48px 40px;
-    animation: fadeUp 0.5s ease both;
+  }
+
+  .login-form {
+    width: 100%;
+    animation: fadeUp 0.4s ease both;
   }
 
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  .login-logo {
-    text-align: center;
-    margin-bottom: 36px;
+  .login-form h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--azul);
+    margin-bottom: 6px;
   }
 
-  .login-logo .brand {
-    font-family: 'Syne', sans-serif;
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    color: var(--accent2);
-  }
-
-  .login-logo .sub {
-    font-size: 12px;
+  .login-form p {
+    font-size: 13px;
     color: var(--text3);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-top: 4px;
+    margin-bottom: 32px;
   }
 
-  .login-sep {
-    width: 40px;
-    height: 2px;
-    background: var(--accent);
-    margin: 20px auto;
-    border-radius: 2px;
-  }
-
-  .field {
-    margin-bottom: 16px;
-  }
+  .field { margin-bottom: 16px; }
 
   .field label {
     display: block;
@@ -99,51 +143,48 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 8px;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .field input {
     width: 100%;
     background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
     padding: 12px 16px;
     color: var(--text);
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Sora', sans-serif;
     font-size: 14px;
     outline: none;
     transition: border-color 0.2s;
   }
 
-  .field input:focus {
-    border-color: var(--accent);
-  }
+  .field input:focus { border-color: var(--azul); }
 
   .btn-primary {
     width: 100%;
-    background: var(--accent);
-    color: #0f0e0c;
+    background: var(--azul);
+    color: white;
     border: none;
-    border-radius: var(--radius);
+    border-radius: 8px;
     padding: 14px;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Sora', sans-serif;
     font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    font-weight: 600;
     cursor: pointer;
     margin-top: 8px;
     transition: background 0.2s, transform 0.1s;
   }
 
-  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:hover { background: var(--azul-mid); }
   .btn-primary:active { transform: scale(0.98); }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .error-msg {
-    background: rgba(192,57,43,0.15);
-    border: 1px solid rgba(192,57,43,0.3);
-    color: #e74c3c;
-    border-radius: var(--radius);
+    background: #fdf0ef;
+    border: 1px solid #f5c6c2;
+    color: var(--danger);
+    border-radius: 8px;
     padding: 10px 14px;
     font-size: 13px;
     margin-top: 12px;
@@ -151,12 +192,12 @@
   }
 
   /* ===== APP ===== */
-  #app-screen { display: none; min-height: 100vh; }
+  #app-screen { display: none; min-height: 100vh; background: var(--bg); }
 
   .topbar {
-    background: var(--surface);
+    background: white;
     border-bottom: 1px solid var(--border);
-    padding: 0 24px;
+    padding: 0 28px;
     height: 60px;
     display: flex;
     align-items: center;
@@ -167,11 +208,21 @@
   }
 
   .topbar-brand {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Sora', sans-serif;
     font-size: 20px;
-    font-weight: 800;
-    color: var(--accent2);
+    font-weight: 700;
+    color: var(--azul);
     letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-brand-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--naranja);
+    border-radius: 50%;
   }
 
   .topbar-user {
@@ -208,8 +259,9 @@
     font-size: 12px;
     cursor: pointer;
     transition: all 0.2s;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Sora', sans-serif;
   }
+
   .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
 
   .layout {
@@ -219,24 +271,47 @@
 
   /* SIDEBAR */
   .sidebar {
-    width: 220px;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 24px 0;
+    width: 230px;
+    background: var(--sidebar-bg);
+    padding: 28px 0;
     flex-shrink: 0;
   }
 
-  .nav-section {
-    padding: 0 12px;
+  .sidebar-logo {
+    font-family: 'Sora', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.5px;
+    padding: 0 20px;
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
+
+  .sidebar-logo-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--naranja);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .sidebar-divider {
+    height: 1px;
+    background: var(--sidebar-border);
+    margin: 16px 20px;
+  }
+
+  .nav-section { padding: 0 12px; }
 
   .nav-label {
     font-size: 10px;
-    color: var(--text3);
+    color: rgba(255,255,255,0.35);
     text-transform: uppercase;
     letter-spacing: 2px;
-    padding: 0 12px;
+    padding: 0 10px;
     margin-bottom: 6px;
     margin-top: 16px;
   }
@@ -247,7 +322,7 @@
     gap: 10px;
     padding: 10px 12px;
     border-radius: 8px;
-    color: var(--text2);
+    color: var(--sidebar-text);
     cursor: pointer;
     transition: all 0.15s;
     font-size: 13px;
@@ -258,40 +333,40 @@
     text-align: left;
   }
 
-  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item:hover { background: var(--sidebar-hover); color: white; }
 
   .nav-item.active {
-    background: rgba(200,146,42,0.12);
-    color: var(--accent2);
-    font-weight: 500;
+    background: var(--naranja);
+    color: white;
+    font-weight: 600;
   }
 
-  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-icon { font-size: 15px; width: 20px; text-align: center; opacity: 0.8; }
+  .nav-item.active .nav-icon { opacity: 1; }
 
   /* MAIN */
   .main {
     flex: 1;
     padding: 32px;
     overflow-y: auto;
-    background:
-      radial-gradient(ellipse 40% 30% at 80% 10%, rgba(200,146,42,0.04) 0%, transparent 60%),
-      var(--bg);
+    background: var(--bg);
   }
 
-  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page { display: none; animation: fadeIn 0.25s ease; }
   .page.active { display: block; }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   .page-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 24px;
+    font-family: 'Sora', sans-serif;
+    font-size: 22px;
     font-weight: 700;
     margin-bottom: 4px;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
+    color: var(--azul);
   }
 
   .page-sub {
@@ -309,14 +384,17 @@
   }
 
   .stat-card {
-    background: var(--surface);
+    background: white;
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
 
-  .stat-card:hover { border-color: var(--accent); }
+  .stat-card:hover {
+    border-color: var(--azul);
+    box-shadow: 0 2px 12px rgba(0,58,112,0.08);
+  }
 
   .stat-label {
     font-size: 11px;
@@ -324,13 +402,14 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 10px;
+    font-weight: 500;
   }
 
   .stat-value {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Sora', sans-serif;
     font-size: 26px;
     font-weight: 700;
-    color: var(--accent2);
+    color: var(--azul);
   }
 
   .stat-desc {
@@ -341,7 +420,7 @@
 
   /* TABLE */
   .table-wrap {
-    background: var(--surface);
+    background: white;
     border: 1px solid var(--border);
     border-radius: 12px;
     overflow: hidden;
@@ -354,19 +433,17 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background: white;
   }
 
   .table-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Sora', sans-serif;
     font-size: 14px;
     font-weight: 600;
+    color: var(--azul);
   }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
 
   th {
     text-align: left;
@@ -375,40 +452,41 @@
     color: var(--text3);
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-weight: 500;
+    font-weight: 600;
     border-bottom: 1px solid var(--border);
+    background: var(--surface2);
   }
 
   td {
     padding: 13px 20px;
-    border-bottom: 1px solid rgba(46,43,36,0.5);
+    border-bottom: 1px solid var(--border);
     color: var(--text2);
   }
 
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); color: var(--text); }
+  tr:hover td { background: #faf9f8; }
 
   .badge {
     display: inline-block;
     padding: 3px 10px;
     border-radius: 20px;
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
     text-transform: capitalize;
   }
 
-  .badge-premium  { background: rgba(200,146,42,0.15); color: var(--accent2); }
-  .badge-primera  { background: rgba(39,166,106,0.12); color: #2ecc71; }
-  .badge-segunda  { background: rgba(52,152,219,0.12); color: #5dade2; }
-  .badge-tercera  { background: rgba(142,68,173,0.12); color: #af7ac5; }
-  .badge-descarte { background: rgba(90,85,77,0.3);    color: var(--text3); }
-  .badge-canal    { background: rgba(192,57,43,0.12);  color: #e74c3c; }
-  .badge-corte    { background: rgba(200,146,42,0.12); color: var(--accent); }
-  .badge-preparado{ background: rgba(39,166,106,0.12); color: #27a66a; }
+  .badge-premium  { background: rgba(0,58,112,0.08); color: var(--azul); }
+  .badge-primera  { background: rgba(26,140,90,0.1);  color: #1a7a4a; }
+  .badge-segunda  { background: rgba(52,152,219,0.1); color: #2980b9; }
+  .badge-tercera  { background: rgba(145,128,122,0.15); color: var(--taupe); }
+  .badge-descarte { background: #f5f0ef; color: var(--text3); }
+  .badge-canal    { background: rgba(255,103,29,0.1); color: var(--naranja2); }
+  .badge-corte    { background: rgba(0,58,112,0.08);  color: var(--azul); }
+  .badge-preparado{ background: rgba(26,140,90,0.1);  color: #1a7a4a; }
 
   /* FORM */
   .form-card {
-    background: var(--surface);
+    background: white;
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 24px;
@@ -425,10 +503,11 @@
   .form-group label {
     display: block;
     font-size: 11px;
-    color: var(--text2);
+    color: var(--text3);
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 8px;
+    font-weight: 600;
   }
 
   .form-group input,
@@ -436,11 +515,11 @@
   .form-group textarea {
     width: 100%;
     background: var(--surface2);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: 8px;
     padding: 10px 14px;
     color: var(--text);
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Sora', sans-serif;
     font-size: 13px;
     outline: none;
     transition: border-color 0.2s;
@@ -448,39 +527,39 @@
 
   .form-group input:focus,
   .form-group select:focus,
-  .form-group textarea:focus { border-color: var(--accent); }
+  .form-group textarea:focus { border-color: var(--azul); }
 
-  .form-group select option { background: var(--surface2); }
+  .form-group select option { background: white; }
 
   .btn-action {
-    background: var(--accent);
-    color: #0f0e0c;
+    background: var(--naranja);
+    color: white;
     border: none;
     border-radius: 8px;
-    padding: 10px 20px;
-    font-family: 'Syne', sans-serif;
+    padding: 10px 22px;
+    font-family: 'Sora', sans-serif;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
   }
 
-  .btn-action:hover { background: var(--accent2); }
+  .btn-action:hover { background: var(--naranja2); }
 
   .btn-secondary {
-    background: var(--surface2);
+    background: white;
     color: var(--text2);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: 8px;
     padding: 10px 20px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Sora', sans-serif;
     font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
     margin-left: 8px;
   }
 
-  .btn-secondary:hover { color: var(--text); border-color: var(--text3); }
+  .btn-secondary:hover { border-color: var(--azul); color: var(--azul); }
 
   .loading {
     text-align: center;
@@ -501,7 +580,7 @@
     position: fixed;
     bottom: 24px;
     right: 24px;
-    background: var(--success);
+    background: var(--azul);
     color: white;
     padding: 12px 20px;
     border-radius: 10px;
@@ -511,13 +590,14 @@
     opacity: 0;
     transition: all 0.3s;
     z-index: 999;
+    border-left: 4px solid var(--naranja);
   }
 
   .success-toast.show { transform: translateY(0); opacity: 1; }
 
   .role-chip {
-    background: rgba(200,146,42,0.15);
-    color: var(--accent);
+    background: rgba(0,58,112,0.1);
+    color: var(--azul);
     border-radius: 4px;
     padding: 2px 8px;
     font-size: 11px;
@@ -525,35 +605,50 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
+
+  @media (max-width: 768px) {
+    .login-left { display: none; }
+    .login-right { width: 100%; }
+    .sidebar { width: 200px; }
+    .main { padding: 20px; }
+  }
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
 <div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">
-      <div class="brand">ACAURE</div>
-      <div class="sub">Sistema de Gestión</div>
-      <div class="login-sep"></div>
+  <div class="login-left">
+    <div class="login-left-logo">AC<span>A</span>URE</div>
+    <div class="login-left-sub">RASTRO — Sistema de Gestión</div>
+    <div class="login-left-tagline">Carnes, Llano y Familia</div>
+    <div class="login-left-coords">9°35'29"N 69°17'35"O</div>
+  </div>
+  <div class="login-right">
+    <div class="login-form">
+      <h2>Bienvenido</h2>
+      <p>Ingresá con tu cuenta para continuar</p>
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input type="email" id="email" placeholder="usuario@acaure.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-primary" id="btn-login" onclick="doLogin()">Entrar al sistema</button>
+      <div class="error-msg" id="error-msg"></div>
     </div>
-    <div class="field">
-      <label>Correo electrónico</label>
-      <input type="email" id="email" placeholder="usuario@acaure.com" autocomplete="email">
-    </div>
-    <div class="field">
-      <label>Contraseña</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="btn-primary" id="btn-login" onclick="doLogin()">Entrar al sistema</button>
-    <div class="error-msg" id="error-msg"></div>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app-screen">
   <div class="topbar">
-    <div class="topbar-brand">ACAURE</div>
+    <div class="topbar-brand">
+      <div class="topbar-brand-dot"></div>
+      RASTRO
+    </div>
     <div class="topbar-user">
       <div class="user-badge">
         <div class="user-dot"></div>
@@ -1182,7 +1277,14 @@ async function loadApp(user) {
 function buildNav() {
   const items = NAV[currentRole] || NAV.admin;
   const sidebar = document.getElementById('sidebar');
-  sidebar.innerHTML = '<div class="nav-label" style="padding:0 24px">Menú</div>';
+  sidebar.innerHTML = `
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-dot"></div>
+      RASTRO
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="nav-label" style="padding:0 22px">Módulos</div>
+  `;
   const sec = document.createElement('div');
   sec.className = 'nav-section';
   items.forEach(item => {
@@ -1318,7 +1420,7 @@ async function loadDashboard() {
   const margenEl = document.getElementById('dash-margen');
   const margenCard = document.getElementById('dash-margen-card');
   margenEl.textContent = `$${margen.toFixed(0)}`;
-  margenEl.style.color = margen >= 0 ? 'var(--success)' : '#e74c3c';
+  margenEl.style.color = margen >= 0 ? 'var(--success)' : 'var(--danger)';
   document.getElementById('dash-margen-pct').textContent = `${margenPct.toFixed(1)}% margen`;
   margenCard.style.borderColor = margen >= 0 ? 'rgba(39,166,106,0.3)' : 'rgba(192,57,43,0.3)';
 
