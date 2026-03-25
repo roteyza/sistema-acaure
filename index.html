@@ -837,9 +837,44 @@
           <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:600;margin-bottom:16px;">Nueva compra</div>
 
           <div class="form-row">
-            <div class="form-group">
+            <div class="form-group" style="position:relative">
               <label>Proveedor</label>
-              <select id="c-proveedor"></select>
+              <div style="display:flex;gap:6px;align-items:center">
+                <div style="flex:1;position:relative">
+                  <input type="text" id="c-proveedor-search" placeholder="Buscar proveedor..."
+                    autocomplete="off"
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;outline:none;"
+                    oninput="filtrarProveedores()" onfocus="mostrarProveedores()" onblur="setTimeout(()=>ocultarProveedores(),200)">
+                  <input type="hidden" id="c-proveedor">
+                  <div id="c-prov-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;max-height:200px;overflow-y:auto;margin-top:2px"></div>
+                </div>
+                <button type="button" onclick="abrirNuevoProveedor()"
+                  style="background:var(--azul);color:white;border:none;border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">+ Nuevo</button>
+              </div>
+              <!-- Mini form nuevo proveedor -->
+              <div id="form-nuevo-prov" style="display:none;background:var(--surface2);border:1.5px solid var(--azul);border-radius:8px;padding:12px;margin-top:8px">
+                <div style="font-size:12px;font-weight:600;color:var(--azul);margin-bottom:10px">Nuevo proveedor</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end">
+                  <div>
+                    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Nombre</label>
+                    <input type="text" id="np-nombre" placeholder="Ej: Minco"
+                      style="width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+                  </div>
+                  <div>
+                    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Tipo</label>
+                    <select id="np-tipo" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+                      <option value="matadero">Matadero</option>
+                      <option value="ganadero">Ganadero</option>
+                    </select>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <button type="button" onclick="guardarNuevoProveedor()"
+                      style="background:var(--naranja);color:white;border:none;border-radius:6px;padding:8px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer">Guardar</button>
+                    <button type="button" onclick="cerrarNuevoProveedor()"
+                      style="background:none;border:1.5px solid var(--border);color:var(--text3);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:12px;cursor:pointer">✕</button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="form-group">
               <label>Tipo documento</label>
@@ -957,9 +992,51 @@
                 <option value="detal_ccs">Detal CCS</option>
               </select>
             </div>
-            <div class="form-group" id="v-field-cliente">
+            <div class="form-group" id="v-field-cliente" style="position:relative">
               <label>Cliente</label>
-              <select id="v-cliente"></select>
+              <div style="display:flex;gap:6px;align-items:center">
+                <div style="flex:1;position:relative">
+                  <input type="text" id="v-cliente-search" placeholder="Buscar cliente..."
+                    autocomplete="off"
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;outline:none;"
+                    oninput="filtrarClientes()" onfocus="mostrarClientes()" onblur="setTimeout(()=>ocultarClientes(),200)">
+                  <input type="hidden" id="v-cliente">
+                  <div id="v-cli-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;max-height:200px;overflow-y:auto;margin-top:2px"></div>
+                </div>
+                <button type="button" onclick="abrirNuevoCliente()"
+                  style="background:var(--azul);color:white;border:none;border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">+ Nuevo</button>
+              </div>
+              <!-- Mini form nuevo cliente -->
+              <div id="form-nuevo-cli" style="display:none;background:var(--surface2);border:1.5px solid var(--azul);border-radius:8px;padding:12px;margin-top:8px">
+                <div style="font-size:12px;font-weight:600;color:var(--azul);margin-bottom:10px">Nuevo cliente</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end">
+                  <div>
+                    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Nombre</label>
+                    <input type="text" id="nc-nombre" placeholder="Ej: Roca Firme"
+                      style="width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+                  </div>
+                  <div>
+                    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Tipo</label>
+                    <select id="nc-tipo" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+                      <option value="b2b">B2B (Mayor)</option>
+                      <option value="b2c">B2C (Detal)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Canal</label>
+                    <select id="nc-canal" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+                      <option value="mayor">Mayor</option>
+                      <option value="detal">Detal</option>
+                    </select>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <button type="button" onclick="guardarNuevoCliente()"
+                      style="background:var(--naranja);color:white;border:none;border-radius:6px;padding:8px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer">Guardar</button>
+                    <button type="button" onclick="cerrarNuevoCliente()"
+                      style="background:none;border:1.5px solid var(--border);color:var(--text3);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:12px;cursor:pointer">✕</button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="form-group" id="v-field-cliente-libre" style="display:none">
               <label>Nombre cliente</label>
@@ -1766,6 +1843,7 @@ async function loadVentasSelects() {
   ]);
 
   clientesData = clientes.data || [];
+  clientesCache = [...clientesData];
 
   const selSede = document.getElementById('v-sede');
   if(selSede) selSede.innerHTML = (sedes.data||[]).map(s=>`<option value="${s.id}">${s.nombre}</option>`).join('');
@@ -1788,7 +1866,6 @@ function toggleVentaCanal() {
   const canal = document.getElementById('v-canal')?.value;
   const fieldCliente = document.getElementById('v-field-cliente');
   const fieldClienteLibre = document.getElementById('v-field-cliente-libre');
-  const selCliente = document.getElementById('v-cliente');
 
   if(canal === 'detal_ccs') {
     if(fieldCliente) fieldCliente.style.display = 'none';
@@ -1796,8 +1873,9 @@ function toggleVentaCanal() {
   } else {
     if(fieldCliente) fieldCliente.style.display = 'block';
     if(fieldClienteLibre) fieldClienteLibre.style.display = 'none';
+    // Filtrar cache a solo clientes B2B para el canal mayor
     const mayorClientes = clientesData.filter(c => c.tipo === 'b2b');
-    if(selCliente) selCliente.innerHTML = mayorClientes.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+    clientesCache = mayorClientes;
   }
 }
 
@@ -2070,6 +2148,139 @@ let sedesData = [];
 let tasasData = [];
 let productosData = [];
 
+// PROVEEDOR SEARCH
+let proveedoresCache = [];
+
+function filtrarProveedores() {
+  const q = document.getElementById('c-proveedor-search')?.value.toLowerCase() || '';
+  const filtered = proveedoresCache.filter(p => p.nombre.toLowerCase().includes(q));
+  renderProvDropdown(filtered);
+}
+
+function mostrarProveedores() {
+  renderProvDropdown(proveedoresCache);
+}
+
+function ocultarProveedores() {
+  const dd = document.getElementById('c-prov-dropdown');
+  if(dd) dd.style.display = 'none';
+}
+
+function renderProvDropdown(lista) {
+  const dd = document.getElementById('c-prov-dropdown');
+  if(!dd) return;
+  if(!lista.length) {
+    dd.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--text3)">Sin resultados — usá "+ Nuevo"</div>';
+  } else {
+    dd.innerHTML = lista.map(p => `
+      <div onclick="seleccionarProveedor('${p.id}','${p.nombre}')"
+        style="padding:10px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text)"
+        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='white'">
+        ${p.nombre} <span style="font-size:11px;color:var(--text3);margin-left:6px">${p.tipo||''}</span>
+      </div>`).join('');
+  }
+  dd.style.display = 'block';
+}
+
+function seleccionarProveedor(id, nombre) {
+  document.getElementById('c-proveedor').value = id;
+  document.getElementById('c-proveedor-search').value = nombre;
+  document.getElementById('c-proveedor-search').style.borderColor = 'var(--azul)';
+  ocultarProveedores();
+}
+
+function abrirNuevoProveedor() {
+  document.getElementById('form-nuevo-prov').style.display = 'block';
+  document.getElementById('np-nombre').focus();
+}
+
+function cerrarNuevoProveedor() {
+  document.getElementById('form-nuevo-prov').style.display = 'none';
+  document.getElementById('np-nombre').value = '';
+}
+
+async function guardarNuevoProveedor() {
+  const nombre = document.getElementById('np-nombre').value.trim();
+  const tipo   = document.getElementById('np-tipo').value;
+  if(!nombre) { alert('Ingresá el nombre del proveedor.'); return; }
+
+  const { data, error } = await sb.from('proveedores').insert({ nombre, tipo, activo: true }).select().single();
+  if(error) { alert('Error: ' + error.message); return; }
+
+  proveedoresCache.push(data);
+  proveedoresCache.sort((a,b) => a.nombre.localeCompare(b.nombre));
+  seleccionarProveedor(data.id, data.nombre);
+  cerrarNuevoProveedor();
+  showToast(`Proveedor "${nombre}" agregado ✓`);
+}
+
+// CLIENTE SEARCH
+let clientesCache = [];
+
+function filtrarClientes() {
+  const q = document.getElementById('v-cliente-search')?.value.toLowerCase() || '';
+  const filtered = clientesCache.filter(c => c.nombre.toLowerCase().includes(q));
+  renderCliDropdown(filtered);
+}
+
+function mostrarClientes() {
+  renderCliDropdown(clientesCache);
+}
+
+function ocultarClientes() {
+  const dd = document.getElementById('v-cli-dropdown');
+  if(dd) dd.style.display = 'none';
+}
+
+function renderCliDropdown(lista) {
+  const dd = document.getElementById('v-cli-dropdown');
+  if(!dd) return;
+  if(!lista.length) {
+    dd.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--text3)">Sin resultados — usá "+ Nuevo"</div>';
+  } else {
+    dd.innerHTML = lista.map(c => `
+      <div onclick="seleccionarCliente('${c.id}','${c.nombre}')"
+        style="padding:10px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text)"
+        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='white'">
+        ${c.nombre} <span style="font-size:11px;color:var(--text3);margin-left:6px">${c.canal||''}</span>
+      </div>`).join('');
+  }
+  dd.style.display = 'block';
+}
+
+function seleccionarCliente(id, nombre) {
+  document.getElementById('v-cliente').value = id;
+  document.getElementById('v-cliente-search').value = nombre;
+  document.getElementById('v-cliente-search').style.borderColor = 'var(--azul)';
+  ocultarClientes();
+}
+
+function abrirNuevoCliente() {
+  document.getElementById('form-nuevo-cli').style.display = 'block';
+  document.getElementById('nc-nombre').focus();
+}
+
+function cerrarNuevoCliente() {
+  document.getElementById('form-nuevo-cli').style.display = 'none';
+  document.getElementById('nc-nombre').value = '';
+}
+
+async function guardarNuevoCliente() {
+  const nombre = document.getElementById('nc-nombre').value.trim();
+  const tipo   = document.getElementById('nc-tipo').value;
+  const canal  = document.getElementById('nc-canal').value;
+  if(!nombre) { alert('Ingresá el nombre del cliente.'); return; }
+
+  const { data, error } = await sb.from('clientes').insert({ nombre, tipo, canal, activo: true }).select().single();
+  if(error) { alert('Error: ' + error.message); return; }
+
+  clientesCache.push(data);
+  clientesCache.sort((a,b) => a.nombre.localeCompare(b.nombre));
+  seleccionarCliente(data.id, data.nombre);
+  cerrarNuevoCliente();
+  showToast(`Cliente "${nombre}" agregado ✓`);
+}
+
 async function loadComprasSelects() {
   const [provs, sedes, tasas, prods] = await Promise.all([
     sb.from('proveedores').select('*').order('nombre'),
@@ -2081,9 +2292,10 @@ async function loadComprasSelects() {
   sedesData = sedes.data || [];
   tasasData = tasas.data || [];
   productosData = prods.data || [];
+  proveedoresCache = (provs.data||[]).sort((a,b) => a.nombre.localeCompare(b.nombre));
 
-  const selProv = document.getElementById('c-proveedor');
-  if(selProv) selProv.innerHTML = (provs.data||[]).map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+  const selProv = document.getElementById('c-proveedor-search');
+  if(selProv) selProv.value = '';
 
   const selSede = document.getElementById('c-sede');
   if(selSede) selSede.innerHTML = sedesData.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
