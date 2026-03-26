@@ -3144,34 +3144,59 @@ async function exportarFinanzas() {
 
 // ===== FACTURA =====
 async function abrirFactura(venta_id) {
-  // Mostrar modal con loading mientras carga
-  document.getElementById('factura-preview').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Cargando factura...</div>';
+  document.getElementById('factura-preview').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Cargando...</div>';
   document.getElementById('modal-factura').style.display = 'flex';
 
-  const { data: venta, error: errV } = await sb.from('ventas')
-    .select('id, fecha, tipo, status, notas, cliente_nombre, correlativo, cliente_id, sede_id, clientes(nombre,telefono,direccion), sedes(nombre,codigo)')
-    .eq('id', venta_id).maybeSingle();
+  try {
+    // Query 1: venta sin joins
+    const r1 = await sb.from('ventas').select('*').eq('id', venta_id).maybeSingle();
+    if(r1.error) { document.getElementById('factura-preview').innerHTML = `<div style="padding:24px;color:red">Error venta: ${r1.error.message}</div>`; return; }
+    const venta = r1.data;
+    if(!venta) { document.getElementById('factura-preview').innerHTML = '<div style="padding:24px;color:red">Venta no encontrada.</div>'; return; }
 
-  const { data: detalle, error: errD } = await sb.from('ventas_detalle')
-    .select('*, productos(nombre,unidad)')
-    .eq('venta_id', venta_id);
+    // Query 2: detalle sin joins
+    const r2 = await sb.from('ventas_detalle').select('*').eq('venta_id', venta_id);
+    if(r2.error) { document.getElementById('factura-preview').innerHTML = `<div style="padding:24px;color:red">Error detalle: ${r2.error.message}</div>`; return; }
+    const detalleRaw = r2.data || [];
 
-  if(errV) { document.getElementById('factura-preview').innerHTML = `<div style="padding:24px;color:red">Error cargando venta: ${errV.message}</div>`; return; }
-  if(!venta) { document.getElementById('factura-preview').innerHTML = '<div style="padding:24px;color:red">Venta no encontrada.</div>'; return; }
+    // Query 3: nombres de productos
+    const prodIds = [...new Set(detalleRaw.map(d => d.producto_id).filter(Boolean))];
+    let prodsMap = {};
+    if(prodIds.length > 0) {
+      const r3 = await sb.from('productos').select('id,nombre,unidad').in('id', prodIds);
+      (r3.data||[]).forEach(p => prodsMap[p.id] = p);
+    }
 
-  const clienteNombre = venta.clientes?.nombre || venta.cliente_nombre || 'Cliente';
-  const correlativo = venta.correlativo ? String(venta.correlativo).padStart(4,'0') : '—';
-  const fecha = venta.fecha;
-  const sede = venta.sedes?.nombre || venta.sedes?.codigo || '—';
+    // Query 4: nombre sede
+    let sedeNombre = '—';
+    if(venta.sede_id) {
+      const r4 = await sb.from('sedes').select('nombre,codigo').eq('id', venta.sede_id).maybeSingle();
+      sedeNombre = r4.data?.nombre || r4.data?.codigo || '—';
+    }
 
-  // Tasa del día para referencia en Bs
-  const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
-  const tasaRef = bcvTasa ? bcvTasa.valor : null;
+    // Query 5: nombre cliente si tiene cliente_id
+    let clienteNombreDB = null;
+    if(venta.cliente_id) {
+      const r5 = await sb.from('clientes').select('nombre').eq('id', venta.cliente_id).maybeSingle();
+      clienteNombreDB = r5.data?.nombre || null;
+    }
 
-  const items = detalle || [];
-  const subtotal = items.reduce((s,d) => s + Number(d.cantidad)*Number(d.precio), 0);
+    const detalle = detalleRaw.map(d => ({ ...d, productos: prodsMap[d.producto_id] || null }));
+    const venta_ext = { ...venta, clientes: clienteNombreDB ? { nombre: clienteNombreDB } : null, sedes: { nombre: sedeNombre } };
 
-  const filas = items.map(d => {
+    const clienteNombre = venta_ext.clientes?.nombre || venta.cliente_nombre || 'Cliente';
+    const correlativo = venta.correlativo ? String(venta.correlativo).padStart(4,'0') : '—';
+    const fecha = venta.fecha;
+    const sede = venta_ext.sedes?.nombre || venta_ext.sedes?.codigo || '—';
+
+    // Tasa del día para referencia en Bs
+    const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
+    const tasaRef = bcvTasa ? bcvTasa.valor : null;
+
+    const items = detalle || [];
+    const subtotal = items.reduce((s,d) => s + Number(d.cantidad)*Number(d.precio), 0);
+
+    const filas = items.map(d => {
     const prod = d.productos;
     const unidad = prod?.unidad || 'kg';
     const cant = Number(d.cantidad);
@@ -3183,13 +3208,13 @@ async function abrirFactura(venta_id) {
       <td style="text-align:right">$${precio.toFixed(2)}</td>
       <td style="text-align:right;font-weight:600">$${total.toFixed(2)}</td>
     </tr>`;
-  }).join('');
+    }).join('');
 
-  const tasaLineaBs = tasaRef
+    const tasaLineaBs = tasaRef
     ? `<p style="font-size:11px;color:#888;margin-top:8px">Tasa BCV referencial: Bs ${Number(tasaRef).toFixed(2)} / $1 USD — Total Bs: ${(subtotal * tasaRef).toFixed(0)}</p>`
     : '';
 
-  const html_factura = `
+    const html_factura = `
   <div class="fact-header">
     <div>
       <div class="fact-logo">ACAURE</div>
@@ -3207,12 +3232,12 @@ async function abrirFactura(venta_id) {
     <div>
       <div class="fc-label">Cliente</div>
       <div class="fc-val">${clienteNombre}</div>
-      ${venta.clientes?.direccion || '' ? `<div style="font-size:11px;color:#888;margin-top:2px">${venta.clientes?.direccion||''}</div>` : ''}
+      ${venta_ext.clientes?.direccion || '' ? `<div style="font-size:11px;color:#888;margin-top:2px">${venta.clientes?.direccion||''}</div>` : ''}
     </div>
     <div>
       <div class="fc-label">Recibo Nº</div>
       <div class="fc-val">#${correlativo}</div>
-      ${venta.clientes?.telefono ? `<div style="font-size:11px;color:#888;margin-top:2px">${venta.clientes.telefono}</div>` : ''}
+      ${venta_ext.clientes?.telefono ? `<div style="font-size:11px;color:#888;margin-top:2px">${venta_ext.clientes?.telefono||''}</div>` : ''}
     </div>
     <div>
       <div class="fc-label">Fecha</div>
@@ -3254,9 +3279,11 @@ async function abrirFactura(venta_id) {
     <span>Generado por Sistema Rastro — Acaure</span>
   </div>`;
 
-  document.getElementById('factura-preview').innerHTML = html_factura;
-  document.getElementById('factura-print-area').innerHTML = html_factura;
-  // modal ya está abierto desde el inicio de la función
+    document.getElementById('factura-preview').innerHTML = html_factura;
+    document.getElementById('factura-print-area').innerHTML = html_factura;
+  } catch(e) {
+    document.getElementById('factura-preview').innerHTML = `<div style="padding:24px;color:red">Error inesperado: ${e.message}</div>`;
+  }
 }
 
 function cerrarModalFactura() {
@@ -3270,117 +3297,6 @@ function imprimirFactura() {
   setTimeout(() => { area.style.display = 'none'; }, 1000);
 }
 
-// ===== FACTURA =====
-let facturaVentaId = null;
-
-async function verFactura(venta_id) {
-  facturaVentaId = venta_id;
-  document.getElementById('modal-factura').style.display = 'flex';
-
-  // Cargar datos de la venta + detalle + cliente
-  const [ventaRes, detalleRes] = await Promise.all([
-    sb.from('ventas').select('*, clientes(nombre,tipo), sedes(nombre,codigo), cliente_nombre, correlativo').eq('id', venta_id).single(),
-    sb.from('ventas_detalle').select('*, productos(nombre,unidad,precio_base)').eq('venta_id', venta_id)
-  ]);
-
-  const v = ventaRes.data;
-  const detalle = detalleRes.data || [];
-  const cliente = v?.clientes?.nombre || v?.cliente_nombre || 'Consumidor Final';
-  const correlativo = v?.correlativo || '—';
-  const fecha = v?.fecha || '—';
-  const tasa = (tasasData||[]).find(t=>t.nombre==='BCV');
-  const tasaVal = tasa ? tasa.valor : null;
-
-  const subtotal = detalle.reduce((s,d) => s + (Number(d.cantidad) * Number(d.precio)), 0);
-
-  const filas = detalle.map(d => {
-    const und = d.productos?.unidad || 'kg';
-    const esUnd = und === 'und' || und === 'unidad';
-    const cant = esUnd ? `${Number(d.cantidad).toFixed(0)} Und.` : `${Number(d.cantidad).toFixed(2)} kg`;
-    const subtd = Number(d.cantidad) * Number(d.precio);
-    return `<tr style="border-bottom:1px solid #eee;">
-      <td style="padding:8px 6px">${cant}</td>
-      <td style="padding:8px 6px">${d.productos?.nombre||'—'}</td>
-      <td style="padding:8px 6px;text-align:right">$${Number(d.precio).toFixed(2)}</td>
-      <td style="padding:8px 6px;text-align:right;font-weight:600">$${subtd.toFixed(2)}</td>
-    </tr>`;
-  }).join('');
-
-  const tasaLinea = tasaVal
-    ? `<p style="font-size:11px;color:#888;margin-top:6px">Tasa de referencia BCV: Bs ${Number(tasaVal).toFixed(2)} / $1 USD · Total Bs referencia: Bs ${(subtotal * tasaVal).toFixed(0)}</p>`
-    : '';
-
-  document.getElementById('factura-contenido').innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;">
-      <div>
-        <div style="font-size:32px;font-weight:900;color:#111;letter-spacing:-1px">ACAURE</div>
-      </div>
-      <div style="text-align:right;font-size:12px;color:#444;line-height:1.7">
-        <strong>Acaure</strong><br>
-        Araure, Portuguesa<br>
-        Telf: 04120654903<br>
-        R.I.F: J298137819
-      </div>
-    </div>
-
-    <div style="border:1px solid #ddd;border-radius:6px;padding:14px 16px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
-      <div><strong>CLIENTE:</strong> ${cliente}</div>
-      <div style="text-align:right"><strong>RECIBO:</strong> #${correlativo}</div>
-      <div><strong>FECHA:</strong> ${fecha}</div>
-    </div>
-
-    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
-      <thead>
-        <tr style="border-bottom:2px solid #111;">
-          <th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Cantidad</th>
-          <th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Descripción</th>
-          <th style="padding:8px 6px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Precio USD</th>
-          <th style="padding:8px 6px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Total USD</th>
-        </tr>
-      </thead>
-      <tbody>${filas}</tbody>
-    </table>
-
-    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-      <div style="min-width:220px;">
-        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
-          <span>SUBTOTAL USD:</span><span style="font-weight:600">$${subtotal.toFixed(2)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:2px solid #111;font-size:15px;font-weight:700;">
-          <span>TOTAL USD:</span><span>$${subtotal.toFixed(2)}</span>
-        </div>
-      </div>
-    </div>
-
-    ${tasaLinea}
-
-    <div style="margin-top:24px;border-top:1px solid #ddd;padding-top:12px;">
-      <strong style="font-size:12px">Observaciones:</strong>
-      <div style="min-height:32px;font-size:12px;color:#666;margin-top:4px">${v?.notas||''}</div>
-    </div>`;
-}
-
-function cerrarFactura() {
-  document.getElementById('modal-factura').style.display = 'none';
-}
-
-function imprimirFactura() {
-  const contenido = document.getElementById('factura-contenido').innerHTML;
-  const w = window.open('', '_blank', 'width=800,height=700');
-  w.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8">
-    <title>Factura Acaure</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <style>
-      * { margin:0; padding:0; box-sizing:border-box; }
-      body { font-family:'Sora',sans-serif; padding:40px; color:#111; font-size:13px; }
-      @media print { body { padding:20px; } }
-    </style>
-  </head><body>${contenido}</body></html>`);
-  w.document.close();
-  w.focus();
-  setTimeout(() => { w.print(); }, 500);
-}
 
 // ===== LISTA DE PRECIOS =====
 async function loadListaPrecios() {
