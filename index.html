@@ -1262,6 +1262,77 @@
   </div>
 </div>
 
+<!-- MODAL EDITAR PROVEEDOR -->
+<div id="modal-editar-prov" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
+  <div style="background:white;width:460px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
+    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:24px">Editar proveedor</div>
+    <input type="hidden" id="ep-id">
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Nombre</label>
+      <input type="text" id="ep-nombre"
+        style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+    </div>
+    <div class="form-group" style="margin-bottom:24px">
+      <label>Tipo</label>
+      <select id="ep-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+        <option value="matadero">Matadero</option>
+        <option value="ganadero">Ganadero</option>
+        <option value="distribuidor">Distribuidor</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="guardarEditarProveedor()" class="btn-action" style="flex:1">Guardar cambios</button>
+      <button onclick="cerrarEditarProveedor()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR CLIENTE -->
+<div id="modal-editar-cli" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
+  <div style="background:white;width:500px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
+    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:24px">Editar cliente</div>
+    <input type="hidden" id="ec-id">
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="ec-nombre"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" id="ec-telefono"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+    </div>
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="ec-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <option value="b2b">B2B (Mayor)</option>
+          <option value="b2c">B2C (Detal)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Canal</label>
+        <select id="ec-canal" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <option value="mayor">Mayor</option>
+          <option value="detal">Detal</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:24px">
+      <label>Dirección</label>
+      <input type="text" id="ec-direccion"
+        style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="guardarEditarCliente()" class="btn-action" style="flex:1">Guardar cambios</button>
+      <button onclick="cerrarEditarCliente()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NUEVO CLIENTE -->
 <div id="modal-nuevo-cli" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
   <div style="background:white;width:500px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
@@ -1359,6 +1430,77 @@
 <div class="success-toast" id="toast"></div>
 
 <!-- MODAL COBRO -->
+<!-- MODAL EDITAR PROVEEDOR -->
+<div id="modal-editar-prov" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
+  <div style="background:white;width:460px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
+    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:24px">Editar proveedor</div>
+    <input type="hidden" id="ep-id">
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Nombre</label>
+      <input type="text" id="ep-nombre"
+        style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+    </div>
+    <div class="form-group" style="margin-bottom:24px">
+      <label>Tipo</label>
+      <select id="ep-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+        <option value="matadero">Matadero</option>
+        <option value="ganadero">Ganadero</option>
+        <option value="distribuidor">Distribuidor</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="guardarEditarProveedor()" class="btn-action" style="flex:1">Guardar cambios</button>
+      <button onclick="cerrarEditarProveedor()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR CLIENTE -->
+<div id="modal-editar-cli" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
+  <div style="background:white;width:500px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
+    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:24px">Editar cliente</div>
+    <input type="hidden" id="ec-id">
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="ec-nombre"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" id="ec-telefono"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+    </div>
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="ec-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <option value="b2b">B2B (Mayor)</option>
+          <option value="b2c">B2C (Detal)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Canal</label>
+        <select id="ec-canal" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <option value="mayor">Mayor</option>
+          <option value="detal">Detal</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:24px">
+      <label>Dirección</label>
+      <input type="text" id="ec-direccion"
+        style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="guardarEditarCliente()" class="btn-action" style="flex:1">Guardar cambios</button>
+      <button onclick="cerrarEditarCliente()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NUEVO CLIENTE -->
 <div id="modal-nuevo-cli" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
   <div style="background:white;width:500px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
@@ -2039,8 +2181,8 @@ async function guardarTasa() {
 async function loadMaestros() {
   const [sedes, provs, clientes] = await Promise.all([
     sb.from('sedes').select('*'),
-    sb.from('proveedores').select('*'),
-    sb.from('clientes').select('*')
+    sb.from('proveedores').select('*').order('nombre'),
+    sb.from('clientes').select('*').order('nombre')
   ]);
 
   document.getElementById('sedes-table').innerHTML = `<table>
@@ -2048,15 +2190,81 @@ async function loadMaestros() {
     ${(sedes.data||[]).map(s=>`<tr><td style="color:var(--text)">${s.nombre}</td><td style="color:var(--text3)">${s.codigo}</td></tr>`).join('')}
   </table>`;
 
+  const btnEditar = 'background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer';
+
   document.getElementById('prov-table').innerHTML = `<table>
-    <tr><th>Nombre</th><th>Tipo</th></tr>
-    ${(provs.data||[]).map(p=>`<tr><td style="color:var(--text)">${p.nombre}</td><td><span class="badge badge-${p.tipo||'canal'}">${p.tipo||'—'}</span></td></tr>`).join('')}
+    <tr><th>Nombre</th><th>Tipo</th><th></th></tr>
+    ${(provs.data||[]).map(p=>`<tr>
+      <td style="color:var(--text)">${p.nombre}</td>
+      <td><span class="badge badge-${p.tipo||'canal'}">${p.tipo||'—'}</span></td>
+      <td><button style="${btnEditar}" onclick="abrirEditarProveedor('${p.id}','${(p.nombre||'').replace(/'/g,"\'")}','${p.tipo||''}')">✏ Editar</button></td>
+    </tr>`).join('')}
   </table>`;
 
   document.getElementById('clientes-table').innerHTML = `<table>
-    <tr><th>Nombre</th><th>Tipo</th><th>Canal</th></tr>
-    ${(clientes.data||[]).map(c=>`<tr><td style="color:var(--text)">${c.nombre}</td><td>${c.tipo}</td><td>${c.canal}</td></tr>`).join('')}
+    <tr><th>Nombre</th><th>Tipo</th><th>Canal</th><th>Teléfono</th><th></th></tr>
+    ${(clientes.data||[]).map(c=>`<tr>
+      <td style="color:var(--text)">${c.nombre}</td>
+      <td>${c.tipo||'—'}</td>
+      <td>${c.canal||'—'}</td>
+      <td style="color:var(--text3)">${c.telefono||'—'}</td>
+      <td><button style="${btnEditar}" onclick="abrirEditarCliente('${c.id}','${(c.nombre||'').replace(/'/g,"\'")}','${c.tipo||''}','${c.canal||''}','${c.telefono||''}','${(c.direccion||'').replace(/'/g,"\'")}')">✏ Editar</button></td>
+    </tr>`).join('')}
   </table>`;
+}
+
+// EDITAR PROVEEDOR
+function abrirEditarProveedor(id, nombre, tipo) {
+  document.getElementById('ep-id').value = id;
+  document.getElementById('ep-nombre').value = nombre;
+  document.getElementById('ep-tipo').value = tipo;
+  document.getElementById('modal-editar-prov').style.display = 'flex';
+}
+
+function cerrarEditarProveedor() {
+  document.getElementById('modal-editar-prov').style.display = 'none';
+}
+
+async function guardarEditarProveedor() {
+  const id     = document.getElementById('ep-id').value;
+  const nombre = document.getElementById('ep-nombre').value.trim();
+  const tipo   = document.getElementById('ep-tipo').value;
+  if(!nombre) { alert('El nombre no puede estar vacío.'); return; }
+  const { error } = await sb.from('proveedores').update({ nombre, tipo }).eq('id', id);
+  if(error) { alert('Error: ' + error.message); return; }
+  showToast('Proveedor actualizado ✓');
+  cerrarEditarProveedor();
+  loadMaestros();
+}
+
+// EDITAR CLIENTE
+function abrirEditarCliente(id, nombre, tipo, canal, telefono, direccion) {
+  document.getElementById('ec-id').value = id;
+  document.getElementById('ec-nombre').value = nombre;
+  document.getElementById('ec-tipo').value = tipo;
+  document.getElementById('ec-canal').value = canal;
+  document.getElementById('ec-telefono').value = telefono;
+  document.getElementById('ec-direccion').value = direccion;
+  document.getElementById('modal-editar-cli').style.display = 'flex';
+}
+
+function cerrarEditarCliente() {
+  document.getElementById('modal-editar-cli').style.display = 'none';
+}
+
+async function guardarEditarCliente() {
+  const id        = document.getElementById('ec-id').value;
+  const nombre    = document.getElementById('ec-nombre').value.trim();
+  const tipo      = document.getElementById('ec-tipo').value;
+  const canal     = document.getElementById('ec-canal').value;
+  const telefono  = document.getElementById('ec-telefono').value.trim();
+  const direccion = document.getElementById('ec-direccion').value.trim();
+  if(!nombre) { alert('El nombre no puede estar vacío.'); return; }
+  const { error } = await sb.from('clientes').update({ nombre, tipo, canal, telefono, direccion }).eq('id', id);
+  if(error) { alert('Error: ' + error.message); return; }
+  showToast('Cliente actualizado ✓');
+  cerrarEditarCliente();
+  loadMaestros();
 }
 
 // VENTAS
@@ -2435,22 +2643,31 @@ async function verDetalleVenta(venta_id, titulo) {
     return;
   }
 
-  const totalKG = data.reduce((s,d) => s+Number(d.cantidad), 0);
+  const totalKG  = data.reduce((s,d) => s + Number(d.cantidad), 0);
+  const totalUSD = data.reduce((s,d) => s + Number(d.cantidad)*Number(d.precio), 0);
 
   document.getElementById('venta-detalle-contenido').innerHTML = `<table>
-    <tr><th>Producto</th><th>Tipo</th><th>Cantidad (kg)</th><th>Precio / kg</th><th>Moneda</th><th>Subtotal</th></tr>
-    ${data.map(d=>`<tr>
-      <td style="color:var(--text)">${d.productos?.nombre||'—'}</td>
-      <td><span class="badge badge-${d.productos?.tipo||'canal'}">${d.productos?.tipo||'—'}</span></td>
-      <td style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600">${Number(d.cantidad).toFixed(1)} kg</td>
-      <td>${Number(d.precio).toFixed(2)}</td>
-      <td style="color:var(--text3)">${d.moneda?.toUpperCase()}</td>
-      <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--accent2)">$${(Number(d.cantidad)*Number(d.precio)).toFixed(2)}</td>
-    </tr>`).join('')}
-    <tr style="border-top:1px solid var(--border)">
-      <td colspan="2" style="color:var(--text3);font-size:12px">TOTAL</td>
-      <td style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2)">${totalKG.toFixed(1)} kg</td>
-      <td colspan="3"></td>
+    <tr><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Precio</th><th>Moneda</th><th>Subtotal</th></tr>
+    ${data.map(d=>{
+      const unidad = d.productos?.unidad || 'kg';
+      const esUnd = unidad === 'und' || unidad === 'unidad';
+      const cant = Number(d.cantidad);
+      const cantStr = esUnd ? cant.toFixed(0)+' und.' : cant.toFixed(2)+' kg';
+      const subtotal = cant * Number(d.precio);
+      return `<tr>
+        <td style="color:var(--text)">${d.productos?.nombre||'—'}</td>
+        <td><span class="badge badge-${d.productos?.tipo||'canal'}">${d.productos?.tipo||'—'}</span></td>
+        <td style="font-weight:600">${cantStr}</td>
+        <td>$${Number(d.precio).toFixed(2)}</td>
+        <td style="color:var(--text3)">${d.moneda?.toUpperCase()}</td>
+        <td style="font-weight:600;color:var(--azul)">$${subtotal.toFixed(2)}</td>
+      </tr>`;
+    }).join('')}
+    <tr style="border-top:2px solid var(--border);background:var(--surface2)">
+      <td colspan="2" style="color:var(--text3);font-size:12px;padding:8px 0">TOTALES</td>
+      <td style="font-weight:700;color:var(--text)">${totalKG.toFixed(2)} kg</td>
+      <td colspan="2"></td>
+      <td style="font-weight:700;color:var(--azul);font-size:15px">$${totalUSD.toFixed(2)}</td>
     </tr>
   </table>`;
 }
@@ -3144,157 +3361,117 @@ async function exportarFinanzas() {
 
 // ===== FACTURA =====
 async function abrirFactura(venta_id) {
-  document.getElementById('factura-preview').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Cargando...</div>';
-  document.getElementById('modal-factura').style.display = 'flex';
+  var prev = document.getElementById('factura-preview');
+  var modal = document.getElementById('modal-factura');
+  prev.innerHTML = '<div style="text-align:center;padding:40px;color:#999">Cargando...</div>';
+  modal.style.display = 'flex';
 
   try {
-    // Query 1: venta sin joins
-    const r1 = await sb.from('ventas').select('*').eq('id', venta_id).maybeSingle();
-    if(r1.error) { document.getElementById('factura-preview').innerHTML = `<div style="padding:24px;color:red">Error venta: ${r1.error.message}</div>`; return; }
-    const venta = r1.data;
-    if(!venta) { document.getElementById('factura-preview').innerHTML = '<div style="padding:24px;color:red">Venta no encontrada.</div>'; return; }
+    var r1 = await sb.from('ventas').select('*').eq('id', venta_id).maybeSingle();
+    if (!r1.data) { prev.innerHTML = '<div style="padding:24px;color:red">Venta no encontrada. ' + (r1.error ? r1.error.message : '') + '</div>'; return; }
+    var v = r1.data;
 
-    // Query 2: detalle sin joins
-    const r2 = await sb.from('ventas_detalle').select('*').eq('venta_id', venta_id);
-    if(r2.error) { document.getElementById('factura-preview').innerHTML = `<div style="padding:24px;color:red">Error detalle: ${r2.error.message}</div>`; return; }
-    const detalleRaw = r2.data || [];
+    var r2 = await sb.from('ventas_detalle').select('*').eq('venta_id', venta_id);
+    var items = r2.data || [];
 
-    // Query 3: nombres de productos
-    const prodIds = [...new Set(detalleRaw.map(d => d.producto_id).filter(Boolean))];
-    let prodsMap = {};
-    if(prodIds.length > 0) {
-      const r3 = await sb.from('productos').select('id,nombre,unidad').in('id', prodIds);
-      (r3.data||[]).forEach(p => prodsMap[p.id] = p);
+    var prodIds = items.map(function(d){ return d.producto_id; }).filter(Boolean);
+    var prodsMap = {};
+    if (prodIds.length > 0) {
+      var r3 = await sb.from('productos').select('id,nombre,unidad').in('id', prodIds);
+      (r3.data||[]).forEach(function(p){ prodsMap[p.id] = p; });
     }
 
-    // Query 4: nombre sede
-    let sedeNombre = '—';
-    if(venta.sede_id) {
-      const r4 = await sb.from('sedes').select('nombre,codigo').eq('id', venta.sede_id).maybeSingle();
-      sedeNombre = r4.data?.nombre || r4.data?.codigo || '—';
+    var sedeNombre = '—';
+    if (v.sede_id) {
+      var r4 = await sb.from('sedes').select('nombre,codigo').eq('id', v.sede_id).maybeSingle();
+      if (r4.data) sedeNombre = r4.data.nombre || r4.data.codigo || '—';
     }
 
-    // Query 5: nombre cliente si tiene cliente_id
-    let clienteNombreDB = null;
-    if(venta.cliente_id) {
-      const r5 = await sb.from('clientes').select('nombre').eq('id', venta.cliente_id).maybeSingle();
-      clienteNombreDB = r5.data?.nombre || null;
+    var clienteNombre = v.cliente_nombre || 'Consumidor Final';
+    if (v.cliente_id) {
+      var r5 = await sb.from('clientes').select('nombre').eq('id', v.cliente_id).maybeSingle();
+      if (r5.data && r5.data.nombre) clienteNombre = r5.data.nombre;
     }
 
-    const detalle = detalleRaw.map(d => ({ ...d, productos: prodsMap[d.producto_id] || null }));
-    const venta_ext = { ...venta, clientes: clienteNombreDB ? { nombre: clienteNombreDB } : null, sedes: { nombre: sedeNombre } };
+    var correlativo = v.correlativo ? String(v.correlativo).padStart(4,'0') : '—';
+    var subtotal = items.reduce(function(s,d){ return s + Number(d.cantidad)*Number(d.precio); }, 0);
+    var bcvTasa = (tasasData||[]).find(function(t){ return t.nombre==='BCV'; });
+    var tasaVal = bcvTasa ? Number(bcvTasa.valor) : null;
 
-    const clienteNombre = venta_ext.clientes?.nombre || venta.cliente_nombre || 'Cliente';
-    const correlativo = venta.correlativo ? String(venta.correlativo).padStart(4,'0') : '—';
-    const fecha = venta.fecha;
-    const sede = venta_ext.sedes?.nombre || venta_ext.sedes?.codigo || '—';
+    var filaHTML = '';
+    items.forEach(function(d) {
+      var prod = prodsMap[d.producto_id] || {};
+      var unidad = prod.unidad || 'kg';
+      var esUnd = unidad === 'und' || unidad === 'unidad';
+      var cant = Number(d.cantidad);
+      var precio = Number(d.precio);
+      var total = cant * precio;
+      var cantStr = esUnd ? (Math.round(cant) + ' Und.') : (cant.toFixed(2) + ' Kg');
+      filaHTML += '<tr style="border-bottom:1px solid #eee">';
+      filaHTML += '<td style="padding:8px 6px">' + cantStr + '</td>';
+      filaHTML += '<td style="padding:8px 6px">' + (prod.nombre || '—') + '</td>';
+      filaHTML += '<td style="padding:8px 6px;text-align:right">$' + precio.toFixed(2) + '</td>';
+      filaHTML += '<td style="padding:8px 6px;text-align:right;font-weight:600">$' + total.toFixed(2) + '</td>';
+      filaHTML += '</tr>';
+    });
 
-    // Tasa del día para referencia en Bs
-    const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
-    const tasaRef = bcvTasa ? bcvTasa.valor : null;
+    var tasaLinea = '';
+    if (tasaVal) {
+      tasaLinea = '<p style="font-size:11px;color:#888;margin-top:8px">Tasa BCV: Bs ' + tasaVal.toFixed(2) + ' / $1 — Total Bs ref: Bs ' + (subtotal * tasaVal).toFixed(0) + '</p>';
+    }
 
-    const items = detalle || [];
-    const subtotal = items.reduce((s,d) => s + Number(d.cantidad)*Number(d.precio), 0);
+    var out = '';
+    out += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #003A70">';
+    out += '<div style="font-size:36px;font-weight:900;color:#003A70;letter-spacing:-1px">ACAURE</div>';
+    out += '<div style="text-align:right;font-size:12px;color:#555;line-height:1.8"><strong>Acaure</strong><br>Araure, Portuguesa<br>Telf: 04120654903<br>R.I.F: J298137819</div>';
+    out += '</div>';
 
-    const filas = items.map(d => {
-    const prod = d.productos;
-    const unidad = prod?.unidad || 'kg';
-    const cant = Number(d.cantidad);
-    const precio = Number(d.precio);
-    const total = cant * precio;
-    return `<tr>
-      <td>${cant % 1 === 0 ? cant : cant.toFixed(2)} ${unidad === 'und' || unidad === 'unidad' ? 'Und.' : 'Kg'}</td>
-      <td>${prod?.nombre || '—'}</td>
-      <td style="text-align:right">$${precio.toFixed(2)}</td>
-      <td style="text-align:right;font-weight:600">$${total.toFixed(2)}</td>
-    </tr>`;
-    }).join('');
+    out += '<div style="border:1px solid #ddd;border-radius:6px;padding:12px 16px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:13px">';
+    out += '<div><div style="font-size:10px;color:#999;text-transform:uppercase;margin-bottom:2px">Cliente</div><strong>' + clienteNombre + '</strong></div>';
+    out += '<div><div style="font-size:10px;color:#999;text-transform:uppercase;margin-bottom:2px">Recibo N°</div><strong>#' + correlativo + '</strong></div>';
+    out += '<div><div style="font-size:10px;color:#999;text-transform:uppercase;margin-bottom:2px">Fecha</div><strong>' + (v.fecha||'—') + '</strong></div>';
+    out += '</div>';
 
-    const tasaLineaBs = tasaRef
-    ? `<p style="font-size:11px;color:#888;margin-top:8px">Tasa BCV referencial: Bs ${Number(tasaRef).toFixed(2)} / $1 USD — Total Bs: ${(subtotal * tasaRef).toFixed(0)}</p>`
-    : '';
+    out += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px">';
+    out += '<thead><tr style="border-bottom:2px solid #111">';
+    out += '<th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase">Cantidad</th>';
+    out += '<th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase">Descripción</th>';
+    out += '<th style="padding:8px 6px;text-align:right;font-size:11px;text-transform:uppercase">Precio USD</th>';
+    out += '<th style="padding:8px 6px;text-align:right;font-size:11px;text-transform:uppercase">Total USD</th>';
+    out += '</tr></thead>';
+    out += '<tbody>' + filaHTML + '</tbody></table>';
 
-    const html_factura = `
-  <div class="fact-header">
-    <div>
-      <div class="fact-logo">ACAURE</div>
-      <div style="font-size:11px;color:#888;margin-top:4px">Sistema Rastro</div>
-    </div>
-    <div class="fact-empresa">
-      <strong>Acaure</strong><br>
-      Araure, Portuguesa<br>
-      Telf: 04120654903<br>
-      R.I.F: J298137819
-    </div>
-  </div>
+    out += '<div style="display:flex;justify-content:flex-end;margin-bottom:8px">';
+    out += '<div style="min-width:220px">';
+    out += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span>SUBTOTAL USD:</span><span style="font-weight:600">$' + subtotal.toFixed(2) + '</span></div>';
+    out += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-top:2px solid #111;font-size:15px;font-weight:700"><span>TOTAL USD:</span><span>$' + subtotal.toFixed(2) + '</span></div>';
+    out += '</div></div>';
 
-  <div class="fact-cliente-box">
-    <div>
-      <div class="fc-label">Cliente</div>
-      <div class="fc-val">${clienteNombre}</div>
-      ${venta_ext.clientes?.direccion || '' ? `<div style="font-size:11px;color:#888;margin-top:2px">${venta.clientes?.direccion||''}</div>` : ''}
-    </div>
-    <div>
-      <div class="fc-label">Recibo Nº</div>
-      <div class="fc-val">#${correlativo}</div>
-      ${venta_ext.clientes?.telefono ? `<div style="font-size:11px;color:#888;margin-top:2px">${venta_ext.clientes?.telefono||''}</div>` : ''}
-    </div>
-    <div>
-      <div class="fc-label">Fecha</div>
-      <div class="fc-val">${fecha}</div>
-    </div>
-  </div>
+    out += tasaLinea;
+    out += '<div style="margin-top:20px;border-top:1px solid #ddd;padding-top:12px"><strong style="font-size:12px">Observaciones:</strong><div style="min-height:32px;font-size:12px;color:#666;margin-top:4px"></div></div>';
+    out += '<div style="margin-top:16px;font-size:11px;color:#aaa;display:flex;justify-content:space-between"><span>Sede: ' + sedeNombre + '</span><span>Sistema Rastro — Acaure</span></div>';
 
-  <table class="fact-table">
-    <thead>
-      <tr>
-        <th style="width:80px">Cantidad</th>
-        <th>Descripción</th>
-        <th style="text-align:right;width:100px">Precio USD</th>
-        <th style="text-align:right;width:100px">Total USD</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${filas}
-    </tbody>
-  </table>
+    prev.innerHTML = out;
+    document.getElementById('factura-print-area').innerHTML = out;
 
-  <div style="display:flex;justify-content:flex-end">
-    <table class="fact-totales">
-      <tr><td>Subtotal USD:</td><td>$${subtotal.toFixed(2)}</td></tr>
-      <tr><td>Servicios extras USD:</td><td>$0.00</td></tr>
-      <tr class="fact-total-final"><td><strong>TOTAL USD:</strong></td><td><strong>$${subtotal.toFixed(2)}</strong></td></tr>
-    </table>
-  </div>
-
-  ${tasaLineaBs}
-
-  <div style="margin-top:20px">
-    <div class="fact-obs-label">Observaciones</div>
-    <div class="fact-obs"></div>
-  </div>
-
-  <div class="fact-footer">
-    <span>Sede: ${sede}</span>
-    <span>Generado por Sistema Rastro — Acaure</span>
-  </div>`;
-
-    document.getElementById('factura-preview').innerHTML = html_factura;
-    document.getElementById('factura-print-area').innerHTML = html_factura;
   } catch(e) {
-    document.getElementById('factura-preview').innerHTML = `<div style="padding:24px;color:red">Error inesperado: ${e.message}</div>`;
+    prev.innerHTML = '<div style="padding:24px;color:red">Error: ' + e.message + '</div>';
   }
 }
-
 function cerrarModalFactura() {
   document.getElementById('modal-factura').style.display = 'none';
 }
 
 function imprimirFactura() {
-  const area = document.getElementById('factura-print-area');
-  area.style.display = 'block';
-  window.print();
-  setTimeout(() => { area.style.display = 'none'; }, 1000);
+  var contenido = document.getElementById('factura-print-area').innerHTML;
+  var w = window.open('', '_blank', 'width=800,height=700');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Factura Acaure</title>');
+  w.document.write('<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;900&display=swap" rel="stylesheet">');
+  w.document.write('<style>* { margin:0; padding:0; box-sizing:border-box; } body { font-family: Sora, sans-serif; padding:40px; color:#111; font-size:13px; }</style>');
+  w.document.write('</head><body>' + contenido + '</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(function(){ w.print(); }, 600);
 }
 
 
