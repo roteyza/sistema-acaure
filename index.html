@@ -2423,8 +2423,8 @@ async function anularVenta(venta_id) {
 }
 
 async function verDetalleVenta(venta_id, titulo) {
-  const { data } = await sb.from('ventas_detalle')
-    .select('*, productos(nombre,tipo)')
+  const { data, error } = await sb.from('ventas_detalle')
+    .select('id, cantidad, precio, moneda, producto_id, productos(nombre,tipo,unidad)')
     .eq('venta_id', venta_id);
 
   document.getElementById('venta-detalle-titulo').textContent = titulo;
@@ -3149,8 +3149,8 @@ async function abrirFactura(venta_id) {
   document.getElementById('modal-factura').style.display = 'flex';
 
   const { data: venta, error: errV } = await sb.from('ventas')
-    .select('*, clientes(nombre,telefono,direccion), sedes(nombre,codigo), cliente_nombre, correlativo')
-    .eq('id', venta_id).single();
+    .select('id, fecha, tipo, status, notas, cliente_nombre, correlativo, cliente_id, sede_id, clientes(nombre,telefono,direccion), sedes(nombre,codigo)')
+    .eq('id', venta_id).maybeSingle();
 
   const { data: detalle, error: errD } = await sb.from('ventas_detalle')
     .select('*, productos(nombre,unidad)')
