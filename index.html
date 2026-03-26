@@ -481,6 +481,37 @@
   .badge-tercera  { background: rgba(145,128,122,0.15); color: var(--taupe); }
   .badge-descarte { background: #f5f0ef; color: var(--text3); }
   .badge-canal    { background: rgba(255,103,29,0.1); color: var(--naranja2); }
+
+  /* ===== FACTURA PRINT ===== */
+  #modal-factura { display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center; }
+  #factura-preview {
+    background:white;width:720px;max-height:90vh;overflow-y:auto;border-radius:12px;padding:40px 48px;
+    font-family:'Sora',sans-serif;color:#1a1a1a;
+  }
+  .fact-header { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid #003A70; }
+  .fact-logo { font-size:36px;font-weight:700;color:#003A70;letter-spacing:-1px; }
+  .fact-empresa { text-align:right;font-size:12px;color:#555;line-height:1.7; }
+  .fact-empresa strong { font-size:14px;color:#1a1a1a; }
+  .fact-cliente-box { border:1px solid #ddd;border-radius:6px;padding:12px 16px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px; }
+  .fact-cliente-box .fc-label { color:#888;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;margin-bottom:2px; }
+  .fact-cliente-box .fc-val { font-weight:600;color:#1a1a1a; }
+  .fact-table { width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px; }
+  .fact-table th { background:#003A70;color:white;padding:8px 10px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.5px; }
+  .fact-table td { padding:8px 10px;border-bottom:1px solid #f0f0f0; }
+  .fact-table tr:last-child td { border-bottom:none; }
+  .fact-totales { margin-left:auto;width:280px;font-size:13px; }
+  .fact-totales tr td { padding:4px 0; }
+  .fact-totales tr td:last-child { text-align:right;font-weight:600; }
+  .fact-totales .fact-total-final td { border-top:2px solid #003A70;padding-top:8px;font-size:15px;color:#003A70;font-weight:700; }
+  .fact-footer { margin-top:24px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#888;display:flex;justify-content:space-between;align-items:flex-end; }
+  .fact-obs { margin-top:16px;padding:10px 14px;border:1px solid #eee;border-radius:6px;font-size:12px;color:#555;min-height:40px; }
+  .fact-obs-label { font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:#aaa;margin-bottom:4px; }
+
+  @media print {
+    body > * { display:none !important; }
+    #factura-print-area { display:block !important; position:fixed;top:0;left:0;width:100%;background:white;z-index:9999;padding:32px; }
+    #modal-factura { display:none !important; }
+  }
   .badge-corte    { background: rgba(0,58,112,0.08);  color: var(--azul); }
   .badge-preparado{ background: rgba(26,140,90,0.1);  color: #1a7a4a; }
 
@@ -848,8 +879,7 @@
                   <input type="hidden" id="c-proveedor">
                   <div id="c-prov-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;max-height:200px;overflow-y:auto;margin-top:2px"></div>
                 </div>
-                <button type="button" onclick="abrirNuevoProveedor()"
-                  style="background:var(--azul);color:white;border:none;border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">+ Nuevo</button>
+
               </div>
               <!-- Mini form nuevo proveedor -->
               <div id="form-nuevo-prov" style="display:none;background:var(--surface2);border:1.5px solid var(--azul);border-radius:8px;padding:12px;margin-top:8px">
@@ -890,6 +920,10 @@
             <div class="form-group">
               <label>Fecha</label>
               <input type="date" id="c-fecha">
+            </div>
+            <div class="form-group" style="display:flex;align-items:flex-end">
+              <button type="button" onclick="abrirNuevoProveedor()"
+                style="background:var(--azul);color:white;border:none;border-radius:8px;padding:10px 16px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;width:100%">+ Nuevo proveedor</button>
             </div>
           </div>
 
@@ -1004,7 +1038,7 @@
                   <div id="v-cli-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;max-height:200px;overflow-y:auto;margin-top:2px"></div>
                 </div>
                 <button type="button" onclick="abrirNuevoCliente()"
-                  style="background:var(--azul);color:white;border:none;border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">+ Nuevo</button>
+                  style="background:transparent;color:var(--azul);border:1.5px solid var(--azul);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;display:none" id="btn-nuevo-cliente-inline">+ Nuevo</button>
               </div>
               <!-- Mini form nuevo cliente -->
               <div id="form-nuevo-cli" style="display:none;background:var(--surface2);border:1.5px solid var(--azul);border-radius:8px;padding:12px;margin-top:8px">
@@ -1049,6 +1083,10 @@
             <div class="form-group">
               <label>Fecha</label>
               <input type="date" id="v-fecha">
+            </div>
+            <div class="form-group" id="v-field-nuevo-cliente" style="display:flex;align-items:flex-end">
+              <button type="button" onclick="abrirNuevoCliente()"
+                style="background:var(--azul);color:white;border:none;border-radius:8px;padding:10px 16px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;width:100%">+ Nuevo cliente</button>
             </div>
           </div>
           <div class="form-row">
@@ -1223,6 +1261,34 @@
         </div>
       </div>
 
+      <!-- LISTA DE PRECIOS -->
+      <div class="page" id="page-precios">
+        <div class="page-title">Lista de precios</div>
+        <div class="page-sub">Precios semanales por producto — actualizá cada lunes</div>
+        <div class="form-card">
+          <div style="font-family:'Sora',sans-serif;font-size:14px;font-weight:600;margin-bottom:16px;">Actualizar precio</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Producto</label>
+              <select id="lp-producto"></select>
+            </div>
+            <div class="form-group">
+              <label>Precio (USD)</label>
+              <input type="number" id="lp-precio" placeholder="0.00" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>Válido desde</label>
+              <input type="date" id="lp-fecha">
+            </div>
+          </div>
+          <button class="btn-action" onclick="guardarPrecio()">Guardar precio</button>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Precios vigentes</div></div>
+          <div id="precios-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
       <!-- MAESTROS -->
       <div class="page" id="page-maestros">
         <div class="page-title">Datos maestros</div>
@@ -1245,10 +1311,50 @@
   </div>
 </div>
 
+<!-- MODAL FACTURA -->
+<div id="modal-factura" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;overflow-y:auto;">
+  <div style="background:white;border-radius:12px;width:100%;max-width:680px;margin:24px auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+    <!-- Toolbar -->
+    <div style="background:var(--azul);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="color:white;font-weight:600;font-size:14px;">Vista previa — Factura</span>
+      <div style="display:flex;gap:8px;">
+        <button onclick="imprimirFactura()" style="background:var(--naranja);color:white;border:none;border-radius:6px;padding:8px 18px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">🖨 Imprimir / Guardar PDF</button>
+        <button onclick="cerrarFactura()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:6px;padding:8px 14px;font-family:'Sora',sans-serif;font-size:13px;cursor:pointer;">✕ Cerrar</button>
+      </div>
+    </div>
+    <!-- Contenido imprimible -->
+    <div id="factura-contenido" style="padding:40px;font-family:'Sora',sans-serif;color:#111;"></div>
+  </div>
+</div>
+
+<style>
+@media print {
+  body > *:not(#print-root) { display: none !important; }
+  #print-root { display: block !important; }
+}
+</style>
+
 <div class="success-toast" id="toast"></div>
 
 <!-- MODAL COBRO -->
-<div id="modal-cobro" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;">
+<!-- MODAL FACTURA -->
+<div id="modal-factura" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;">
+  <div style="background:white;width:760px;max-height:92vh;overflow-y:auto;border-radius:12px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #eee;position:sticky;top:0;background:white;z-index:10;">
+      <span style="font-weight:600;color:#003A70">Vista previa de factura</span>
+      <div style="display:flex;gap:8px">
+        <button onclick="imprimirFactura()" style="background:#003A70;color:white;border:none;border-radius:8px;padding:8px 18px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer">🖨 Imprimir / PDF</button>
+        <button onclick="cerrarModalFactura()" style="background:none;border:1.5px solid #ddd;color:#666;border-radius:8px;padding:8px 14px;font-family:'Sora',sans-serif;font-size:13px;cursor:pointer">✕ Cerrar</button>
+      </div>
+    </div>
+    <div id="factura-preview" style="padding:40px 48px;font-family:'Sora',sans-serif;color:#1a1a1a;"></div>
+  </div>
+</div>
+
+<!-- AREA OCULTA PARA PRINT -->
+<div id="factura-print-area" style="display:none;"></div>
+
+<div id="modal-cobro"  style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:480px;margin:24px;animation:fadeUp 0.3s ease">
     <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">Registrar cobro</div>
     <div style="color:var(--text3);font-size:13px;margin-bottom:24px" id="modal-cobro-venta">—</div>
@@ -1325,6 +1431,7 @@ const NAV = {
     { id: 'compras', label: 'Compras', icon: '◳' },
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
+    { id: 'precios', label: 'Lista de precios', icon: '◑' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
     { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
     { id: 'maestros', label: 'Datos maestros', icon: '◫' },
@@ -1336,6 +1443,7 @@ const NAV = {
     { id: 'compras', label: 'Compras', icon: '◳' },
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
+    { id: 'precios', label: 'Lista de precios', icon: '◑' },
   ],
   finanzas: [
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
@@ -1349,6 +1457,7 @@ const NAV = {
     { id: 'inventario', label: 'Inventario', icon: '▦' },
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
+    { id: 'precios', label: 'Lista de precios', icon: '◑' },
   ],
   oficina: [
     { id: 'ventas', label: 'Ventas', icon: '◐' },
@@ -1356,9 +1465,16 @@ const NAV = {
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
     { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
     { id: 'maestros', label: 'Datos maestros', icon: '◫' },
+    { id: 'precios', label: 'Lista de precios', icon: '◑' },
   ],
   socio: [
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
+    { id: 'inventario', label: 'Inventario', icon: '▦' },
+    { id: 'ventas', label: 'Ventas', icon: '◐' },
+    { id: 'compras', label: 'Compras', icon: '◳' },
+    { id: 'finanzas', label: 'Finanzas', icon: '◎' },
+    { id: 'productos', label: 'Productos', icon: '◉' },
+    { id: 'precios', label: 'Lista de precios', icon: '◑' },
   ]
 };
 
@@ -1459,6 +1575,7 @@ function navigate(pageId) {
   if(pageId === 'finanzas') loadFinanzas();
   if(pageId === 'tasas') { loadTasas(); initTasasForm(); }
   if(pageId === 'maestros') loadMaestros();
+  if(pageId === 'precios') loadListaPrecios();
 }
 
 async function doLogout() {
@@ -1647,7 +1764,7 @@ async function loadDashboard() {
         <tr><th>Fecha</th><th>Cliente</th><th>Sede</th><th>Detalle</th><th>Status</th><th></th></tr>
         ${cartera.data.map(v=>`<tr>
           <td style="color:var(--text3)">${v.fecha}</td>
-          <td style="color:var(--text)">${v.clientes?.nombre||'Detal'}</td>
+          <td style="color:var(--text)">${v.clientes?.nombre||v.cliente_nombre||'Detal'}</td>
           <td style="color:var(--text3)">${v.sedes?.codigo||'—'}</td>
           <td style="color:var(--text2);font-size:12px">${v.notas||'—'}</td>
           <td><span class="badge" style="background:${v.status==='parcial'?'rgba(232,184,75,0.15)':'rgba(192,57,43,0.12)'};color:${v.status==='parcial'?'var(--accent2)':'#e74c3c'}">${v.status}</span></td>
@@ -1852,14 +1969,22 @@ async function loadMaestros() {
 let ventaItems = [];
 let clientesData = [];
 let ventaFiltroActual = 'todas';
+let listaPreciosMap = {};
 
 async function loadVentasSelects() {
-  const [clientes, sedes, prods, tasas] = await Promise.all([
+  const [clientes, sedes, prods, tasas, precios] = await Promise.all([
     sb.from('clientes').select('*').order('nombre'),
     sb.from('sedes').select('*'),
-    sb.from('productos').select('id,nombre,tipo').order('tipo').order('nombre'),
-    sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(20)
+    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').order('tipo').order('nombre'),
+    sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(20),
+    sb.from('lista_precios').select('producto_id,precio,fecha_desde').eq('activo',true).order('fecha_desde',{ascending:false})
   ]);
+
+  // Construir mapa de precio vigente por producto (el más reciente activo)
+  listaPreciosMap = {};
+  (precios.data||[]).forEach(lp => {
+    if(!listaPreciosMap[lp.producto_id]) listaPreciosMap[lp.producto_id] = lp.precio;
+  });
 
   clientesData = clientes.data || [];
   clientesCache = [...clientesData];
@@ -1907,8 +2032,13 @@ function agregarItemVenta() {
   div.id = `vitem-${idx}`;
   div.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;';
 
-  const tasasBCV = (tasasData||[]).find(t=>t.nombre==='BCV');
-  const tasasPar = (tasasData||[]).find(t=>t.nombre==='Paralelo');
+  const canal = document.getElementById('v-canal')?.value || '';
+  const esDetal = canal === 'detal_ccs';
+
+  // Filtrar productos: detal ve solo preparados, mayor ve todos
+  const prodsFiltrados = esDetal
+    ? (productosData||[]).filter(p => p.categoria === 'preparados')
+    : (productosData||[]);
 
   div.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1918,17 +2048,23 @@ function agregarItemVenta() {
     <div class="form-row">
       <div class="form-group">
         <label>Producto</label>
-        <select id="vitem-prod-${idx}" onchange="updateItemVenta(${idx})">
-          ${(productosData||[]).map(p=>`<option value="${p.id}">${p.nombre} (${p.tipo})</option>`).join('')}
+        <select id="vitem-prod-${idx}" onchange="onProductoChange(${idx})">
+          <option value="">— Seleccionar —</option>
+          ${prodsFiltrados.map(p=>`<option value="${p.id}" data-unidad="${p.unidad||'kg'}">${p.nombre}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
-        <label>Cantidad (kg)</label>
-        <input type="number" id="vitem-kg-${idx}" placeholder="0.00" step="0.01" min="0.01" oninput="updateItemVenta(${idx})">
+        <label id="vitem-lbl-cant-${idx}">Cantidad</label>
+        <input type="number" id="vitem-kg-${idx}" placeholder="0" step="1" min="1" oninput="updateItemVenta(${idx})">
       </div>
       <div class="form-group">
-        <label>Precio / kg (USD)</label>
-        <input type="number" id="vitem-precio-${idx}" placeholder="0.00" step="0.01" oninput="updateItemVenta(${idx})">
+        <label id="vitem-lbl-precio-${idx}">Precio (USD)</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="number" id="vitem-precio-${idx}" placeholder="0.00" step="0.01" oninput="updateItemVenta(${idx})" style="flex:1">
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);white-space:nowrap;cursor:pointer">
+            <input type="checkbox" id="vitem-manual-${idx}" onchange="togglePrecioManual(${idx})"> Manual
+          </label>
+        </div>
       </div>
       <div class="form-group">
         <label>Total USD</label>
@@ -1937,7 +2073,57 @@ function agregarItemVenta() {
     </div>`;
 
   container.appendChild(div);
+  // Auto-seleccionar primer producto y cargar su precio
+  const sel = document.getElementById(`vitem-prod-${idx}`);
+  if(sel && prodsFiltrados.length > 0) {
+    sel.value = prodsFiltrados[0].id;
+    onProductoChange(idx);
+  }
+}
+
+function onProductoChange(idx) {
+  const sel = document.getElementById(`vitem-prod-${idx}`);
+  if(!sel || !sel.value) return;
+  const prod = (productosData||[]).find(p => p.id === sel.value);
+  if(!prod) return;
+
+  const esUnidad = prod.unidad === 'und' || prod.unidad === 'unidad';
+  const lblCant  = document.getElementById(`vitem-lbl-cant-${idx}`);
+  const lblPrecio = document.getElementById(`vitem-lbl-precio-${idx}`);
+  const inputKg  = document.getElementById(`vitem-kg-${idx}`);
+
+  if(lblCant) lblCant.textContent = esUnidad ? 'Cantidad (und.)' : 'Cantidad (kg)';
+  if(lblPrecio) lblPrecio.textContent = esUnidad ? 'Precio / und. (USD)' : 'Precio / kg (USD)';
+  if(inputKg) inputKg.step = esUnidad ? '1' : '0.01';
+
+  // Cargar precio desde lista_precios o precio_base, solo si no está en modo manual
+  const manual = document.getElementById(`vitem-manual-${idx}`)?.checked;
+  if(!manual) {
+    const precioVigente = listaPreciosMap[prod.id] || prod.precio_base || '';
+    const precioEl = document.getElementById(`vitem-precio-${idx}`);
+    if(precioEl) precioEl.value = precioVigente || '';
+  }
+
   updateItemVenta(idx);
+}
+
+function togglePrecioManual(idx) {
+  const manual = document.getElementById(`vitem-manual-${idx}`)?.checked;
+  const precioEl = document.getElementById(`vitem-precio-${idx}`);
+  if(manual) {
+    if(precioEl) { precioEl.focus(); precioEl.select(); }
+  } else {
+    // Restaurar precio de lista
+    const sel = document.getElementById(`vitem-prod-${idx}`);
+    if(sel && sel.value) {
+      const prod = (productosData||[]).find(p => p.id === sel.value);
+      if(prod) {
+        const precioVigente = listaPreciosMap[prod.id] || prod.precio_base || '';
+        if(precioEl) precioEl.value = precioVigente || '';
+      }
+    }
+    updateItemVenta(idx);
+  }
 }
 
 function eliminarItemVenta(idx) {
@@ -1994,10 +2180,11 @@ async function guardarVenta() {
   const sede_id  = document.getElementById('v-sede').value;
 
   let cliente_id = null;
+  let cliente_nombre = null;
+
   if(canal === 'detal_ccs') {
-    // buscar o usar cliente genérico detal
-    const clienteDetal = clientesData.find(c => c.canal === 'detal');
-    cliente_id = clienteDetal?.id || null;
+    // Guardar nombre libre del cliente detal
+    cliente_nombre = (document.getElementById('v-cliente-libre')?.value || '').trim() || null;
   } else {
     cliente_id = document.getElementById('v-cliente').value;
   }
@@ -2014,6 +2201,7 @@ async function guardarVenta() {
   const { data: venta, error: errV } = await sb.from('ventas').insert({
     fecha,
     cliente_id,
+    cliente_nombre,
     sede_id,
     tipo,
     status,
@@ -2054,7 +2242,7 @@ async function loadVentas(filtro) {
   if(filtro) ventaFiltroActual = filtro;
 
   let query = sb.from('ventas')
-    .select('*, clientes(nombre), sedes(codigo)')
+    .select('*, clientes(nombre), sedes(codigo), cliente_nombre, correlativo')
     .order('fecha', {ascending:false})
     .limit(100);
 
@@ -2076,12 +2264,13 @@ async function loadVentas(filtro) {
     <tr><th>Fecha</th><th>Cliente</th><th>Sede</th><th>Notas</th><th>Status</th><th></th></tr>
     ${data.map(v=>`<tr>
       <td style="color:var(--text3)">${v.fecha}</td>
-      <td style="color:var(--text)">${v.clientes?.nombre || 'Detal'}</td>
+      <td style="color:var(--text)">${v.clientes?.nombre || v.cliente_nombre || 'Detal'}</td>
       <td style="color:var(--text3)">${v.sedes?.codigo||'—'}</td>
       <td style="color:var(--text2);font-size:12px">${v.notas||'—'}</td>
       <td><span class="badge" style="background:${statusColor[v.status]||'#888'}22;color:${statusColor[v.status]||'#888'}">${v.status}</span></td>
       <td style="display:flex;gap:4px;align-items:center">
-        <button onclick="verDetalleVenta('${v.id}','${v.clientes?.nombre||'Detal'} - ${v.fecha}')" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Ver</button>
+        <button onclick="verDetalleVenta('${v.id}','${v.clientes?.nombre||v.cliente_nombre||'Detal'} - ${v.fecha}')" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Ver</button>
+        <button onclick="abrirFactura('${v.id}')" style="background:rgba(0,58,112,0.08);border:1px solid rgba(0,58,112,0.3);color:var(--azul);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">🧾 Factura</button>
         ${v.status !== 'pagada' && v.status !== 'anulada' ? `<button onclick="abrirModalCobro('${v.id}','${(v.clientes?.nombre||'Detal')+' — '+v.fecha}')" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button>` : ''}
         ${v.status !== 'anulada' ? `<button onclick="anularVenta('${v.id}')" style="background:none;border:1px solid #e2dedd;color:#c0392b;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Anular</button>` : '<span style="font-size:11px;color:var(--text3)">Anulada</span>'}
       </td>
@@ -2305,7 +2494,7 @@ async function loadComprasSelects() {
     sb.from('proveedores').select('*').order('nombre'),
     sb.from('sedes').select('*'),
     sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(20),
-    sb.from('productos').select('id,nombre,tipo').order('tipo').order('nombre')
+    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').order('tipo').order('nombre')
   ]);
 
   sedesData = sedes.data || [];
@@ -2842,6 +3031,308 @@ async function exportarFinanzas() {
     cuenta: m.cuentas?.nombre||'—', status: m.status
   }));
   exportarCSV(flat, 'finanzas');
+}
+
+// ===== FACTURA =====
+async function abrirFactura(venta_id) {
+  const { data: venta } = await sb.from('ventas')
+    .select('*, clientes(nombre), sedes(nombre,codigo), cliente_nombre, correlativo')
+    .eq('id', venta_id).single();
+
+  const { data: detalle } = await sb.from('ventas_detalle')
+    .select('*, productos(nombre,unidad)')
+    .eq('venta_id', venta_id);
+
+  if(!venta) { alert('No se pudo cargar la venta.'); return; }
+
+  const clienteNombre = venta.clientes?.nombre || venta.cliente_nombre || 'Cliente';
+  const correlativo = venta.correlativo ? String(venta.correlativo).padStart(4,'0') : '—';
+  const fecha = venta.fecha;
+  const sede = venta.sedes?.nombre || venta.sedes?.codigo || '—';
+
+  // Tasa del día para referencia en Bs
+  const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
+  const tasaRef = bcvTasa ? bcvTasa.valor : null;
+
+  const items = detalle || [];
+  const subtotal = items.reduce((s,d) => s + Number(d.cantidad)*Number(d.precio), 0);
+
+  const filas = items.map(d => {
+    const prod = d.productos;
+    const unidad = prod?.unidad || 'kg';
+    const cant = Number(d.cantidad);
+    const precio = Number(d.precio);
+    const total = cant * precio;
+    return `<tr>
+      <td>${cant % 1 === 0 ? cant : cant.toFixed(2)} ${unidad === 'und' || unidad === 'unidad' ? 'Und.' : 'Kg'}</td>
+      <td>${prod?.nombre || '—'}</td>
+      <td style="text-align:right">$${precio.toFixed(2)}</td>
+      <td style="text-align:right;font-weight:600">$${total.toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+
+  const tasaLineaBs = tasaRef
+    ? `<p style="font-size:11px;color:#888;margin-top:8px">Tasa BCV referencial: Bs ${Number(tasaRef).toFixed(2)} / $1 USD — Total Bs: ${(subtotal * tasaRef).toFixed(0)}</p>`
+    : '';
+
+  const html_factura = `
+  <div class="fact-header">
+    <div>
+      <div class="fact-logo">ACAURE</div>
+      <div style="font-size:11px;color:#888;margin-top:4px">Sistema Rastro</div>
+    </div>
+    <div class="fact-empresa">
+      <strong>Acaure</strong><br>
+      Araure, Portuguesa<br>
+      Telf: 04120654903<br>
+      R.I.F: J298137819
+    </div>
+  </div>
+
+  <div class="fact-cliente-box">
+    <div>
+      <div class="fc-label">Cliente</div>
+      <div class="fc-val">${clienteNombre}</div>
+    </div>
+    <div>
+      <div class="fc-label">Recibo Nº</div>
+      <div class="fc-val">#${correlativo}</div>
+    </div>
+    <div>
+      <div class="fc-label">Fecha</div>
+      <div class="fc-val">${fecha}</div>
+    </div>
+  </div>
+
+  <table class="fact-table">
+    <thead>
+      <tr>
+        <th style="width:80px">Cantidad</th>
+        <th>Descripción</th>
+        <th style="text-align:right;width:100px">Precio USD</th>
+        <th style="text-align:right;width:100px">Total USD</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${filas}
+    </tbody>
+  </table>
+
+  <div style="display:flex;justify-content:flex-end">
+    <table class="fact-totales">
+      <tr><td>Subtotal USD:</td><td>$${subtotal.toFixed(2)}</td></tr>
+      <tr><td>Servicios extras USD:</td><td>$0.00</td></tr>
+      <tr class="fact-total-final"><td><strong>TOTAL USD:</strong></td><td><strong>$${subtotal.toFixed(2)}</strong></td></tr>
+    </table>
+  </div>
+
+  ${tasaLineaBs}
+
+  <div style="margin-top:20px">
+    <div class="fact-obs-label">Observaciones</div>
+    <div class="fact-obs"></div>
+  </div>
+
+  <div class="fact-footer">
+    <span>Sede: ${sede}</span>
+    <span>Generado por Sistema Rastro — Acaure</span>
+  </div>`;
+
+  document.getElementById('factura-preview').innerHTML = html_factura;
+  document.getElementById('factura-print-area').innerHTML = html_factura;
+  document.getElementById('modal-factura').style.display = 'flex';
+}
+
+function cerrarModalFactura() {
+  document.getElementById('modal-factura').style.display = 'none';
+}
+
+function imprimirFactura() {
+  const area = document.getElementById('factura-print-area');
+  area.style.display = 'block';
+  window.print();
+  setTimeout(() => { area.style.display = 'none'; }, 1000);
+}
+
+// ===== FACTURA =====
+let facturaVentaId = null;
+
+async function verFactura(venta_id) {
+  facturaVentaId = venta_id;
+  document.getElementById('modal-factura').style.display = 'flex';
+
+  // Cargar datos de la venta + detalle + cliente
+  const [ventaRes, detalleRes] = await Promise.all([
+    sb.from('ventas').select('*, clientes(nombre,tipo), sedes(nombre,codigo), cliente_nombre, correlativo').eq('id', venta_id).single(),
+    sb.from('ventas_detalle').select('*, productos(nombre,unidad,precio_base)').eq('venta_id', venta_id)
+  ]);
+
+  const v = ventaRes.data;
+  const detalle = detalleRes.data || [];
+  const cliente = v?.clientes?.nombre || v?.cliente_nombre || 'Consumidor Final';
+  const correlativo = v?.correlativo || '—';
+  const fecha = v?.fecha || '—';
+  const tasa = (tasasData||[]).find(t=>t.nombre==='BCV');
+  const tasaVal = tasa ? tasa.valor : null;
+
+  const subtotal = detalle.reduce((s,d) => s + (Number(d.cantidad) * Number(d.precio)), 0);
+
+  const filas = detalle.map(d => {
+    const und = d.productos?.unidad || 'kg';
+    const esUnd = und === 'und' || und === 'unidad';
+    const cant = esUnd ? `${Number(d.cantidad).toFixed(0)} Und.` : `${Number(d.cantidad).toFixed(2)} kg`;
+    const subtd = Number(d.cantidad) * Number(d.precio);
+    return `<tr style="border-bottom:1px solid #eee;">
+      <td style="padding:8px 6px">${cant}</td>
+      <td style="padding:8px 6px">${d.productos?.nombre||'—'}</td>
+      <td style="padding:8px 6px;text-align:right">$${Number(d.precio).toFixed(2)}</td>
+      <td style="padding:8px 6px;text-align:right;font-weight:600">$${subtd.toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+
+  const tasaLinea = tasaVal
+    ? `<p style="font-size:11px;color:#888;margin-top:6px">Tasa de referencia BCV: Bs ${Number(tasaVal).toFixed(2)} / $1 USD · Total Bs referencia: Bs ${(subtotal * tasaVal).toFixed(0)}</p>`
+    : '';
+
+  document.getElementById('factura-contenido').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;">
+      <div>
+        <div style="font-size:32px;font-weight:900;color:#111;letter-spacing:-1px">ACAURE</div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:#444;line-height:1.7">
+        <strong>Acaure</strong><br>
+        Araure, Portuguesa<br>
+        Telf: 04120654903<br>
+        R.I.F: J298137819
+      </div>
+    </div>
+
+    <div style="border:1px solid #ddd;border-radius:6px;padding:14px 16px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+      <div><strong>CLIENTE:</strong> ${cliente}</div>
+      <div style="text-align:right"><strong>RECIBO:</strong> #${correlativo}</div>
+      <div><strong>FECHA:</strong> ${fecha}</div>
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+      <thead>
+        <tr style="border-bottom:2px solid #111;">
+          <th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Cantidad</th>
+          <th style="padding:8px 6px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Descripción</th>
+          <th style="padding:8px 6px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Precio USD</th>
+          <th style="padding:8px 6px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Total USD</th>
+        </tr>
+      </thead>
+      <tbody>${filas}</tbody>
+    </table>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <div style="min-width:220px;">
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+          <span>SUBTOTAL USD:</span><span style="font-weight:600">$${subtotal.toFixed(2)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:2px solid #111;font-size:15px;font-weight:700;">
+          <span>TOTAL USD:</span><span>$${subtotal.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+
+    ${tasaLinea}
+
+    <div style="margin-top:24px;border-top:1px solid #ddd;padding-top:12px;">
+      <strong style="font-size:12px">Observaciones:</strong>
+      <div style="min-height:32px;font-size:12px;color:#666;margin-top:4px">${v?.notas||''}</div>
+    </div>`;
+}
+
+function cerrarFactura() {
+  document.getElementById('modal-factura').style.display = 'none';
+}
+
+function imprimirFactura() {
+  const contenido = document.getElementById('factura-contenido').innerHTML;
+  const w = window.open('', '_blank', 'width=800,height=700');
+  w.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <title>Factura Acaure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { font-family:'Sora',sans-serif; padding:40px; color:#111; font-size:13px; }
+      @media print { body { padding:20px; } }
+    </style>
+  </head><body>${contenido}</body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { w.print(); }, 500);
+}
+
+// ===== LISTA DE PRECIOS =====
+async function loadListaPrecios() {
+  // Llenar select de productos
+  const sel = document.getElementById('lp-producto');
+  if(sel) {
+    const prods = productosData.length ? productosData
+      : (await sb.from('productos').select('id,nombre,unidad').order('nombre')).data || [];
+    sel.innerHTML = prods.map(p=>`<option value="${p.id}" data-unidad="${p.unidad||'kg'}">${p.nombre} (${p.unidad||'kg'})</option>`).join('');
+  }
+  // Fecha por defecto = hoy
+  const fechaEl = document.getElementById('lp-fecha');
+  if(fechaEl && !fechaEl.value) fechaEl.value = new Date().toISOString().split('T')[0];
+
+  // Cargar precios vigentes — el más reciente por producto
+  const { data } = await sb.from('lista_precios')
+    .select('*, productos(nombre,unidad)')
+    .eq('activo', true)
+    .order('fecha_desde', {ascending:false});
+
+  const tb = document.getElementById('precios-table');
+  if(!data || !data.length) {
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">◑</div><p>Sin precios registrados. Agregá el primero arriba.</p></div>';
+    return;
+  }
+
+  // Dedup: un precio por producto (el más reciente)
+  const seen = new Set();
+  const vigentes = data.filter(lp => {
+    if(seen.has(lp.producto_id)) return false;
+    seen.add(lp.producto_id);
+    return true;
+  });
+
+  tb.innerHTML = `<table>
+    <tr><th>Producto</th><th>Unidad</th><th>Precio USD</th><th>Válido desde</th></tr>
+    ${vigentes.map(lp=>`<tr>
+      <td style="color:var(--text)">${lp.productos?.nombre||'—'}</td>
+      <td style="color:var(--text3)">${lp.productos?.unidad||'kg'}</td>
+      <td style="font-family:'Sora',sans-serif;font-weight:700;color:var(--azul)">$${Number(lp.precio).toFixed(2)}</td>
+      <td style="color:var(--text3)">${lp.fecha_desde}</td>
+    </tr>`).join('')}
+  </table>`;
+}
+
+async function guardarPrecio() {
+  const producto_id = document.getElementById('lp-producto').value;
+  const precio = parseFloat(document.getElementById('lp-precio').value);
+  const fecha_desde = document.getElementById('lp-fecha').value;
+
+  if(!producto_id) { alert('Seleccioná un producto.'); return; }
+  if(!precio || precio <= 0) { alert('Ingresá un precio válido.'); return; }
+  if(!fecha_desde) { alert('Seleccioná la fecha de vigencia.'); return; }
+
+  // Desactivar precio anterior de ese producto
+  await sb.from('lista_precios').update({ activo: false })
+    .eq('producto_id', producto_id).eq('activo', true);
+
+  // Insertar nuevo precio
+  const { error } = await sb.from('lista_precios').insert({ producto_id, precio, fecha_desde, activo: true });
+  if(error) { alert('Error: ' + error.message); return; }
+
+  // Actualizar mapa en memoria
+  listaPreciosMap[producto_id] = precio;
+
+  showToast('Precio actualizado ✓');
+  document.getElementById('lp-precio').value = '';
+  loadListaPrecios();
 }
 
 function showToast(msg) {
