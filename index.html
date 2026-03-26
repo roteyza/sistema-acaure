@@ -1457,7 +1457,7 @@ function navigate(pageId) {
   if(pageId === 'inventario') loadInventario();
   if(pageId === 'productos') loadProductos();
   if(pageId === 'finanzas') loadFinanzas();
-  if(pageId === 'tasas') loadTasas();
+  if(pageId === 'tasas') { loadTasas(); initTasasForm(); }
   if(pageId === 'maestros') loadMaestros();
 }
 
@@ -1793,15 +1793,34 @@ async function loadTasas() {
   </table>`;
 }
 
+function initTasasForm() {
+  const fechaEl = document.getElementById('t-fecha');
+  if(fechaEl && !fechaEl.value) {
+    fechaEl.value = new Date().toISOString().split('T')[0];
+  }
+}
+
 async function guardarTasa() {
   const nombre = document.getElementById('t-nombre').value;
-  const valor = parseFloat(document.getElementById('t-valor').value);
-  const fecha = document.getElementById('t-fecha').value;
-  if(!valor || !fecha) { alert('Completá todos los campos.'); return; }
+  const valor  = parseFloat(document.getElementById('t-valor').value);
+  const fecha  = document.getElementById('t-fecha').value;
+
+  if(!nombre)             { alert('Seleccioná el tipo de tasa.'); return; }
+  if(!valor || valor <= 0){ alert('Ingresá un valor válido para la tasa.'); return; }
+  if(!fecha)              { alert('Seleccioná la fecha.'); return; }
+
+  const btn = document.querySelector('#page-tasas .btn-action');
+  if(btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
   const { error } = await sb.from('tasas_cambio').insert({ nombre, valor, fecha });
-  if(error) { alert('Error: ' + error.message); return; }
+
+  if(btn) { btn.disabled = false; btn.textContent = 'Guardar tasa'; }
+  if(error) { alert('Error al guardar: ' + error.message); return; }
+
   showToast('Tasa guardada ✓');
   document.getElementById('t-valor').value = '';
+  document.getElementById('t-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('t-nombre').value = 'BCV';
   loadTasas();
 }
 
