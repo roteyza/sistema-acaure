@@ -881,30 +881,8 @@
                 </div>
 
               </div>
-              <!-- Mini form nuevo proveedor -->
-              <div id="form-nuevo-prov" style="display:none;background:var(--surface2);border:1.5px solid var(--azul);border-radius:8px;padding:12px;margin-top:8px">
-                <div style="font-size:12px;font-weight:600;color:var(--azul);margin-bottom:10px">Nuevo proveedor</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end">
-                  <div>
-                    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Nombre</label>
-                    <input type="text" id="np-nombre" placeholder="Ej: Minco"
-                      style="width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
-                  </div>
-                  <div>
-                    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Tipo</label>
-                    <select id="np-tipo" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
-                      <option value="matadero">Matadero</option>
-                      <option value="ganadero">Ganadero</option>
-                    </select>
-                  </div>
-                  <div style="display:flex;gap:6px">
-                    <button type="button" onclick="guardarNuevoProveedor()"
-                      style="background:var(--naranja);color:white;border:none;border-radius:6px;padding:8px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer">Guardar</button>
-                    <button type="button" onclick="cerrarNuevoProveedor()"
-                      style="background:none;border:1.5px solid var(--border);color:var(--text3);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:12px;cursor:pointer">✕</button>
-                  </div>
-                </div>
-              </div>
+              <!-- Mini form nuevo proveedor (ahora es modal) -->
+              <div id="form-nuevo-prov" style="display:none"></div>
             </div>
             <div class="form-group">
               <label>Tipo documento</label>
@@ -1024,6 +1002,7 @@
                 <option value="mayor_ccs">Mayor CCS (Roca Firme)</option>
                 <option value="mayor_acarigua">Mayor Acarigua</option>
                 <option value="detal_ccs">Detal CCS</option>
+                <option value="detal_acarigua">Detal Acarigua</option>
               </select>
             </div>
             <div class="form-group" id="v-field-cliente" style="position:relative">
@@ -1040,37 +1019,8 @@
                 <button type="button" onclick="abrirNuevoCliente()"
                   style="background:transparent;color:var(--azul);border:1.5px solid var(--azul);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;display:none" id="btn-nuevo-cliente-inline">+ Nuevo</button>
               </div>
-              <!-- Mini form nuevo cliente -->
-              <div id="form-nuevo-cli" style="display:none;background:var(--surface2);border:1.5px solid var(--azul);border-radius:8px;padding:12px;margin-top:8px">
-                <div style="font-size:12px;font-weight:600;color:var(--azul);margin-bottom:10px">Nuevo cliente</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end">
-                  <div>
-                    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Nombre</label>
-                    <input type="text" id="nc-nombre" placeholder="Ej: Roca Firme"
-                      style="width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
-                  </div>
-                  <div>
-                    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Tipo</label>
-                    <select id="nc-tipo" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
-                      <option value="b2b">B2B (Mayor)</option>
-                      <option value="b2c">B2C (Detal)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Canal</label>
-                    <select id="nc-canal" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
-                      <option value="mayor">Mayor</option>
-                      <option value="detal">Detal</option>
-                    </select>
-                  </div>
-                  <div style="display:flex;gap:6px">
-                    <button type="button" onclick="guardarNuevoCliente()"
-                      style="background:var(--naranja);color:white;border:none;border-radius:6px;padding:8px 14px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer">Guardar</button>
-                    <button type="button" onclick="cerrarNuevoCliente()"
-                      style="background:none;border:1.5px solid var(--border);color:var(--text3);border-radius:6px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:12px;cursor:pointer">✕</button>
-                  </div>
-                </div>
-              </div>
+              <!-- Mini form nuevo cliente (oculto, ahora es modal) -->
+              <div id="form-nuevo-cli" style="display:none"></div>
             </div>
             <div class="form-group" id="v-field-cliente-libre" style="display:none">
               <label>Nombre cliente</label>
@@ -1141,6 +1091,8 @@
           <button class="btn-secondary" id="tab-mayor_ccs" onclick="filtrarVentas('mayor_ccs')" style="font-size:12px;padding:8px 16px">Mayor CCS</button>
           <button class="btn-secondary" id="tab-mayor_acarigua" onclick="filtrarVentas('mayor_acarigua')" style="font-size:12px;padding:8px 16px">Mayor Acarigua</button>
           <button class="btn-secondary" id="tab-detal_ccs" onclick="filtrarVentas('detal_ccs')" style="font-size:12px;padding:8px 16px">Detal CCS</button>
+          <button class="btn-secondary" id="tab-detal_acarigua" onclick="filtrarVentas('detal_acarigua')" style="font-size:12px;padding:8px 16px">Detal Acarigua</button>
+          <button class="btn-secondary" id="tab-detal_acarigua" onclick="filtrarVentas('detal_acarigua')" style="font-size:12px;padding:8px 16px">Detal Acarigua</button>
         </div>
 
         <div class="table-wrap">
@@ -1311,6 +1263,77 @@
   </div>
 </div>
 
+<!-- MODAL NUEVO CLIENTE -->
+<div id="modal-nuevo-cli" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
+  <div style="background:white;width:500px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
+    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px">Nuevo cliente</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:24px">Agregá el cliente antes de registrar la venta</div>
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="nc-nombre" placeholder="Ej: Supermercado El Valle"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" id="nc-telefono" placeholder="Ej: 04141234567"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+    </div>
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-top:4px">
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="nc-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <option value="b2b">B2B (Mayor)</option>
+          <option value="b2c">B2C (Detal)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Canal</label>
+        <select id="nc-canal" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <option value="mayor">Mayor</option>
+          <option value="detal">Detal</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:4px">
+      <label>Dirección</label>
+      <input type="text" id="nc-direccion" placeholder="Ej: La Lagunita, Caracas"
+        style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:24px">
+      <button onclick="guardarNuevoCliente()" class="btn-action" style="flex:1">Guardar cliente</button>
+      <button onclick="cerrarNuevoCliente()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO PROVEEDOR -->
+<div id="modal-nuevo-prov" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
+  <div style="background:white;width:460px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
+    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px">Nuevo proveedor</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:24px">Registrá el proveedor antes de continuar</div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Nombre</label>
+      <input type="text" id="np-nombre" placeholder="Ej: Minco, Frigorífico Central..."
+        style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+    </div>
+    <div class="form-group" style="margin-bottom:24px">
+      <label>Tipo</label>
+      <select id="np-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+        <option value="matadero">Matadero</option>
+        <option value="ganadero">Ganadero</option>
+        <option value="distribuidor">Distribuidor</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="guardarNuevoProveedor()" class="btn-action" style="flex:1">Guardar proveedor</button>
+      <button onclick="cerrarNuevoProveedor()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL FACTURA -->
 <div id="modal-factura" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;overflow-y:auto;">
   <div style="background:white;border-radius:12px;width:100%;max-width:680px;margin:24px auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
@@ -1337,6 +1360,77 @@
 <div class="success-toast" id="toast"></div>
 
 <!-- MODAL COBRO -->
+<!-- MODAL NUEVO CLIENTE -->
+<div id="modal-nuevo-cli" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
+  <div style="background:white;width:500px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
+    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px">Nuevo cliente</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:24px">Agregá el cliente antes de registrar la venta</div>
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="nc-nombre" placeholder="Ej: Supermercado El Valle"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" id="nc-telefono" placeholder="Ej: 04141234567"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+    </div>
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-top:4px">
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="nc-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <option value="b2b">B2B (Mayor)</option>
+          <option value="b2c">B2C (Detal)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Canal</label>
+        <select id="nc-canal" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <option value="mayor">Mayor</option>
+          <option value="detal">Detal</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:4px">
+      <label>Dirección</label>
+      <input type="text" id="nc-direccion" placeholder="Ej: La Lagunita, Caracas"
+        style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:24px">
+      <button onclick="guardarNuevoCliente()" class="btn-action" style="flex:1">Guardar cliente</button>
+      <button onclick="cerrarNuevoCliente()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO PROVEEDOR -->
+<div id="modal-nuevo-prov" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
+  <div style="background:white;width:460px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
+    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px">Nuevo proveedor</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:24px">Registrá el proveedor antes de continuar</div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Nombre</label>
+      <input type="text" id="np-nombre" placeholder="Ej: Minco, Frigorífico Central..."
+        style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+    </div>
+    <div class="form-group" style="margin-bottom:24px">
+      <label>Tipo</label>
+      <select id="np-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+        <option value="matadero">Matadero</option>
+        <option value="ganadero">Ganadero</option>
+        <option value="distribuidor">Distribuidor</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="guardarNuevoProveedor()" class="btn-action" style="flex:1">Guardar proveedor</button>
+      <button onclick="cerrarNuevoProveedor()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL FACTURA -->
 <div id="modal-factura" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;">
   <div style="background:white;width:760px;max-height:92vh;overflow-y:auto;border-radius:12px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
@@ -1638,7 +1732,7 @@ async function loadDashboard() {
   (ventas.data||[]).forEach(v => { ventasMap[v.id] = v; });
 
   let totalVentasUSD = 0, totalVentasKG = 0;
-  const canales = { mayor_ccs: {usd:0,kg:0}, mayor_acarigua: {usd:0,kg:0}, detal_ccs: {usd:0,kg:0} };
+  const canales = { mayor_ccs: {usd:0,kg:0}, mayor_acarigua: {usd:0,kg:0}, detal_ccs: {usd:0,kg:0}, detal_acarigua: {usd:0,kg:0} };
 
   (ventasDetalle.data||[]).forEach(d => {
     const v = ventasMap[d.venta_id];
@@ -1650,9 +1744,10 @@ async function loadDashboard() {
     totalVentasKG  += kg;
 
     const notas = (v.notas||'').toLowerCase();
-    if(notas.includes('mayor ccs'))       { canales.mayor_ccs.usd += usd; canales.mayor_ccs.kg += kg; }
-    else if(notas.includes('mayor acarigua')) { canales.mayor_acarigua.usd += usd; canales.mayor_acarigua.kg += kg; }
-    else if(notas.includes('detal ccs'))  { canales.detal_ccs.usd += usd; canales.detal_ccs.kg += kg; }
+    if(notas.includes('mayor ccs'))           { canales.mayor_ccs.usd += usd; canales.mayor_ccs.kg += kg; }
+    else if(notas.includes('mayor acarigua'))  { canales.mayor_acarigua.usd += usd; canales.mayor_acarigua.kg += kg; }
+    else if(notas.includes('detal ccs'))       { canales.detal_ccs.usd += usd; canales.detal_ccs.kg += kg; }
+    else if(notas.includes('detal acarigua'))  { canales.detal_acarigua.usd += usd; canales.detal_acarigua.kg += kg; }
   });
 
   document.getElementById('dash-ventas-total').textContent = `$${totalVentasUSD.toFixed(0)}`;
@@ -2010,16 +2105,27 @@ function toggleVentaCanal() {
   const canal = document.getElementById('v-canal')?.value;
   const fieldCliente = document.getElementById('v-field-cliente');
   const fieldClienteLibre = document.getElementById('v-field-cliente-libre');
+  const fieldNuevoCliente = document.getElementById('v-field-nuevo-cliente');
+  const esDetal = canal === 'detal_ccs' || canal === 'detal_acarigua';
 
-  if(canal === 'detal_ccs') {
+  if(esDetal) {
     if(fieldCliente) fieldCliente.style.display = 'none';
     if(fieldClienteLibre) fieldClienteLibre.style.display = 'block';
+    if(fieldNuevoCliente) fieldNuevoCliente.style.display = 'none';
   } else {
     if(fieldCliente) fieldCliente.style.display = 'block';
     if(fieldClienteLibre) fieldClienteLibre.style.display = 'none';
-    // Filtrar cache a solo clientes B2B para el canal mayor
+    if(fieldNuevoCliente) fieldNuevoCliente.style.display = 'flex';
     const mayorClientes = clientesData.filter(c => c.tipo === 'b2b');
     clientesCache = mayorClientes;
+  }
+
+  // Refrescar productos al cambiar canal
+  const container = document.getElementById('venta-items');
+  if(container && ventaItems.length > 0) {
+    container.innerHTML = '';
+    ventaItems = [];
+    agregarItemVenta();
   }
 }
 
@@ -2033,12 +2139,12 @@ function agregarItemVenta() {
   div.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;';
 
   const canal = document.getElementById('v-canal')?.value || '';
-  const esDetal = canal === 'detal_ccs';
+  const esDetal = canal === 'detal_ccs' || canal === 'detal_acarigua';
 
-  // Filtrar productos: detal ve solo preparados, mayor ve todos
+  // Filtrar productos por canal
   const prodsFiltrados = esDetal
-    ? (productosData||[]).filter(p => p.categoria === 'preparados')
-    : (productosData||[]);
+    ? (productosData||[]).filter(p => p.categoria === 'detal')
+    : (productosData||[]).filter(p => p.categoria === 'corte' || p.categoria === 'mayor');
 
   div.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -2182,7 +2288,7 @@ async function guardarVenta() {
   let cliente_id = null;
   let cliente_nombre = null;
 
-  if(canal === 'detal_ccs') {
+  if(canal === 'detal_ccs' || canal === 'detal_acarigua') {
     // Guardar nombre libre del cliente detal
     cliente_nombre = (document.getElementById('v-cliente-libre')?.value || '').trim() || null;
   } else {
@@ -2398,13 +2504,13 @@ function seleccionarProveedor(id, nombre) {
 }
 
 function abrirNuevoProveedor() {
-  document.getElementById('form-nuevo-prov').style.display = 'block';
-  document.getElementById('np-nombre').focus();
+  document.getElementById('np-nombre').value = '';
+  document.getElementById('modal-nuevo-prov').style.display = 'flex';
+  setTimeout(() => document.getElementById('np-nombre').focus(), 100);
 }
 
 function cerrarNuevoProveedor() {
-  document.getElementById('form-nuevo-prov').style.display = 'none';
-  document.getElementById('np-nombre').value = '';
+  document.getElementById('modal-nuevo-prov').style.display = 'none';
 }
 
 async function guardarNuevoProveedor() {
@@ -2464,13 +2570,15 @@ function seleccionarCliente(id, nombre) {
 }
 
 function abrirNuevoCliente() {
-  document.getElementById('form-nuevo-cli').style.display = 'block';
-  document.getElementById('nc-nombre').focus();
+  document.getElementById('nc-nombre').value = '';
+  document.getElementById('nc-telefono').value = '';
+  document.getElementById('nc-direccion').value = '';
+  document.getElementById('modal-nuevo-cli').style.display = 'flex';
+  setTimeout(() => document.getElementById('nc-nombre').focus(), 100);
 }
 
 function cerrarNuevoCliente() {
-  document.getElementById('form-nuevo-cli').style.display = 'none';
-  document.getElementById('nc-nombre').value = '';
+  document.getElementById('modal-nuevo-cli').style.display = 'none';
 }
 
 async function guardarNuevoCliente() {
@@ -2479,6 +2587,8 @@ async function guardarNuevoCliente() {
   const canal  = document.getElementById('nc-canal').value;
   if(!nombre) { alert('Ingresá el nombre del cliente.'); return; }
 
+  const telefono = document.getElementById('nc-telefono')?.value.trim() || null;
+  const direccion = document.getElementById('nc-direccion')?.value.trim() || null;
   const { data, error } = await sb.from('clientes').insert({ nombre, tipo, canal, activo: true }).select().single();
   if(error) { alert('Error: ' + error.message); return; }
 
