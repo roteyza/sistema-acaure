@@ -1092,7 +1092,6 @@
           <button class="btn-secondary" id="tab-mayor_acarigua" onclick="filtrarVentas('mayor_acarigua')" style="font-size:12px;padding:8px 16px">Mayor Acarigua</button>
           <button class="btn-secondary" id="tab-detal_ccs" onclick="filtrarVentas('detal_ccs')" style="font-size:12px;padding:8px 16px">Detal CCS</button>
           <button class="btn-secondary" id="tab-detal_acarigua" onclick="filtrarVentas('detal_acarigua')" style="font-size:12px;padding:8px 16px">Detal Acarigua</button>
-          <button class="btn-secondary" id="tab-detal_acarigua" onclick="filtrarVentas('detal_acarigua')" style="font-size:12px;padding:8px 16px">Detal Acarigua</button>
         </div>
 
         <div class="table-wrap">
@@ -1103,13 +1102,13 @@
           <div id="ventas-table"><div class="loading">Cargando...</div></div>
         </div>
 
-        <div id="venta-detalle-panel" style="display:none">
-          <div class="table-wrap" style="margin-top:16px">
-            <div class="table-head">
-              <div class="table-title" id="venta-detalle-titulo">Detalle venta</div>
-              <button class="btn-secondary" onclick="document.getElementById('venta-detalle-panel').style.display='none'" style="font-size:12px;padding:6px 12px">Cerrar</button>
+        <div id="venta-detalle-panel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:500;align-items:center;justify-content:center;">
+          <div style="background:white;width:700px;max-height:85vh;overflow-y:auto;border-radius:16px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 28px;border-bottom:1px solid var(--border);position:sticky;top:0;background:white;z-index:10;">
+              <div class="table-title" id="venta-detalle-titulo" style="font-size:16px">Detalle venta</div>
+              <button class="btn-secondary" onclick="document.getElementById('venta-detalle-panel').style.display='none'" style="font-size:12px;padding:6px 14px">✕ Cerrar</button>
             </div>
-            <div id="venta-detalle-contenido"></div>
+            <div id="venta-detalle-contenido" style="padding:24px 28px"></div>
           </div>
         </div>
       </div>
@@ -2429,7 +2428,7 @@ async function verDetalleVenta(venta_id, titulo) {
     .eq('venta_id', venta_id);
 
   document.getElementById('venta-detalle-titulo').textContent = titulo;
-  document.getElementById('venta-detalle-panel').style.display = 'block';
+  document.getElementById('venta-detalle-panel').style.display = 'flex';
 
   if(!data || !data.length) {
     document.getElementById('venta-detalle-contenido').innerHTML = '<div class="empty">Sin detalle</div>';
@@ -3145,15 +3144,20 @@ async function exportarFinanzas() {
 
 // ===== FACTURA =====
 async function abrirFactura(venta_id) {
-  const { data: venta } = await sb.from('ventas')
-    .select('*, clientes(nombre), sedes(nombre,codigo), cliente_nombre, correlativo')
+  // Mostrar modal con loading mientras carga
+  document.getElementById('factura-preview').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Cargando factura...</div>';
+  document.getElementById('modal-factura').style.display = 'flex';
+
+  const { data: venta, error: errV } = await sb.from('ventas')
+    .select('*, clientes(nombre,telefono,direccion), sedes(nombre,codigo), cliente_nombre, correlativo')
     .eq('id', venta_id).single();
 
-  const { data: detalle } = await sb.from('ventas_detalle')
+  const { data: detalle, error: errD } = await sb.from('ventas_detalle')
     .select('*, productos(nombre,unidad)')
     .eq('venta_id', venta_id);
 
-  if(!venta) { alert('No se pudo cargar la venta.'); return; }
+  if(errV) { document.getElementById('factura-preview').innerHTML = `<div style="padding:24px;color:red">Error cargando venta: ${errV.message}</div>`; return; }
+  if(!venta) { document.getElementById('factura-preview').innerHTML = '<div style="padding:24px;color:red">Venta no encontrada.</div>'; return; }
 
   const clienteNombre = venta.clientes?.nombre || venta.cliente_nombre || 'Cliente';
   const correlativo = venta.correlativo ? String(venta.correlativo).padStart(4,'0') : '—';
@@ -3203,10 +3207,12 @@ async function abrirFactura(venta_id) {
     <div>
       <div class="fc-label">Cliente</div>
       <div class="fc-val">${clienteNombre}</div>
+      ${venta.clientes?.direccion || '' ? `<div style="font-size:11px;color:#888;margin-top:2px">${venta.clientes?.direccion||''}</div>` : ''}
     </div>
     <div>
       <div class="fc-label">Recibo Nº</div>
       <div class="fc-val">#${correlativo}</div>
+      ${venta.clientes?.telefono ? `<div style="font-size:11px;color:#888;margin-top:2px">${venta.clientes.telefono}</div>` : ''}
     </div>
     <div>
       <div class="fc-label">Fecha</div>
@@ -3250,7 +3256,7 @@ async function abrirFactura(venta_id) {
 
   document.getElementById('factura-preview').innerHTML = html_factura;
   document.getElementById('factura-print-area').innerHTML = html_factura;
-  document.getElementById('modal-factura').style.display = 'flex';
+  // modal ya está abierto desde el inicio de la función
 }
 
 function cerrarModalFactura() {
