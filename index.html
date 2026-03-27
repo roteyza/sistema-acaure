@@ -1406,7 +1406,7 @@
 
 <!-- MODAL FACTURA -->
 <div id="modal-factura" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;overflow-y:auto;">
-  <div style="background:white;border-radius:12px;width:100%;max-width:680px;margin:24px auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+  <div style="background:white;border-radius:12px;width:100%;max-width:680px;margin:24px auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow-y:auto;height:auto;">
     <!-- Toolbar -->
     <div style="background:var(--azul);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;">
       <span style="color:white;font-weight:600;font-size:14px;">Vista previa — Factura</span>
@@ -1572,19 +1572,7 @@
   </div>
 </div>
 
-<!-- MODAL FACTURA -->
-<div id="modal-factura" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;">
-  <div style="background:white;width:760px;max-height:92vh;overflow-y:auto;border-radius:12px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #eee;position:sticky;top:0;background:white;z-index:10;">
-      <span style="font-weight:600;color:#003A70">Vista previa de factura</span>
-      <div style="display:flex;gap:8px">
-        <button onclick="imprimirFactura()" style="background:#003A70;color:white;border:none;border-radius:8px;padding:8px 18px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer">🖨 Imprimir / PDF</button>
-        <button onclick="cerrarModalFactura()" style="background:none;border:1.5px solid #ddd;color:#666;border-radius:8px;padding:8px 14px;font-family:'Sora',sans-serif;font-size:13px;cursor:pointer">✕ Cerrar</button>
-      </div>
-    </div>
-    <div id="factura-preview" style="padding:40px 48px;font-family:'Sora',sans-serif;color:#1a1a1a;"></div>
-  </div>
-</div>
+
 
 <!-- AREA OCULTA PARA PRINT -->
 <div id="factura-print-area" style="display:none;"></div>
@@ -3361,7 +3349,7 @@ async function exportarFinanzas() {
 
 // ===== FACTURA =====
 async function abrirFactura(venta_id) {
-  var prev = document.getElementById('factura-preview');
+  var prev = document.getElementById('factura-contenido');
   var modal = document.getElementById('modal-factura');
   prev.innerHTML = '<div style="text-align:center;padding:40px;color:#999">Cargando...</div>';
   modal.style.display = 'flex';
@@ -3452,13 +3440,18 @@ async function abrirFactura(venta_id) {
     out += '<div style="margin-top:16px;font-size:11px;color:#aaa;display:flex;justify-content:space-between"><span>Sede: ' + sedeNombre + '</span><span>Sistema Rastro — Acaure</span></div>';
 
     prev.innerHTML = out;
-    document.getElementById('factura-print-area').innerHTML = out;
+    // print area sync
+    var pa = document.getElementById('factura-contenido'); if(pa) pa.innerHTML = out;
 
   } catch(e) {
     prev.innerHTML = '<div style="padding:24px;color:red">Error: ' + e.message + '</div>';
   }
 }
 function cerrarModalFactura() {
+  document.getElementById('modal-factura').style.display = 'none';
+}
+
+function cerrarFactura() {
   document.getElementById('modal-factura').style.display = 'none';
 }
 
