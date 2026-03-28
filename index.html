@@ -2115,7 +2115,7 @@ async function loadDashboard() {
           '<td style="color:var(--text3)">' + (c.sedes?.codigo||'—') + '</td>' +
           '<td style="color:var(--text2);font-size:12px">' + (c.notas||'—') + '</td>' +
           '<td><span class="badge" style="background:rgba(192,57,43,0.1);color:var(--danger)">' + (c.status_pago||'pendiente') + '</span></td>' +
-          '<td><button onclick="abrirPagarCompra('' + c.id + '','' + (c.proveedores?.nombre||'Proveedor') + ' — ' + c.fecha + '')" style="background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--danger);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">💳 Pagar</button></td>' +
+          '<td><button data-cid="' + c.id + '" data-desc="' + (c.proveedores?.nombre||'Proveedor') + ' — ' + c.fecha + '" onclick="abrirPagarCompra(this.dataset.cid,this.dataset.desc)" style="background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--danger);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">💳 Pagar</button></td>' +
         '</tr>').join('') + '</table>';
     }
   }
@@ -3190,7 +3190,7 @@ async function loadCompras() {
       <td><span class="badge" style="background:rgba(39,166,106,0.12);color:#27a66a">registrada</span></td>
       <td style="display:flex;gap:4px;align-items:center">
         <button onclick="verDetalleCompra('${c.id}','${c.proveedores?.nombre || ''} - ${c.fecha}')" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Ver</button>
-        ${c.condicion === 'credito' && c.status_pago !== 'pagada' ? `<button onclick="abrirPagarCompra('${c.id}','${(c.proveedores?.nombre||'Proveedor')} — ${c.fecha}')" style="background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--danger);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">💳 Pagar</button>` : ''}
+        ${c.condicion === 'credito' && c.status_pago !== 'pagada' ? `<button data-cid="${c.id}" data-desc="${(c.proveedores?.nombre||'Proveedor')} — ${c.fecha}" onclick="abrirPagarCompra(this.dataset.cid,this.dataset.desc)" style="background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--danger);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">💳 Pagar</button>` : ''}
       </td>
     </tr>`).join('')}
   </table>`;
