@@ -1451,12 +1451,34 @@
       <select id="pc-cuenta" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;"></select>
     </div>
     <div class="form-group" style="margin-bottom:16px">
-      <label>Moneda del pago</label>
-      <select id="pc-moneda" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      <label>Forma de pago</label>
+      <select id="pc-moneda" onchange="toggleCamposBs('pc')" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
         <option value="usd">USD</option>
-        <option value="bs">Bolívares (Bs)</option>
+        <option value="zelle">Zelle USD</option>
+        <option value="cash">Cash USD</option>
+        <option value="bs_bcv">Bs (BCV)</option>
+        <option value="bs_paralelo">Bs (Paralelo)</option>
       </select>
     </div>
+
+    <!-- Campos Bs pago compra -->
+    <div id="pc-campos-bs" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Detalle en bolívares</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Monto Bs pagados</label>
+          <input type="number" id="pc-monto-bs" placeholder="0.00" step="0.01"
+            style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Equivalente USD</label>
+          <input type="number" id="pc-monto-usd-bs" placeholder="0.00" step="0.01"
+            style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Los Bs se debitan de la cuenta. El USD equivalente actualiza el saldo de la compra.</div>
+    </div>
+
     <div class="form-group" style="margin-bottom:24px">
       <label>¿Queda saldo pendiente?</label>
       <select id="pc-status" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
@@ -1644,59 +1666,72 @@
 <!-- AREA OCULTA PARA PRINT -->
 <div id="factura-print-area" style="display:none;"></div>
 
-<div id="modal-cobro"  style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:480px;margin:24px;animation:fadeUp 0.3s ease">
-    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">Registrar cobro</div>
+<div id="modal-cobro" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:520px;margin:24px;animation:fadeUp 0.3s ease">
+    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px">Registrar cobro</div>
     <div style="color:var(--text3);font-size:13px;margin-bottom:24px" id="modal-cobro-venta">—</div>
 
-    <div class="form-row">
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px">
       <div class="form-group">
         <label>Forma de pago</label>
-        <select id="cobro-moneda">
+        <select id="cobro-moneda" onchange="toggleCamposBs('cobro')">
           <option value="usd">USD factura</option>
-          <option value="bs_bcv">Bs a BCV</option>
-          <option value="bs_paralelo">Bs a Paralelo</option>
           <option value="zelle">Zelle USD</option>
           <option value="cash">Cash USD</option>
+          <option value="bs_bcv">Bs (BCV)</option>
+          <option value="bs_paralelo">Bs (Paralelo)</option>
         </select>
-      </div>
-      <div class="form-group">
-        <label>Tasa (Bs/$)</label>
-        <input type="number" id="cobro-tasa" placeholder="0.00" step="0.01">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Monto cobrado</label>
-        <input type="number" id="cobro-monto" placeholder="0.00" step="0.01">
       </div>
       <div class="form-group">
         <label>Cuenta destino</label>
         <select id="cobro-cuenta"></select>
       </div>
     </div>
-    <div class="form-row">
+
+    <!-- Campo USD — siempre visible -->
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label id="cobro-monto-label">Monto cobrado (USD)</label>
+        <input type="number" id="cobro-monto" placeholder="0.00" step="0.01">
+      </div>
       <div class="form-group">
         <label>Fecha cobro</label>
         <input type="date" id="cobro-fecha">
       </div>
+    </div>
+
+    <!-- Campos Bs — solo cuando forma de pago es Bs -->
+    <div id="cobro-campos-bs" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Detalle en bolívares</div>
+      <div class="form-row" style="grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>Monto Bs recibidos</label>
+          <input type="number" id="cobro-monto-bs" placeholder="0.00" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Equivalente USD</label>
+          <input type="number" id="cobro-monto-usd-bs" placeholder="0.00" step="0.01">
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Los Bs se acreditan a la cuenta seleccionada. El USD equivalente actualiza el saldo de la venta.</div>
+    </div>
+
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px">
       <div class="form-group">
-        <label>¿Queda saldo pendiente?</label>
+        <label>¿Queda saldo?</label>
         <select id="cobro-status">
-          <option value="pagada">No — venta completamente pagada</option>
+          <option value="pagada">No — cobro completo</option>
           <option value="parcial">Sí — pago parcial</option>
         </select>
       </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group" style="grid-column:1/-1">
+      <div class="form-group">
         <label>Nota</label>
-        <input type="text" id="cobro-nota" placeholder="Ej: Transferencia RF semana 12">
+        <input type="text" id="cobro-nota" placeholder="Opcional">
       </div>
     </div>
 
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn-action" onclick="confirmarCobro()">Confirmar cobro</button>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn-action" onclick="confirmarCobro()" style="flex:1">Confirmar cobro</button>
       <button class="btn-secondary" onclick="cerrarModalCobro()">Cancelar</button>
     </div>
   </div>
@@ -2639,6 +2674,8 @@ async function guardarVenta() {
     sede_id,
     tipo,
     status,
+    total_usd,
+    saldo_pendiente: status === 'pagada' ? 0 : total_usd,
     usuario_id: currentUser?.id || null,
     notas: `${canal.replace('_',' ')}${notas?' | '+notas:''} | Total: $${total_usd.toFixed(2)} USD BCV`
   }).select().single();
@@ -2676,7 +2713,7 @@ async function loadVentas(filtro) {
   if(filtro) ventaFiltroActual = filtro;
 
   let query = sb.from('ventas')
-    .select('*, clientes(nombre), sedes(codigo), cliente_nombre, correlativo')
+    .select('*, clientes(nombre), sedes(codigo), cliente_nombre, correlativo, total_usd, saldo_pendiente')
     .order('fecha', {ascending:false})
     .limit(100);
 
@@ -2695,12 +2732,15 @@ async function loadVentas(filtro) {
   const statusColor = { pagada:'#27a66a', parcial:'#e8b84b', pendiente:'#e74c3c' };
 
   tb.innerHTML = `<table>
-    <tr><th>Fecha</th><th>Cliente</th><th>Sede</th><th>Notas</th><th>Status</th><th></th></tr>
+    <tr><th>Fecha</th><th>Cliente</th><th>Sede</th><th>Total</th><th>Saldo</th><th>Status</th><th></th></tr>
     ${data.map(v=>`<tr>
       <td style="color:var(--text3)">${v.fecha}</td>
       <td style="color:var(--text)">${v.clientes?.nombre || v.cliente_nombre || 'Detal'}</td>
       <td style="color:var(--text3)">${v.sedes?.codigo||'—'}</td>
-      <td style="color:var(--text2);font-size:12px">${v.notas||'—'}</td>
+      <td style="font-weight:600;color:var(--azul);font-size:13px">${v.total_usd ? '$'+Number(v.total_usd).toFixed(2) : '—'}</td>
+      <td style="font-weight:600;font-size:13px;color:${Number(v.saldo_pendiente)>0?'var(--danger)':'var(--success)'}">
+        ${v.saldo_pendiente!=null?(Number(v.saldo_pendiente)>0?'$'+Number(v.saldo_pendiente).toFixed(2):'✓ 0'):'—'}
+      </td>
       <td><span class="badge" style="background:${statusColor[v.status]||'#888'}22;color:${statusColor[v.status]||'#888'}">${v.status}</span></td>
       <td style="display:flex;gap:4px;align-items:center">
         <button onclick="verDetalleVenta('${v.id}','${v.clientes?.nombre||v.cliente_nombre||'Detal'} - ${v.fecha}')" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Ver</button>
@@ -3188,12 +3228,16 @@ async function loadCompras() {
   }
 
   tb.innerHTML = `<table>
-    <tr><th>Fecha</th><th>Proveedor</th><th>Documento / Notas</th><th>Status</th><th></th></tr>
+    <tr><th>Fecha</th><th>Proveedor</th><th>Notas</th><th>Saldo</th><th>Status</th><th></th></tr>
     ${data.map(c => `<tr>
       <td style="color:var(--text3)">${c.fecha}</td>
       <td style="color:var(--text)">${c.proveedores?.nombre || '—'}</td>
-      <td style="color:var(--text2);font-size:12px">${c.notas || '—'}</td>
-      <td><span class="badge" style="background:rgba(39,166,106,0.12);color:#27a66a">registrada</span></td>
+      <td style="color:var(--text2);font-size:12px">${(c.notas||'—').substring(0,60)}</td>
+      <td style="font-weight:600;color:${Number(c.saldo_pendiente)>0?'var(--danger)':'var(--success)'}">
+        ${c.saldo_pendiente != null ? (Number(c.saldo_pendiente)>0 ? '$'+Number(c.saldo_pendiente).toFixed(2) : '✓ 0') : (c.condicion==='credito'?'—':'✓')}
+      </td>
+      <td><span class="badge" style="background:${c.status_pago==='pagada'?'rgba(39,166,106,0.12)':'rgba(192,57,43,0.1)'};color:${c.status_pago==='pagada'?'#27a66a':'var(--danger)'}">
+        ${c.status_pago||'registrada'}</span></td>
       <td style="display:flex;gap:4px;align-items:center">
         <button onclick="verDetalleCompra('${c.id}','${c.proveedores?.nombre || ''} - ${c.fecha}')" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Ver</button>
         ${c.condicion === 'credito' && c.status_pago !== 'pagada' ? `<button data-cid="${c.id}" data-desc="${(c.proveedores?.nombre||'Proveedor')} — ${c.fecha}" onclick="abrirPagarCompra(this.dataset.cid,this.dataset.desc)" style="background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);color:var(--danger);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">💳 Pagar</button>` : ''}
@@ -3389,39 +3433,57 @@ function cerrarModalCobro() {
 }
 
 async function confirmarCobro() {
-  const moneda  = document.getElementById('cobro-moneda').value;
-  const tasa    = parseFloat(document.getElementById('cobro-tasa').value) || 1;
-  const monto   = parseFloat(document.getElementById('cobro-monto').value);
+  const formaPago = document.getElementById('cobro-moneda').value;
+  const esBs      = formaPago.startsWith('bs');
   const cuenta_id = document.getElementById('cobro-cuenta').value;
-  const fecha   = document.getElementById('cobro-fecha').value;
-  const status  = document.getElementById('cobro-status').value;
-  const nota    = document.getElementById('cobro-nota').value;
+  const fecha     = document.getElementById('cobro-fecha').value;
+  const status    = document.getElementById('cobro-status').value;
+  const nota      = document.getElementById('cobro-nota').value;
 
-  if(!monto || monto <= 0) { alert('Ingresá un monto válido.'); return; }
-  if(!fecha)               { alert('Seleccioná una fecha.'); return; }
-  if(!cobroVentaId)        { alert('Error: no hay venta seleccionada.'); return; }
+  // Montos según forma de pago
+  const montoUSD = esBs
+    ? parseFloat(document.getElementById('cobro-monto-usd-bs').value) || 0
+    : parseFloat(document.getElementById('cobro-monto').value) || 0;
+  const montoBS = esBs
+    ? parseFloat(document.getElementById('cobro-monto-bs').value) || 0
+    : 0;
+
+  if(!esBs && montoUSD <= 0) { alert('Ingresá un monto válido.'); return; }
+  if(esBs && montoBS <= 0)   { alert('Ingresá el monto en Bs.'); return; }
+  if(esBs && montoUSD <= 0)  { alert('Ingresá el equivalente en USD.'); return; }
+  if(!fecha)                  { alert('Seleccioná una fecha.'); return; }
+  if(!cobroVentaId)           { alert('Error: no hay venta seleccionada.'); return; }
 
   // 1. Registrar movimiento financiero
   const { error: errMF } = await sb.from('movimientos_financieros').insert({
     fecha,
     cuenta_id,
     tipo: 'ingreso',
-    concepto: `Cobro venta${nota ? ' — '+nota : ''}`,
-    monto,
-    moneda: moneda.startsWith('bs') ? 'bs' : 'usd',
+    concepto: 'Cobro venta' + (nota ? ' — '+nota : ''),
+    monto:    esBs ? montoBS  : montoUSD,
+    monto_bs: esBs ? montoBS  : null,
+    monto_usd: montoUSD,
+    moneda:   esBs ? 'bs' : 'usd',
     contraparte: nota || null,
     status: 'registrado',
     usuario_id: currentUser?.id || null
   });
-
   if(errMF) { alert('Error registrando movimiento: ' + errMF.message); return; }
 
-  // 2. Actualizar status de la venta
-  const { error: errV } = await sb.from('ventas').update({ status }).eq('id', cobroVentaId);
+  // 2. Actualizar saldo_pendiente y status de la venta
+  const { data: ventaActual } = await sb.from('ventas').select('saldo_pendiente,total_usd').eq('id', cobroVentaId).maybeSingle();
+  const saldoActual = ventaActual?.saldo_pendiente ?? ventaActual?.total_usd ?? 0;
+  const nuevoSaldo  = Math.max(0, saldoActual - montoUSD);
+  const nuevoStatus = nuevoSaldo <= 0 ? 'pagada' : status;
+
+  const { error: errV } = await sb.from('ventas').update({
+    status: nuevoStatus,
+    saldo_pendiente: nuevoSaldo
+  }).eq('id', cobroVentaId);
   if(errV) { alert('Error actualizando venta: ' + errV.message); return; }
 
   cerrarModalCobro();
-  showToast('Cobro registrado ✓');
+  showToast('Cobro registrado ✓ — saldo: $' + nuevoSaldo.toFixed(2));
   loadVentas();
   loadDashboard();
 }
@@ -3631,6 +3693,26 @@ function imprimirFactura() {
 }
 
 
+// ===== TOGGLE CAMPOS BS =====
+function toggleCamposBs(prefix) {
+  var moneda = document.getElementById(prefix + '-moneda')?.value || '';
+  var esBs   = moneda.startsWith('bs');
+
+  if(prefix === 'cobro') {
+    var camposBs  = document.getElementById('cobro-campos-bs');
+    var montoLabel = document.getElementById('cobro-monto-label');
+    var montoInput = document.getElementById('cobro-monto');
+    if(camposBs)   camposBs.style.display   = esBs ? 'block' : 'none';
+    if(montoInput) montoInput.style.display  = esBs ? 'none'  : 'block';
+    if(montoLabel) montoLabel.style.display  = esBs ? 'none'  : 'block';
+  } else if(prefix === 'pc') {
+    var camposBsPc = document.getElementById('pc-campos-bs');
+    var montoInputPc = document.getElementById('pc-monto');
+    if(camposBsPc)   camposBsPc.style.display  = esBs ? 'block' : 'none';
+    if(montoInputPc) montoInputPc.style.display = esBs ? 'none'  : 'block';
+  }
+}
+
 // ===== PAGO DE COMPRAS CxP =====
 let pagarCompraId = null;
 
@@ -3656,40 +3738,56 @@ function cerrarPagarCompra() {
 }
 
 async function confirmarPagoCompra() {
-  var monto    = parseFloat(document.getElementById('pc-monto').value);
-  var fecha    = document.getElementById('pc-fecha').value;
+  var formaPago = document.getElementById('pc-moneda').value;
+  var esBs      = formaPago.startsWith('bs');
+  var fecha     = document.getElementById('pc-fecha').value;
   var cuenta_id = document.getElementById('pc-cuenta').value;
-  var moneda   = document.getElementById('pc-moneda').value;
-  var status   = document.getElementById('pc-status').value;
+  var status    = document.getElementById('pc-status').value;
 
-  if(!monto || monto <= 0) { alert('Ingresá un monto válido.'); return; }
-  if(!fecha)               { alert('Seleccioná una fecha.'); return; }
-  if(!pagarCompraId)       { alert('Error: no hay compra seleccionada.'); return; }
+  var montoUSD = esBs
+    ? parseFloat(document.getElementById('pc-monto-usd-bs').value) || 0
+    : parseFloat(document.getElementById('pc-monto').value) || 0;
+  var montoBS = esBs
+    ? parseFloat(document.getElementById('pc-monto-bs').value) || 0
+    : 0;
 
-  // 1. Registrar egreso en movimientos financieros
-  var r1 = await sb.from('compras').select('proveedores(nombre)').eq('id', pagarCompraId).maybeSingle();
+  if(!esBs && montoUSD <= 0) { alert('Ingresá un monto válido.'); return; }
+  if(esBs && montoBS <= 0)   { alert('Ingresá el monto en Bs.'); return; }
+  if(esBs && montoUSD <= 0)  { alert('Ingresá el equivalente en USD.'); return; }
+  if(!fecha)                  { alert('Seleccioná una fecha.'); return; }
+  if(!pagarCompraId)          { alert('Error: no hay compra seleccionada.'); return; }
+
+  var r1 = await sb.from('compras').select('proveedores(nombre), saldo_pendiente, total_usd').eq('id', pagarCompraId).maybeSingle();
   var provNombre = r1.data?.proveedores?.nombre || 'Proveedor';
+  var saldoActual = r1.data?.saldo_pendiente ?? r1.data?.total_usd ?? 0;
+  var nuevoSaldo  = Math.max(0, saldoActual - montoUSD);
+  var nuevoStatus = nuevoSaldo <= 0 ? 'pagada' : status;
 
+  // 1. Registrar egreso
   var errMF = await sb.from('movimientos_financieros').insert({
     fecha: fecha,
     cuenta_id: cuenta_id,
     tipo: 'egreso',
     concepto: 'Pago compra — ' + provNombre,
-    monto: monto,
-    moneda: moneda,
+    monto:     esBs ? montoBS : montoUSD,
+    monto_bs:  esBs ? montoBS : null,
+    monto_usd: montoUSD,
+    moneda:    esBs ? 'bs' : 'usd',
     contraparte: provNombre,
     status: 'registrado',
     usuario_id: currentUser?.id || null
   });
-
   if(errMF.error) { alert('Error registrando egreso: ' + errMF.error.message); return; }
 
-  // 2. Actualizar status de la compra
-  var errC = await sb.from('compras').update({ status_pago: status }).eq('id', pagarCompraId);
+  // 2. Actualizar saldo y status compra
+  var errC = await sb.from('compras').update({
+    status_pago: nuevoStatus,
+    saldo_pendiente: nuevoSaldo
+  }).eq('id', pagarCompraId);
   if(errC.error) { alert('Error actualizando compra: ' + errC.error.message); return; }
 
   cerrarPagarCompra();
-  showToast('Pago registrado ✓ — egreso descontado de cuenta');
+  showToast('Pago registrado ✓ — saldo: $' + nuevoSaldo.toFixed(2));
   loadCompras();
   loadDashboard();
 }
