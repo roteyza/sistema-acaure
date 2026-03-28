@@ -2120,7 +2120,7 @@ async function loadDashboard() {
           <td style="color:var(--text3)">${v.sedes?.codigo||'—'}</td>
           <td style="color:var(--text2);font-size:12px">${v.notas||'—'}</td>
           <td><span class="badge" style="background:${v.status==='parcial'?'rgba(232,184,75,0.15)':'rgba(192,57,43,0.12)'};color:${v.status==='parcial'?'var(--accent2)':'#e74c3c'}">${v.status}</span></td>
-          <td><button data-vid="${v.id}" data-desc="${(v.clientes?.nombre||v.cliente_nombre||'Detal')+' — '+v.fecha}" data-total="${((v.notas||'').match(/Total: \$([0-9.]+)/)||[])[1]||''}" onclick="abrirModalCobro(this.dataset.vid,this.dataset.desc,this.dataset.total)" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button></td>
+          <td><button data-vid="${v.id}" data-desc="${(v.clientes?.nombre||v.cliente_nombre||'Detal')+' — '+v.fecha}" data-total="${v.saldo_pendiente!=null ? Number(v.saldo_pendiente).toFixed(2) : ((v.notas||'').match(/Total: \$([0-9.]+)/)||[])[1]||''}" onclick="abrirModalCobro(this.dataset.vid,this.dataset.desc,this.dataset.total)" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button></td>
         </tr>`).join('')}
       </table>`;
   }
@@ -2745,7 +2745,7 @@ async function loadVentas(filtro) {
       <td style="display:flex;gap:4px;align-items:center">
         <button onclick="verDetalleVenta('${v.id}','${v.clientes?.nombre||v.cliente_nombre||'Detal'} - ${v.fecha}')" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Ver</button>
         <button onclick="abrirFactura('${v.id}')" style="background:rgba(0,58,112,0.08);border:1px solid rgba(0,58,112,0.3);color:var(--azul);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">🧾 Factura</button>
-        ${v.status !== 'pagada' && v.status !== 'anulada' ? `<button data-vid="${v.id}" data-desc="${(v.clientes?.nombre||v.cliente_nombre||'Detal')+' — '+v.fecha}" data-total="${((v.notas||'').match(/Total: \$([0-9.]+)/)||[])[1]||''}" onclick="abrirModalCobro(this.dataset.vid,this.dataset.desc,this.dataset.total)" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button>` : ''}
+        ${(v.status !== 'pagada' && v.status !== 'anulada') || Number(v.saldo_pendiente) > 0 ? `<button data-vid="${v.id}" data-desc="${(v.clientes?.nombre||v.cliente_nombre||'Detal')+' — '+v.fecha}" data-total="${v.saldo_pendiente!=null ? Number(v.saldo_pendiente).toFixed(2) : ((v.notas||'').match(/Total: \$([0-9.]+)/)||[])[1]||''}" onclick="abrirModalCobro(this.dataset.vid,this.dataset.desc,this.dataset.total)" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button>` : ''}
         ${v.status !== 'anulada' ? `<button onclick="anularVenta('${v.id}')" style="background:none;border:1px solid #e2dedd;color:#c0392b;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Anular</button>` : '<span style="font-size:11px;color:var(--text3)">Anulada</span>'}
       </td>
     </tr>`).join('')}
@@ -3175,6 +3175,8 @@ async function guardarCompra() {
     fecha,
     condicion,
     status_pago: condicion === 'credito' ? 'pendiente' : 'pagada',
+    total_usd: total_usd_bcv,
+    saldo_pendiente: condicion === 'credito' ? total_usd_bcv : 0,
     sede_id: document.getElementById('c-sede')?.value || null,
     tipo_doc,
     num_doc: num_doc || null,
