@@ -1207,10 +1207,29 @@
           <button class="btn-action" onclick="guardarMovFinanciero()">Registrar movimiento</button>
         </div>
 
-        <div class="table-wrap">
+        <!-- FILTROS -->
+        <div class="form-card" style="padding:16px 20px;margin-bottom:0">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="font-size:12px;font-weight:600;color:var(--text2)">Filtrar:</div>
+            <select id="fin-cuenta-filtro" onchange="loadFinanzas()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;min-width:180px">
+              <option value="">Todas las cuentas</option>
+            </select>
+            <input type="date" id="fin-desde" onchange="loadFinanzas()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            <span style="color:var(--text3);font-size:12px">→</span>
+            <input type="date" id="fin-hasta" onchange="loadFinanzas()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            <button onclick="setFinPeriodo(30)" style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--text3)">30d</button>
+            <button onclick="setFinPeriodo(90)" style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--text3)">90d</button>
+            <button onclick="setFinPeriodo(0)" style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--text3)">Este mes</button>
+            <div style="margin-left:auto">
+              <button onclick="exportarEstadoCuenta()" style="background:var(--azul);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;font-weight:600">↓ Exportar CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="margin-top:0;border-top:none;border-radius:0 0 12px 12px">
           <div class="table-head">
-            <div class="table-title">Historial</div>
-            <button onclick="exportarFinanzas()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Exportar CSV</button>
+            <div class="table-title" id="fin-tabla-titulo">Estado de cuenta</div>
+            <div id="fin-resumen" style="font-size:12px;color:var(--text3)"></div>
           </div>
           <div id="mf-table"><div class="loading">Cargando...</div></div>
         </div>
@@ -1894,7 +1913,7 @@ function navigate(pageId) {
   if(pageId === 'dashboard') loadDashboard();
   if(pageId === 'inventario') loadInventario();
   if(pageId === 'productos') loadProductos();
-  if(pageId === 'finanzas') loadFinanzas();
+  if(pageId === 'finanzas') { initFinanzasFiltros(); loadFinanzas(); }
   if(pageId === 'tasas') { loadTasas(); initTasasForm(); }
   if(pageId === 'maestros') loadMaestros();
   if(pageId === 'precios') loadListaPrecios();
@@ -2253,25 +2272,131 @@ async function loadCuentasSelect() {
 }
 
 // FINANZAS
+// Estado de cuenta data global para exportar
+let finanzasDataGlobal = [];
+
+function setFinPeriodo(dias) {
+  const hoy = new Date();
+  const hastaStr = hoy.toISOString().split('T')[0];
+  let desdeStr;
+  if(dias === 0) {
+    // Este mes
+    desdeStr = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+  } else {
+    const d = new Date(hoy);
+    d.setDate(d.getDate() - dias);
+    desdeStr = d.toISOString().split('T')[0];
+  }
+  const desdeEl = document.getElementById('fin-desde');
+  const hastaEl = document.getElementById('fin-hasta');
+  if(desdeEl) desdeEl.value = desdeStr;
+  if(hastaEl) hastaEl.value = hastaStr;
+  loadFinanzas();
+}
+
+async function initFinanzasFiltros() {
+  // Cargar cuentas en el filtro
+  const sel = document.getElementById('fin-cuenta-filtro');
+  if(sel && cuentasSelectData && cuentasSelectData.length) {
+    sel.innerHTML = '<option value="">Todas las cuentas</option>' +
+      cuentasSelectData.map(c => '<option value="' + c.id + '">' + c.nombre + '</option>').join('');
+  }
+  // Fechas por defecto: este mes
+  const hoy = new Date();
+  const desdeEl = document.getElementById('fin-desde');
+  const hastaEl = document.getElementById('fin-hasta');
+  if(desdeEl && !desdeEl.value) desdeEl.value = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+  if(hastaEl && !hastaEl.value) hastaEl.value = hoy.toISOString().split('T')[0];
+}
+
 async function loadFinanzas() {
-  const { data } = await sb.from('movimientos_financieros').select('*, cuentas(nombre)').order('fecha', {ascending:false}).limit(50);
   const tb = document.getElementById('mf-table');
-  if(!data || !data.length) {
-    tb.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><p>Sin movimientos registrados aún.</p></div>';
+  tb.innerHTML = '<div class="loading">Cargando...</div>';
+
+  const cuentaFiltro = document.getElementById('fin-cuenta-filtro')?.value || '';
+  const desde = document.getElementById('fin-desde')?.value || '';
+  const hasta  = document.getElementById('fin-hasta')?.value || '';
+
+  let query = sb.from('movimientos_financieros')
+    .select('*, cuentas(nombre,moneda)')
+    .order('fecha', {ascending: true})
+    .order('created_at', {ascending: true});
+
+  if(cuentaFiltro) query = query.eq('cuenta_id', cuentaFiltro);
+  if(desde) query = query.gte('fecha', desde);
+  if(hasta) query = query.lte('fecha', hasta);
+
+  const { data } = await query.limit(500);
+  finanzasDataGlobal = data || [];
+
+  if(!finanzasDataGlobal.length) {
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><p>Sin movimientos en el período seleccionado.</p></div>';
+    document.getElementById('fin-resumen').textContent = '';
     return;
   }
-  tb.innerHTML = `<table>
-    <tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Contraparte</th><th>Cuenta</th><th>Monto</th><th>Status</th></tr>
-    ${data.map(m => `<tr>
-      <td style="color:var(--text3)">${m.fecha}</td>
-      <td><span class="badge" style="background:${m.tipo==='ingreso'?'rgba(39,166,106,0.15)':'rgba(192,57,43,0.15)'};color:${m.tipo==='ingreso'?'#27a66a':'#e74c3c'}">${m.tipo}</span></td>
-      <td style="color:var(--text)">${m.concepto}</td>
-      <td style="color:var(--text2)">${m.contraparte || '—'}</td>
-      <td style="color:var(--text3)">${m.cuentas?.nombre || '—'}</td>
-      <td style="font-family:'Syne',sans-serif;font-weight:600;color:${m.tipo==='ingreso'?'#27a66a':'#e74c3c'}">${m.tipo==='ingreso'?'+':'-'}${Number(m.monto).toFixed(2)} ${m.moneda.toUpperCase()}</td>
-      <td><span class="badge" style="background:rgba(90,85,77,0.3);color:var(--text3)">${m.status}</span></td>
-    </tr>`).join('')}
-  </table>`;
+
+  // Calcular saldo acumulado línea por línea
+  let saldo = 0;
+  let totalIngresos = 0;
+  let totalEgresos  = 0;
+
+  const filas = finanzasDataGlobal.map(m => {
+    const monto = Number(m.monto);
+    const esIngreso = m.tipo === 'ingreso';
+    if(esIngreso) { saldo += monto; totalIngresos += monto; }
+    else          { saldo -= monto; totalEgresos  += monto; }
+
+    const montoStr = (esIngreso ? '+' : '-') + monto.toFixed(2) + ' ' + (m.moneda||'').toUpperCase();
+    const saldoColor = saldo >= 0 ? 'var(--azul)' : 'var(--danger)';
+
+    return '<tr>' +
+      '<td style="color:var(--text3);white-space:nowrap">' + m.fecha + '</td>' +
+      '<td><span class="badge" style="background:' + (esIngreso?'rgba(39,166,106,0.15)':'rgba(192,57,43,0.15)') + ';color:' + (esIngreso?'#27a66a':'#e74c3c') + '">' + m.tipo + '</span></td>' +
+      '<td style="color:var(--text)">' + (m.concepto||'—') + '</td>' +
+      '<td style="color:var(--text2);font-size:12px">' + (m.contraparte||'—') + '</td>' +
+      '<td style="color:var(--text3);font-size:12px">' + (m.cuentas?.nombre||'—') + '</td>' +
+      '<td style="font-weight:600;color:' + (esIngreso?'#27a66a':'#e74c3c') + '">' + montoStr + '</td>' +
+      '<td style="font-weight:700;color:' + saldoColor + '">' + saldo.toFixed(2) + '</td>' +
+    '</tr>';
+  });
+
+  const cuentaNombre = cuentaFiltro
+    ? (cuentasSelectData.find(c => c.id === cuentaFiltro)?.nombre || 'Cuenta')
+    : 'Todas las cuentas';
+
+  const tituloEl = document.getElementById('fin-tabla-titulo');
+  if(tituloEl) tituloEl.textContent = 'Estado de cuenta — ' + cuentaNombre;
+
+  const resumenEl = document.getElementById('fin-resumen');
+  if(resumenEl) resumenEl.innerHTML =
+    '<span style="color:#27a66a;margin-right:12px">▲ Ingresos: ' + totalIngresos.toFixed(2) + '</span>' +
+    '<span style="color:#e74c3c;margin-right:12px">▼ Egresos: ' + totalEgresos.toFixed(2) + '</span>' +
+    '<span style="color:var(--azul);font-weight:700">= Saldo: ' + saldo.toFixed(2) + '</span>';
+
+  tb.innerHTML = '<table>' +
+    '<tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Contraparte</th><th>Cuenta</th><th>Monto</th><th>Saldo acumulado</th></tr>' +
+    filas.join('') +
+    '</table>';
+}
+
+function exportarEstadoCuenta() {
+  if(!finanzasDataGlobal.length) { alert('No hay datos para exportar.'); return; }
+  let saldo = 0;
+  const rows = finanzasDataGlobal.map(m => {
+    const monto = Number(m.monto);
+    if(m.tipo === 'ingreso') saldo += monto; else saldo -= monto;
+    return {
+      fecha: m.fecha,
+      tipo: m.tipo,
+      concepto: m.concepto || '—',
+      contraparte: m.contraparte || '—',
+      cuenta: m.cuentas?.nombre || '—',
+      moneda: m.moneda,
+      monto: monto.toFixed(2),
+      saldo_acumulado: saldo.toFixed(2)
+    };
+  });
+  exportarCSV(rows, 'estado_cuenta');
 }
 
 function toggleTasaFinanzas() {
