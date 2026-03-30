@@ -1453,8 +1453,8 @@
     <div class="form-group" style="margin-bottom:16px">
       <label>Forma de pago</label>
       <select id="pc-moneda" onchange="toggleCamposBs('pc')" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-        <option value="usd">USD</option>
-        <option value="zelle">Zelle USD</option>
+        <option value="zelle">Zelle (Capital One)</option>
+        <option value="usd">Transferencia USD</option>
         <option value="cash">Cash USD</option>
         <option value="bs_bcv">Bs (BCV)</option>
         <option value="bs_paralelo">Bs (Paralelo)</option>
@@ -1675,8 +1675,8 @@
       <div class="form-group">
         <label>Forma de pago</label>
         <select id="cobro-moneda" onchange="toggleCamposBs('cobro')">
-          <option value="usd">USD factura</option>
-          <option value="zelle">Zelle USD</option>
+          <option value="zelle">Zelle (Capital One)</option>
+          <option value="usd">Transferencia USD</option>
           <option value="cash">Cash USD</option>
           <option value="bs_bcv">Bs (BCV)</option>
           <option value="bs_paralelo">Bs (Paralelo)</option>
@@ -3415,12 +3415,20 @@ function abrirModalCobro(venta_id, descripcion, total_usd) {
   const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
   if(bcvTasa) document.getElementById('cobro-tasa').value = bcvTasa.valor;
 
-  // Auto-llenar monto si se pasó el total
-  if(total_usd) {
-    document.getElementById('cobro-monto').value = parseFloat(total_usd).toFixed(2);
+  // Auto-llenar monto en ambos campos (USD normal y USD-equiv de Bs)
+  if(total_usd && parseFloat(total_usd) > 0) {
+    const t = parseFloat(total_usd).toFixed(2);
+    document.getElementById('cobro-monto').value = t;
+    document.getElementById('cobro-monto-usd-bs').value = t;
   } else {
     document.getElementById('cobro-monto').value = '';
+    document.getElementById('cobro-monto-usd-bs').value = '';
   }
+  // Reset campos Bs
+  document.getElementById('cobro-monto-bs').value = '';
+  // Resetear forma de pago a USD y ocultar campos Bs
+  document.getElementById('cobro-moneda').value = 'usd';
+  toggleCamposBs('cobro');
 
   // cargar cuentas en el select
   const selCuenta = document.getElementById('cobro-cuenta');
@@ -3450,16 +3458,20 @@ async function confirmarCobro() {
     ? parseFloat(document.getElementById('cobro-monto-bs').value) || 0
     : 0;
 
+  const cuentaIdRaw = document.getElementById('cobro-cuenta').value;
+  const cuentaId = (cuentaIdRaw && cuentaIdRaw !== 'null') ? cuentaIdRaw : null;
+
   if(!esBs && montoUSD <= 0) { alert('Ingresá un monto válido.'); return; }
   if(esBs && montoBS <= 0)   { alert('Ingresá el monto en Bs.'); return; }
   if(esBs && montoUSD <= 0)  { alert('Ingresá el equivalente en USD.'); return; }
   if(!fecha)                  { alert('Seleccioná una fecha.'); return; }
+  if(!cuentaId)               { alert('Seleccioná una cuenta destino.'); return; }
   if(!cobroVentaId)           { alert('Error: no hay venta seleccionada.'); return; }
 
   // 1. Registrar movimiento financiero
   const { error: errMF } = await sb.from('movimientos_financieros').insert({
     fecha,
-    cuenta_id,
+    cuenta_id: cuentaId,
     tipo: 'ingreso',
     concepto: 'Cobro venta' + (nota ? ' — '+nota : ''),
     monto:    esBs ? montoBS  : montoUSD,
@@ -3699,19 +3711,34 @@ function imprimirFactura() {
 function toggleCamposBs(prefix) {
   var moneda = document.getElementById(prefix + '-moneda')?.value || '';
   var esBs   = moneda.startsWith('bs');
+  var esZelle = moneda === 'zelle';
 
   if(prefix === 'cobro') {
-    var camposBs  = document.getElementById('cobro-campos-bs');
+    var camposBs   = document.getElementById('cobro-campos-bs');
     var montoLabel = document.getElementById('cobro-monto-label');
     var montoInput = document.getElementById('cobro-monto');
-    if(camposBs)   camposBs.style.display   = esBs ? 'block' : 'none';
-    if(montoInput) montoInput.style.display  = esBs ? 'none'  : 'block';
-    if(montoLabel) montoLabel.style.display  = esBs ? 'none'  : 'block';
+    var selCuenta  = document.getElementById('cobro-cuenta');
+    if(camposBs)   camposBs.style.display  = esBs ? 'block' : 'none';
+    if(montoInput) montoInput.style.display = esBs ? 'none'  : 'block';
+    if(montoLabel) montoLabel.style.display = esBs ? 'none'  : 'block';
+    // Auto-seleccionar Capital One si es Zelle
+    if(esZelle && selCuenta) {
+      var opts = Array.from(selCuenta.options);
+      var capitalOne = opts.find(o => o.text.toLowerCase().includes('capital') || o.text.toLowerCase().includes('zelle'));
+      if(capitalOne) selCuenta.value = capitalOne.value;
+    }
   } else if(prefix === 'pc') {
-    var camposBsPc = document.getElementById('pc-campos-bs');
+    var camposBsPc  = document.getElementById('pc-campos-bs');
     var montoInputPc = document.getElementById('pc-monto');
+    var selCuentaPc  = document.getElementById('pc-cuenta');
     if(camposBsPc)   camposBsPc.style.display  = esBs ? 'block' : 'none';
     if(montoInputPc) montoInputPc.style.display = esBs ? 'none'  : 'block';
+    // Auto-seleccionar Capital One si es Zelle
+    if(esZelle && selCuentaPc) {
+      var optsPc = Array.from(selCuentaPc.options);
+      var capitalOnePc = optsPc.find(o => o.text.toLowerCase().includes('capital') || o.text.toLowerCase().includes('zelle'));
+      if(capitalOnePc) selCuentaPc.value = capitalOnePc.value;
+    }
   }
 }
 
@@ -3753,10 +3780,14 @@ async function confirmarPagoCompra() {
     ? parseFloat(document.getElementById('pc-monto-bs').value) || 0
     : 0;
 
+  var cuentaIdPcRaw = document.getElementById('pc-cuenta').value;
+  var cuentaIdPc = (cuentaIdPcRaw && cuentaIdPcRaw !== 'null') ? cuentaIdPcRaw : null;
+
   if(!esBs && montoUSD <= 0) { alert('Ingresá un monto válido.'); return; }
   if(esBs && montoBS <= 0)   { alert('Ingresá el monto en Bs.'); return; }
   if(esBs && montoUSD <= 0)  { alert('Ingresá el equivalente en USD.'); return; }
   if(!fecha)                  { alert('Seleccioná una fecha.'); return; }
+  if(!cuentaIdPc)             { alert('Seleccioná una cuenta.'); return; }
   if(!pagarCompraId)          { alert('Error: no hay compra seleccionada.'); return; }
 
   var r1 = await sb.from('compras').select('proveedores(nombre), saldo_pendiente, total_usd').eq('id', pagarCompraId).maybeSingle();
@@ -3768,7 +3799,7 @@ async function confirmarPagoCompra() {
   // 1. Registrar egreso
   var errMF = await sb.from('movimientos_financieros').insert({
     fecha: fecha,
-    cuenta_id: cuenta_id,
+    cuenta_id: cuentaIdPc,
     tipo: 'egreso',
     concepto: 'Pago compra — ' + provNombre,
     monto:     esBs ? montoBS : montoUSD,
