@@ -696,17 +696,28 @@
 
       <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:12px">
           <div class="page-title">Dashboard</div>
-          <div style="font-size:12px;color:var(--text3)" id="dash-periodo">Últimos 30 días</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <button onclick="setPeriodo('7')"  id="btn-periodo-7"  style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--text3)">7 días</button>
+            <button onclick="setPeriodo('30')" id="btn-periodo-30" style="background:var(--azul);color:white;border:1.5px solid var(--azul);border-radius:20px;padding:5px 14px;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer">30 días</button>
+            <button onclick="setPeriodo('90')" id="btn-periodo-90" style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--text3)">90 días</button>
+            <button onclick="setPeriodo('mes')" id="btn-periodo-mes" style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--text3)">Este mes</button>
+            <button onclick="setPeriodo('ano')" id="btn-periodo-ano" style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--text3)">Este año</button>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input type="date" id="dash-desde" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 8px;font-size:12px;font-family:'Sora',sans-serif;outline:none;" onchange="loadDashboard()">
+              <span style="color:var(--text3);font-size:12px">→</span>
+              <input type="date" id="dash-hasta" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 8px;font-size:12px;font-family:'Sora',sans-serif;outline:none;" onchange="loadDashboard()">
+            </div>
+          </div>
         </div>
-        <div class="page-sub">Métricas en tiempo real — base USD BCV equivalente</div>
+        <div class="page-sub" id="dash-periodo-label">Mostrando últimos 30 días</div>
 
         <!-- TASAS ACTIVAS -->
         <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap" id="dash-tasas"></div>
 
         <!-- VENTAS POR CANAL -->
-        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Ventas últimos 30 días</div>
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Ventas — período seleccionado</div>
         <div class="cards-grid" style="margin-bottom:24px">
           <div class="stat-card" style="border-color:rgba(200,146,42,0.3)">
             <div class="stat-label">Total ventas</div>
@@ -751,7 +762,7 @@
         </div>
 
         <!-- GASTOS 30 DÍAS -->
-        <div style="font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Gastos últimos 30 días</div>
+        <div style="font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Gastos — período seleccionado</div>
         <div class="cards-grid" style="margin-bottom:24px">
           <div class="stat-card">
             <div class="stat-label">Materia prima</div>
@@ -1451,14 +1462,8 @@
       <select id="pc-cuenta" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;"></select>
     </div>
     <div class="form-group" style="margin-bottom:16px">
-      <label>Forma de pago</label>
-      <select id="pc-moneda" onchange="toggleCamposBs('pc')" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-        <option value="zelle">Zelle (Capital One)</option>
-        <option value="usd">Transferencia USD</option>
-        <option value="cash">Cash USD</option>
-        <option value="bs_bcv">Bs (BCV)</option>
-        <option value="bs_paralelo">Bs (Paralelo)</option>
-      </select>
+      <label>Cuenta a debitar</label>
+      <select id="pc-cuenta" onchange="onCuentaChange('pc')" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;"></select>
     </div>
 
     <!-- Campos Bs pago compra -->
@@ -1671,20 +1676,10 @@
     <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px">Registrar cobro</div>
     <div style="color:var(--text3);font-size:13px;margin-bottom:24px" id="modal-cobro-venta">—</div>
 
-    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px">
-      <div class="form-group">
-        <label>Forma de pago</label>
-        <select id="cobro-moneda" onchange="toggleCamposBs('cobro')">
-          <option value="zelle">Zelle (Capital One)</option>
-          <option value="usd">Transferencia USD</option>
-          <option value="cash">Cash USD</option>
-          <option value="bs_bcv">Bs (BCV)</option>
-          <option value="bs_paralelo">Bs (Paralelo)</option>
-        </select>
-      </div>
+    <div class="form-row" style="grid-template-columns:1fr;gap:16px">
       <div class="form-group">
         <label>Cuenta destino</label>
-        <select id="cobro-cuenta"></select>
+        <select id="cobro-cuenta" onchange="onCuentaChange('cobro')"></select>
       </div>
     </div>
 
@@ -1914,14 +1909,70 @@ async function doLogout() {
 }
 
 // DASHBOARD
+function setPeriodo(tipo) {
+  const hoy = new Date();
+  let desde, hasta;
+  hasta = hoy.toISOString().split('T')[0];
+
+  if(tipo === '7') {
+    const d = new Date(hoy); d.setDate(d.getDate()-7);
+    desde = d.toISOString().split('T')[0];
+  } else if(tipo === '30') {
+    const d = new Date(hoy); d.setDate(d.getDate()-30);
+    desde = d.toISOString().split('T')[0];
+  } else if(tipo === '90') {
+    const d = new Date(hoy); d.setDate(d.getDate()-90);
+    desde = d.toISOString().split('T')[0];
+  } else if(tipo === 'mes') {
+    desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+  } else if(tipo === 'ano') {
+    desde = new Date(hoy.getFullYear(), 0, 1).toISOString().split('T')[0];
+  }
+
+  const desdeEl = document.getElementById('dash-desde');
+  const hastaEl = document.getElementById('dash-hasta');
+  if(desdeEl) desdeEl.value = desde;
+  if(hastaEl) hastaEl.value = hasta;
+
+  // Resaltar botón activo
+  ['7','30','90','mes','ano'].forEach(t => {
+    const btn = document.getElementById('btn-periodo-' + t);
+    if(!btn) return;
+    if(t === tipo) {
+      btn.style.background = 'var(--azul)';
+      btn.style.color = 'white';
+      btn.style.borderColor = 'var(--azul)';
+    } else {
+      btn.style.background = 'none';
+      btn.style.color = 'var(--text3)';
+      btn.style.borderColor = 'var(--border)';
+    }
+  });
+
+  loadDashboard();
+}
+
 async function loadDashboard() {
   const hoy = new Date();
-  const hace30 = new Date(hoy);
-  hace30.setDate(hace30.getDate() - 30);
-  const desde = hace30.toISOString().split('T')[0];
-  const hasta = hoy.toISOString().split('T')[0];
+  // Leer fechas del selector, o usar defaults
+  const desdeEl = document.getElementById('dash-desde');
+  const hastaEl = document.getElementById('dash-hasta');
+  let desde, hasta;
 
-  document.getElementById('dash-periodo').textContent = `${desde} → ${hasta}`;
+  if(desdeEl?.value && hastaEl?.value) {
+    desde = desdeEl.value;
+    hasta = hastaEl.value;
+  } else {
+    const hace30 = new Date(hoy);
+    hace30.setDate(hace30.getDate() - 30);
+    desde = hace30.toISOString().split('T')[0];
+    hasta = hoy.toISOString().split('T')[0];
+    if(desdeEl) desdeEl.value = desde;
+    if(hastaEl) hastaEl.value = hasta;
+  }
+
+  const labelEl = document.getElementById('dash-periodo-label');
+  if(labelEl) labelEl.textContent = 'Mostrando ' + desde + ' → ' + hasta;
 
   // Cargar todo en paralelo
   const [ventas, ventasDetalle, compras, comprasDetalle, cuentas, movFin, tasas, cartera, cxp] = await Promise.all([
@@ -2792,14 +2843,20 @@ async function anularVenta(venta_id) {
 }
 
 async function verDetalleVenta(venta_id, titulo) {
-  const { data, error } = await sb.from('ventas_detalle')
-    .select('id, cantidad, precio, moneda, producto_id, productos(nombre,tipo,unidad)')
-    .eq('venta_id', venta_id);
+  const [detRes, pagosRes, ventaRes] = await Promise.all([
+    sb.from('ventas_detalle').select('id,cantidad,precio,moneda,producto_id,productos(nombre,tipo,unidad)').eq('venta_id', venta_id),
+    sb.from('movimientos_financieros').select('fecha,monto,monto_bs,monto_usd,moneda,concepto,cuentas(nombre)').eq('venta_id', venta_id).order('fecha',{ascending:true}),
+    sb.from('ventas').select('total_usd,saldo_pendiente,status').eq('id', venta_id).maybeSingle()
+  ]);
 
   document.getElementById('venta-detalle-titulo').textContent = titulo;
   document.getElementById('venta-detalle-panel').style.display = 'flex';
 
-  if(!data || !data.length) {
+  const data   = detRes.data || [];
+  const pagos  = pagosRes.data || [];
+  const venta  = ventaRes.data;
+
+  if(!data.length) {
     document.getElementById('venta-detalle-contenido').innerHTML = '<div class="empty">Sin detalle</div>';
     return;
   }
@@ -2807,30 +2864,61 @@ async function verDetalleVenta(venta_id, titulo) {
   const totalKG  = data.reduce((s,d) => s + Number(d.cantidad), 0);
   const totalUSD = data.reduce((s,d) => s + Number(d.cantidad)*Number(d.precio), 0);
 
-  document.getElementById('venta-detalle-contenido').innerHTML = `<table>
-    <tr><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Precio</th><th>Moneda</th><th>Subtotal</th></tr>
-    ${data.map(d=>{
+  // Tabla de productos
+  let html = `<table style="margin-bottom:20px">
+    <tr><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr>
+    ${data.map(d => {
       const unidad = d.productos?.unidad || 'kg';
-      const esUnd = unidad === 'und' || unidad === 'unidad';
-      const cant = Number(d.cantidad);
+      const esUnd  = unidad === 'und' || unidad === 'unidad';
+      const cant   = Number(d.cantidad);
       const cantStr = esUnd ? cant.toFixed(0)+' und.' : cant.toFixed(2)+' kg';
       const subtotal = cant * Number(d.precio);
-      return `<tr>
-        <td style="color:var(--text)">${d.productos?.nombre||'—'}</td>
-        <td><span class="badge badge-${d.productos?.tipo||'canal'}">${d.productos?.tipo||'—'}</span></td>
-        <td style="font-weight:600">${cantStr}</td>
-        <td>$${Number(d.precio).toFixed(2)}</td>
-        <td style="color:var(--text3)">${d.moneda?.toUpperCase()}</td>
-        <td style="font-weight:600;color:var(--azul)">$${subtotal.toFixed(2)}</td>
-      </tr>`;
+      return '<tr>' +
+        '<td style="color:var(--text)">' + (d.productos?.nombre||'—') + '</td>' +
+        '<td><span class="badge badge-' + (d.productos?.tipo||'canal') + '">' + (d.productos?.tipo||'—') + '</span></td>' +
+        '<td style="font-weight:600">' + cantStr + '</td>' +
+        '<td>$' + Number(d.precio).toFixed(2) + '</td>' +
+        '<td style="font-weight:600;color:var(--azul)">$' + subtotal.toFixed(2) + '</td>' +
+      '</tr>';
     }).join('')}
     <tr style="border-top:2px solid var(--border);background:var(--surface2)">
       <td colspan="2" style="color:var(--text3);font-size:12px;padding:8px 0">TOTALES</td>
-      <td style="font-weight:700;color:var(--text)">${totalKG.toFixed(2)} kg</td>
-      <td colspan="2"></td>
+      <td style="font-weight:700">${totalKG.toFixed(2)} kg</td>
+      <td></td>
       <td style="font-weight:700;color:var(--azul);font-size:15px">$${totalUSD.toFixed(2)}</td>
     </tr>
   </table>`;
+
+  // Historial de cobros
+  html += '<div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin:16px 0 10px">Historial de cobros</div>';
+  if(!pagos.length) {
+    html += '<div style="font-size:13px;color:var(--text3);padding:8px 0">Sin cobros registrados aún.</div>';
+  } else {
+    const totalCobrado = pagos.reduce((s,p) => s + (Number(p.monto_usd)||Number(p.monto)||0), 0);
+    html += '<table><tr><th>Fecha</th><th>Forma</th><th>Monto</th><th>Cuenta</th></tr>';
+    pagos.forEach(p => {
+      const esBs = p.moneda === 'bs';
+      const montoStr = esBs
+        ? 'Bs ' + Number(p.monto_bs||p.monto).toFixed(0) + ' (≈ $' + Number(p.monto_usd||0).toFixed(2) + ')'
+        : '$' + Number(p.monto).toFixed(2);
+      html += '<tr>' +
+        '<td style="color:var(--text3)">' + p.fecha + '</td>' +
+        '<td style="color:var(--text3)">' + (esBs ? 'Bs' : 'USD') + '</td>' +
+        '<td style="font-weight:600;color:var(--success)">' + montoStr + '</td>' +
+        '<td style="color:var(--text3);font-size:12px">' + (p.cuentas?.nombre||'—') + '</td>' +
+      '</tr>';
+    });
+    html += '<tr style="border-top:2px solid var(--border);background:var(--surface2)">' +
+      '<td colspan="2" style="color:var(--text3);font-size:12px;padding:8px 0">Total cobrado</td>' +
+      '<td style="font-weight:700;color:var(--success)">$' + totalCobrado.toFixed(2) + '</td>' +
+      '<td></td></tr>';
+    html += '</table>';
+    const saldo = venta?.saldo_pendiente ?? 0;
+    html += '<div style="margin-top:10px;font-size:13px;font-weight:600;color:' + (Number(saldo)>0?'var(--danger)':'var(--success)') + '">' +
+      (Number(saldo)>0 ? 'Saldo pendiente: $' + Number(saldo).toFixed(2) : '✓ Venta completamente cobrada') + '</div>';
+  }
+
+  document.getElementById('venta-detalle-contenido').innerHTML = html;
 }
 
 // COMPRAS
@@ -3249,28 +3337,69 @@ async function loadCompras() {
 }
 
 async function verDetalleCompra(compra_id, titulo) {
-  const { data } = await sb.from('compras_detalle')
-    .select('*, productos(nombre,tipo)')
-    .eq('compra_id', compra_id);
+  const [detRes, pagosRes, compraRes] = await Promise.all([
+    sb.from('compras_detalle').select('*, productos(nombre,tipo)').eq('compra_id', compra_id),
+    sb.from('movimientos_financieros').select('fecha,monto,monto_bs,monto_usd,moneda,concepto,cuentas(nombre)').eq('compra_id', compra_id).order('fecha',{ascending:true}),
+    sb.from('compras').select('total_usd,saldo_pendiente,status_pago,condicion').eq('id', compra_id).maybeSingle()
+  ]);
 
   document.getElementById('detalle-titulo').textContent = titulo;
   document.getElementById('compra-detalle-panel').style.display = 'block';
 
-  if(!data || !data.length) {
+  const data   = detRes.data || [];
+  const pagos  = pagosRes.data || [];
+  const compra = compraRes.data;
+
+  if(!data.length) {
     document.getElementById('compra-detalle-contenido').innerHTML = '<div class="empty">Sin detalle</div>';
     return;
   }
 
-  document.getElementById('compra-detalle-contenido').innerHTML = `<table>
-    <tr><th>Producto</th><th>Tipo</th><th>Cantidad (kg)</th><th>Precio unit.</th><th>Moneda</th></tr>
-    ${data.map(d => `<tr>
-      <td style="color:var(--text)">${d.productos?.nombre || '—'}</td>
-      <td><span class="badge badge-${d.productos?.tipo||'canal'}">${d.productos?.tipo||'—'}</span></td>
-      <td style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600">${Number(d.cantidad_kg).toFixed(1)} kg</td>
-      <td>${Number(d.precio).toFixed(2)}</td>
-      <td style="color:var(--text3)">${d.moneda?.toUpperCase()}</td>
-    </tr>`).join('')}
-  </table>`;
+  // Tabla de productos
+  var html = '<table style="margin-bottom:20px"><tr><th>Producto</th><th>Tipo</th><th>Cantidad (kg)</th><th>Precio unit.</th><th>Moneda</th></tr>';
+  data.forEach(function(d) {
+    html += '<tr>' +
+      '<td style="color:var(--text)">' + (d.productos?.nombre||'—') + '</td>' +
+      '<td><span class="badge badge-' + (d.productos?.tipo||'canal') + '">' + (d.productos?.tipo||'—') + '</span></td>' +
+      '<td style="font-weight:600">' + Number(d.cantidad_kg).toFixed(1) + ' kg</td>' +
+      '<td>$' + Number(d.precio).toFixed(2) + '</td>' +
+      '<td style="color:var(--text3)">' + (d.moneda?.toUpperCase()||'—') + '</td>' +
+    '</tr>';
+  });
+  html += '</table>';
+
+  // Historial de pagos (solo si es crédito)
+  if(compra?.condicion === 'credito') {
+    html += '<div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin:16px 0 10px">Historial de pagos</div>';
+    if(!pagos.length) {
+      html += '<div style="font-size:13px;color:var(--text3);padding:8px 0">Sin pagos registrados aún.</div>';
+    } else {
+      const totalPagado = pagos.reduce(function(s,p){ return s + (Number(p.monto_usd)||Number(p.monto)||0); }, 0);
+      html += '<table><tr><th>Fecha</th><th>Forma</th><th>Monto</th><th>Cuenta</th></tr>';
+      pagos.forEach(function(p) {
+        var esBs = p.moneda === 'bs';
+        var montoStr = esBs
+          ? 'Bs ' + Number(p.monto_bs||p.monto).toFixed(0) + ' (≈ $' + Number(p.monto_usd||0).toFixed(2) + ')'
+          : '$' + Number(p.monto).toFixed(2);
+        html += '<tr>' +
+          '<td style="color:var(--text3)">' + p.fecha + '</td>' +
+          '<td style="color:var(--text3)">' + (esBs ? 'Bs' : 'USD') + '</td>' +
+          '<td style="font-weight:600;color:var(--danger)">' + montoStr + '</td>' +
+          '<td style="color:var(--text3);font-size:12px">' + (p.cuentas?.nombre||'—') + '</td>' +
+        '</tr>';
+      });
+      html += '<tr style="border-top:2px solid var(--border);background:var(--surface2)">' +
+        '<td colspan="2" style="color:var(--text3);font-size:12px;padding:8px 0">Total pagado</td>' +
+        '<td style="font-weight:700;color:var(--danger)">$' + totalPagado.toFixed(2) + '</td>' +
+        '<td></td></tr>';
+      html += '</table>';
+    }
+    var saldo = compra?.saldo_pendiente ?? 0;
+    html += '<div style="margin-top:10px;font-size:13px;font-weight:600;color:' + (Number(saldo)>0?'var(--danger)':'var(--success)') + '">' +
+      (Number(saldo)>0 ? 'Saldo pendiente: $' + Number(saldo).toFixed(2) : '✓ Compra completamente pagada') + '</div>';
+  }
+
+  document.getElementById('compra-detalle-contenido').innerHTML = html;
 }
 
 // MOVIMIENTOS INVENTARIO
@@ -3430,10 +3559,15 @@ function abrirModalCobro(venta_id, descripcion, total_usd) {
   document.getElementById('cobro-moneda').value = 'usd';
   toggleCamposBs('cobro');
 
-  // cargar cuentas en el select
+  // cargar cuentas en el select y construir mapa de monedas
   const selCuenta = document.getElementById('cobro-cuenta');
   if(selCuenta && cuentasSelectData) {
-    selCuenta.innerHTML = cuentasSelectData.map(c=>`<option value="${c.id}">${c.nombre} (${c.moneda.toUpperCase()})</option>`).join('');
+    cuentasMonedaMap = {};
+    cuentasSelectData.forEach(c => { cuentasMonedaMap[c.id] = c.moneda; });
+    selCuenta.innerHTML = cuentasSelectData.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+    // Guardar el prefilled para usarlo al cambiar cuenta
+    selCuenta._prefilled = total_usd;
+    onCuentaChange('cobro');
   }
 }
 
@@ -3443,9 +3577,10 @@ function cerrarModalCobro() {
 }
 
 async function confirmarCobro() {
-  const formaPago = document.getElementById('cobro-moneda').value;
-  const esBs      = formaPago.startsWith('bs');
-  const cuenta_id = document.getElementById('cobro-cuenta').value;
+  const cuentaIdRaw2 = document.getElementById('cobro-cuenta').value;
+  const monedaCuenta = cuentasMonedaMap[cuentaIdRaw2] || 'usd';
+  const formaPago = monedaCuenta;
+  const esBs      = monedaCuenta === 'bs';
   const fecha     = document.getElementById('cobro-fecha').value;
   const status    = document.getElementById('cobro-status').value;
   const nota      = document.getElementById('cobro-nota').value;
@@ -3458,7 +3593,7 @@ async function confirmarCobro() {
     ? parseFloat(document.getElementById('cobro-monto-bs').value) || 0
     : 0;
 
-  const cuentaIdRaw = document.getElementById('cobro-cuenta').value;
+  const cuentaIdRaw = cuentaIdRaw2;
   const cuentaId = (cuentaIdRaw && cuentaIdRaw !== 'null') ? cuentaIdRaw : null;
 
   if(!esBs && montoUSD <= 0) { alert('Ingresá un monto válido.'); return; }
@@ -3480,6 +3615,7 @@ async function confirmarCobro() {
     moneda:   esBs ? 'bs' : 'usd',
     contraparte: nota || null,
     status: 'registrado',
+    venta_id: cobroVentaId,
     usuario_id: currentUser?.id || null
   });
   if(errMF) { alert('Error registrando movimiento: ' + errMF.message); return; }
@@ -3708,6 +3844,40 @@ function imprimirFactura() {
 
 
 // ===== TOGGLE CAMPOS BS =====
+// Cuentas con moneda bs (se llena al cargar)
+var cuentasMonedaMap = {};
+
+function onCuentaChange(prefix) {
+  var selId = prefix === 'cobro' ? 'cobro-cuenta' : 'pc-cuenta';
+  var sel = document.getElementById(selId);
+  if(!sel) return;
+  var cuentaId = sel.value;
+  var moneda = cuentasMonedaMap[cuentaId] || 'usd';
+  var esBs = moneda === 'bs';
+
+  if(prefix === 'cobro') {
+    var camposBs   = document.getElementById('cobro-campos-bs');
+    var montoLabel = document.getElementById('cobro-monto-label');
+    var montoInput = document.getElementById('cobro-monto');
+    if(camposBs)   camposBs.style.display  = esBs ? 'block' : 'none';
+    if(montoInput) montoInput.style.display = esBs ? 'none'  : 'block';
+    if(montoLabel) montoLabel.style.display = esBs ? 'none'  : 'block';
+    if(esBs) {
+      // Pre-llenar equivalente USD con el saldo pendiente
+      var usdBsEl = document.getElementById('cobro-monto-usd-bs');
+      var montoEl = document.getElementById('cobro-monto');
+      if(usdBsEl && montoEl && montoEl._prefilled) {
+        usdBsEl.value = montoEl._prefilled;
+      }
+    }
+  } else if(prefix === 'pc') {
+    var camposBsPc  = document.getElementById('pc-campos-bs');
+    var montoInputPc = document.getElementById('pc-monto');
+    if(camposBsPc)   camposBsPc.style.display  = esBs ? 'block' : 'none';
+    if(montoInputPc) montoInputPc.style.display = esBs ? 'none'  : 'block';
+  }
+}
+
 function toggleCamposBs(prefix) {
   var moneda = document.getElementById(prefix + '-moneda')?.value || '';
   var esBs   = moneda.startsWith('bs');
@@ -3751,12 +3921,15 @@ function abrirPagarCompra(compra_id, descripcion) {
   document.getElementById('pc-fecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('pc-monto').value = '';
 
-  // Cargar cuentas
+  // Cargar cuentas y mapa de monedas
   var selCuenta = document.getElementById('pc-cuenta');
   if(selCuenta && cuentasSelectData) {
+    cuentasMonedaMap = {};
+    cuentasSelectData.forEach(function(c) { cuentasMonedaMap[c.id] = c.moneda; });
     selCuenta.innerHTML = cuentasSelectData.map(function(c) {
-      return '<option value="' + c.id + '">' + c.nombre + ' (' + c.moneda.toUpperCase() + ')</option>';
+      return '<option value="' + c.id + '">' + c.nombre + '</option>';
     }).join('');
+    onCuentaChange('pc');
   }
   document.getElementById('modal-pagar-compra').style.display = 'flex';
 }
@@ -3767,8 +3940,10 @@ function cerrarPagarCompra() {
 }
 
 async function confirmarPagoCompra() {
-  var formaPago = document.getElementById('pc-moneda').value;
-  var esBs      = formaPago.startsWith('bs');
+  var cuentaIdPc2 = document.getElementById('pc-cuenta').value;
+  var monedaCuentaPc = cuentasMonedaMap[cuentaIdPc2] || 'usd';
+  var formaPago = monedaCuentaPc;
+  var esBs      = monedaCuentaPc === 'bs';
   var fecha     = document.getElementById('pc-fecha').value;
   var cuenta_id = document.getElementById('pc-cuenta').value;
   var status    = document.getElementById('pc-status').value;
@@ -3780,7 +3955,7 @@ async function confirmarPagoCompra() {
     ? parseFloat(document.getElementById('pc-monto-bs').value) || 0
     : 0;
 
-  var cuentaIdPcRaw = document.getElementById('pc-cuenta').value;
+  var cuentaIdPcRaw = cuentaIdPc2;
   var cuentaIdPc = (cuentaIdPcRaw && cuentaIdPcRaw !== 'null') ? cuentaIdPcRaw : null;
 
   if(!esBs && montoUSD <= 0) { alert('Ingresá un monto válido.'); return; }
@@ -3805,9 +3980,10 @@ async function confirmarPagoCompra() {
     monto:     esBs ? montoBS : montoUSD,
     monto_bs:  esBs ? montoBS : null,
     monto_usd: montoUSD,
-    moneda:    esBs ? 'bs' : 'usd',
+    moneda:    monedaCuentaPc,
     contraparte: provNombre,
     status: 'registrado',
+    compra_id: pagarCompraId,
     usuario_id: currentUser?.id || null
   });
   if(errMF.error) { alert('Error registrando egreso: ' + errMF.error.message); return; }
