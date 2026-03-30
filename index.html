@@ -1159,7 +1159,7 @@
           <div class="form-row">
             <div class="form-group">
               <label>Tipo</label>
-              <select id="mf-tipo">
+              <select id="mf-tipo" onchange="actualizarCategoriasFinanzas()">
                 <option value="ingreso">Ingreso</option>
                 <option value="egreso">Egreso</option>
               </select>
@@ -1199,6 +1199,23 @@
             </div>
           </div>
           <div class="form-row">
+            <div class="form-group">
+              <label>Categoría</label>
+              <select id="mf-categoria" onchange="actualizarCategoriasFinanzas()">
+                <option value="">— Seleccionar —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Departamento</label>
+              <select id="mf-departamento">
+                <option value="">— N/A —</option>
+                <option value="ADM">ADM — Administración</option>
+                <option value="OP">OP — Operaciones</option>
+                <option value="Venta">Venta</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
             <div class="form-group" style="grid-column: 1/-1;">
               <label>Concepto</label>
               <input type="text" id="mf-concepto" placeholder="Descripción del movimiento">
@@ -1220,6 +1237,27 @@
             <button onclick="setFinPeriodo(30)" style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--text3)">30d</button>
             <button onclick="setFinPeriodo(90)" style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--text3)">90d</button>
             <button onclick="setFinPeriodo(0)" style="background:none;border:1.5px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--text3)">Este mes</button>
+            <select id="fin-cat-filtro" onchange="loadFinanzas()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;min-width:160px">
+              <option value="">Todas las categorías</option>
+              <optgroup label="Egresos"><option value="Costos directos">Costos directos</option>
+<option value="Nómina">Nómina</option>
+<option value="Gastos operativos">Gastos operativos</option>
+<option value="Gastos comerciales">Gastos comerciales</option>
+<option value="Gastos financieros">Gastos financieros</option>
+<option value="Fiscal">Fiscal</option>
+<option value="Seguros">Seguros</option>
+<option value="Otros egresos">Otros egresos</option></optgroup>
+              <optgroup label="Ingresos"><option value="Ventas">Ventas</option>
+<option value="Aporte de socio">Aporte de socio</option>
+<option value="Préstamo">Préstamo</option>
+<option value="Otros ingresos">Otros ingresos</option></optgroup>
+            </select>
+            <select id="fin-dep-filtro" onchange="loadFinanzas()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+              <option value="">Todos los depto.</option>
+              <option value="ADM">ADM</option>
+              <option value="OP">OP</option>
+              <option value="Venta">Venta</option>
+            </select>
             <div style="margin-left:auto">
               <button onclick="exportarEstadoCuenta()" style="background:var(--azul);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;font-weight:600">↓ Exportar CSV</button>
             </div>
@@ -2295,6 +2333,8 @@ function setFinPeriodo(dias) {
 }
 
 async function initFinanzasFiltros() {
+  // Inicializar categorías del formulario
+  actualizarCategoriasFinanzas();
   // Cargar cuentas en el filtro
   const sel = document.getElementById('fin-cuenta-filtro');
   if(sel && cuentasSelectData && cuentasSelectData.length) {
@@ -2317,6 +2357,9 @@ async function loadFinanzas() {
   const desde = document.getElementById('fin-desde')?.value || '';
   const hasta  = document.getElementById('fin-hasta')?.value || '';
 
+  const catFiltro = document.getElementById('fin-cat-filtro')?.value || '';
+  const depFiltro = document.getElementById('fin-dep-filtro')?.value || '';
+
   let query = sb.from('movimientos_financieros')
     .select('*, cuentas(nombre,moneda)')
     .order('fecha', {ascending: true})
@@ -2325,6 +2368,8 @@ async function loadFinanzas() {
   if(cuentaFiltro) query = query.eq('cuenta_id', cuentaFiltro);
   if(desde) query = query.gte('fecha', desde);
   if(hasta) query = query.lte('fecha', hasta);
+  if(catFiltro) query = query.eq('categoria', catFiltro);
+  if(depFiltro) query = query.eq('departamento', depFiltro);
 
   const { data } = await query.limit(500);
   finanzasDataGlobal = data || [];
@@ -2352,6 +2397,8 @@ async function loadFinanzas() {
     return '<tr>' +
       '<td style="color:var(--text3);white-space:nowrap">' + m.fecha + '</td>' +
       '<td><span class="badge" style="background:' + (esIngreso?'rgba(39,166,106,0.15)':'rgba(192,57,43,0.15)') + ';color:' + (esIngreso?'#27a66a':'#e74c3c') + '">' + m.tipo + '</span></td>' +
+      '<td style="color:var(--text2);font-size:12px">' + (m.categoria||'—') + '</td>' +
+      '<td style="color:var(--text3);font-size:11px">' + (m.departamento||'—') + '</td>' +
       '<td style="color:var(--text)">' + (m.concepto||'—') + '</td>' +
       '<td style="color:var(--text2);font-size:12px">' + (m.contraparte||'—') + '</td>' +
       '<td style="color:var(--text3);font-size:12px">' + (m.cuentas?.nombre||'—') + '</td>' +
@@ -2374,7 +2421,7 @@ async function loadFinanzas() {
     '<span style="color:var(--azul);font-weight:700">= Saldo: ' + saldo.toFixed(2) + '</span>';
 
   tb.innerHTML = '<table>' +
-    '<tr><th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Contraparte</th><th>Cuenta</th><th>Monto</th><th>Saldo acumulado</th></tr>' +
+    '<tr><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Depto.</th><th>Concepto</th><th>Contraparte</th><th>Cuenta</th><th>Monto</th><th>Saldo acumulado</th></tr>' +
     filas.join('') +
     '</table>';
 }
@@ -2388,6 +2435,8 @@ function exportarEstadoCuenta() {
     return {
       fecha: m.fecha,
       tipo: m.tipo,
+      categoria: m.categoria || '—',
+      departamento: m.departamento || '—',
       concepto: m.concepto || '—',
       contraparte: m.contraparte || '—',
       cuenta: m.cuentas?.nombre || '—',
@@ -2397,6 +2446,19 @@ function exportarEstadoCuenta() {
     };
   });
   exportarCSV(rows, 'estado_cuenta');
+}
+
+// ===== CATEGORÍAS FINANZAS =====
+const CATS_EGRESO  = ['Costos directos', 'Nómina', 'Gastos operativos', 'Gastos comerciales', 'Gastos financieros', 'Fiscal', 'Seguros', 'Otros egresos'];
+const CATS_INGRESO = ['Ventas', 'Aporte de socio', 'Préstamo', 'Otros ingresos'];
+
+function actualizarCategoriasFinanzas() {
+  const tipo = document.getElementById('mf-tipo')?.value || 'egreso';
+  const sel  = document.getElementById('mf-categoria');
+  if(!sel) return;
+  const cats = tipo === 'ingreso' ? CATS_INGRESO : CATS_EGRESO;
+  sel.innerHTML = '<option value="">— Sin categoría —</option>' +
+    cats.map(c => '<option value="' + c + '">' + c + '</option>').join('');
 }
 
 function toggleTasaFinanzas() {
@@ -2439,8 +2501,14 @@ async function guardarMovFinanciero() {
 
   if(!monto || !fecha) { alert('Completá monto y fecha.'); return; }
 
+  const categoria    = document.getElementById('mf-categoria')?.value || null;
+  const departamento = document.getElementById('mf-departamento')?.value || null;
+
   const { error } = await sb.from('movimientos_financieros').insert({
-    tipo, cuenta_id, moneda, monto, contraparte, fecha, concepto: concepto || '—',
+    tipo, cuenta_id, moneda, monto, contraparte, fecha,
+    concepto: concepto || '—',
+    categoria: categoria || null,
+    departamento: departamento || null,
     status: 'registrado'
   });
 
@@ -2450,6 +2518,9 @@ async function guardarMovFinanciero() {
   document.getElementById('mf-monto').value = '';
   document.getElementById('mf-contraparte').value = '';
   document.getElementById('mf-concepto').value = '';
+  document.getElementById('mf-categoria').value = '';
+  document.getElementById('mf-departamento').value = '';
+  actualizarCategoriasFinanzas();
   loadFinanzas();
 }
 
