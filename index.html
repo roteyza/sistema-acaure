@@ -879,9 +879,15 @@
             </div>
           </div>
           <div class="form-row">
-            <div class="form-group" style="grid-column:1/-1">
+            <div class="form-group">
               <label>Referencia / Nota</label>
               <input type="text" id="mi-referencia" placeholder="Ej: Compra Minco semana 12, Despacho RF...">
+            </div>
+            <div class="form-group">
+              <label>Lote de producción (opcional)</label>
+              <select id="mi-lote" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+                <option value="">— Sin lote —</option>
+              </select>
             </div>
           </div>
           <button class="btn-action" onclick="guardarMovInventario()">Registrar movimiento</button>
@@ -1330,6 +1336,100 @@
         <div class="table-wrap">
           <div class="table-head"><div class="table-title">Precios vigentes</div></div>
           <div id="precios-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
+      <!-- LOTES -->
+      <div class="page" id="page-lotes">
+        <div class="page-title">Lotes de producción</div>
+        <div class="page-sub">Registrá cada batch de desposte vinculado a su partida (compra)</div>
+
+        <div class="form-card">
+          <div style="font-size:14px;font-weight:600;margin-bottom:16px">Nuevo lote</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Partida (compra)</label>
+              <select id="lote-partida" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+                <option value="">— Seleccionar compra —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Fecha de desposte</label>
+              <input type="date" id="lote-fecha" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            </div>
+            <div class="form-group">
+              <label>N° de animales</label>
+              <input type="number" id="lote-animales" placeholder="Ej: 4" min="1" max="20" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            </div>
+            <div class="form-group">
+              <label>Estado</label>
+              <select id="lote-estado" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+                <option value="pendiente">Pendiente</option>
+                <option value="en_proceso">En proceso</option>
+                <option value="completado">Completado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:16px">
+            <label>Notas</label>
+            <input type="text" id="lote-notas" placeholder="Ej: 4 toros — lote 1 de partida Álvaro" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+          </div>
+          <button class="btn-action" onclick="guardarLote()">Registrar lote</button>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-head"><div class="table-title">Lotes registrados</div></div>
+          <div id="lotes-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
+      <!-- CICLO OPERATIVO -->
+      <div class="page" id="page-ciclo">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="page-title">Ciclo operativo</div>
+          <div style="font-size:12px;color:var(--text3)" id="ciclo-actualizado">—</div>
+        </div>
+        <div class="page-sub">Visibilidad de rotación y flujo de caja por partida</div>
+
+        <!-- CONSOLIDADO -->
+        <div class="cards-grid" style="margin-bottom:24px" id="ciclo-cards">
+          <div class="stat-card">
+            <div class="stat-label">CxC activa</div>
+            <div class="stat-value" id="ciclo-cxc" style="color:var(--success)">—</div>
+            <div class="stat-desc" id="ciclo-cxc-n">— ventas pendientes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">CxP activa</div>
+            <div class="stat-value" id="ciclo-cxp" style="color:var(--danger)">—</div>
+            <div class="stat-desc" id="ciclo-cxp-n">— compras pendientes</div>
+          </div>
+          <div class="stat-card" id="ciclo-posicion-card">
+            <div class="stat-label">Posición neta</div>
+            <div class="stat-value" id="ciclo-posicion">—</div>
+            <div class="stat-desc">CxC − CxP</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">CCE promedio</div>
+            <div class="stat-value" id="ciclo-cce">—</div>
+            <div class="stat-desc">días compra → cobro</div>
+          </div>
+        </div>
+
+        <!-- TABLA POR PARTIDA -->
+        <div class="table-wrap">
+          <div class="table-head">
+            <div class="table-title">Partidas activas</div>
+          </div>
+          <div id="ciclo-table"><div class="loading">Cargando...</div></div>
+        </div>
+
+        <!-- ALERTAS -->
+        <div id="ciclo-alertas" style="margin-top:16px"></div>
+
+        <!-- ROTACIÓN POR PRODUCTO -->
+        <div class="table-wrap" style="margin-top:16px">
+          <div class="table-head"><div class="table-title">Rotación por producto — stock parado</div></div>
+          <div id="ciclo-rotacion"><div class="loading">Cargando...</div></div>
         </div>
       </div>
 
@@ -1803,9 +1903,11 @@ let cuentasSelectData = [];
 const NAV = {
   admin: [
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
+    { id: 'ciclo', label: 'Ciclo operativo', icon: '◎' },
     { id: 'inventario', label: 'Inventario', icon: '▦' },
     { id: 'movimientos', label: 'Movimientos', icon: '⇄' },
     { id: 'compras', label: 'Compras', icon: '◳' },
+    { id: 'lotes', label: 'Lotes', icon: '⬡' },
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
     { id: 'precios', label: 'Lista de precios', icon: '◑' },
@@ -1818,6 +1920,7 @@ const NAV = {
     { id: 'inventario', label: 'Inventario', icon: '▦' },
     { id: 'movimientos', label: 'Movimientos', icon: '⇄' },
     { id: 'compras', label: 'Compras', icon: '◳' },
+    { id: 'lotes', label: 'Lotes', icon: '⬡' },
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
     { id: 'precios', label: 'Lista de precios', icon: '◑' },
@@ -1848,6 +1951,7 @@ const NAV = {
   ],
   socio: [
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
+    { id: 'ciclo', label: 'Ciclo operativo', icon: '◎' },
     { id: 'inventario', label: 'Inventario', icon: '▦' },
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'compras', label: 'Compras', icon: '◳' },
@@ -1955,6 +2059,8 @@ function navigate(pageId) {
   if(pageId === 'tasas') { loadTasas(); initTasasForm(); }
   if(pageId === 'maestros') loadMaestros();
   if(pageId === 'precios') loadListaPrecios();
+  if(pageId === 'lotes') loadLotes();
+  if(pageId === 'ciclo') loadCicloOperativo();
 }
 
 async function doLogout() {
@@ -3653,6 +3759,9 @@ async function guardarMovInventario() {
   if(!fecha) { alert('Seleccioná una fecha.'); return; }
 
   // 1. Guardar movimiento
+  const lote_id_raw = document.getElementById('mi-lote')?.value || '';
+  const lote_id = lote_id_raw || null;
+
   const { error: errMov } = await sb.from('movimientos_inventario').insert({
     tipo,
     producto_id,
@@ -3661,6 +3770,7 @@ async function guardarMovInventario() {
     referencia: referencia || null,
     sede_origen_id:  (tipo === 'entrada') ? null : origen_id,
     sede_destino_id: (tipo === 'salida' || tipo === 'merma') ? null : destino_id,
+    lote_id,
     usuario_id: currentUser?.id || null
   });
 
@@ -3679,6 +3789,8 @@ async function guardarMovInventario() {
   showToast('Movimiento registrado ✓');
   document.getElementById('mi-cantidad').value = '';
   document.getElementById('mi-referencia').value = '';
+  const loteEl = document.getElementById('mi-lote');
+  if(loteEl) loteEl.value = '';
   loadMovimientos();
   loadInventario();
 }
@@ -4264,6 +4376,241 @@ async function guardarPrecio() {
   showToast('Precio actualizado ✓');
   document.getElementById('lp-precio').value = '';
   loadListaPrecios();
+}
+
+// ===== LOTES =====
+async function loadLotes() {
+  // Cargar partidas (compras) en el select
+  const selPartida = document.getElementById('lote-partida');
+  if(selPartida) {
+    const { data: compras } = await sb.from('compras')
+      .select('id, fecha, proveedores(nombre), notas')
+      .order('fecha', {ascending: false}).limit(50);
+    selPartida.innerHTML = '<option value="">— Seleccionar compra —</option>' +
+      (compras||[]).map(c => {
+        const label = (c.proveedores?.nombre||'?') + ' — ' + c.fecha + (c.notas ? ' | ' + c.notas.substring(0,40) : '');
+        return '<option value="' + c.id + '">' + label + '</option>';
+      }).join('');
+  }
+
+  // Cargar lotes en el select de movimientos
+  const selLote = document.getElementById('mi-lote');
+  if(selLote) {
+    const { data: lotes } = await sb.from('lotes')
+      .select('id, fecha, num_animales, estado, compras(proveedores(nombre))')
+      .order('fecha', {ascending: false}).limit(50);
+    selLote.innerHTML = '<option value="">— Sin lote —</option>' +
+      (lotes||[]).filter(l => l.estado !== 'completado').map(l => {
+        const prov = l.compras?.proveedores?.nombre || '?';
+        return '<option value="' + l.id + '">' + prov + ' — ' + l.fecha + ' (' + l.num_animales + ' animales)</option>';
+      }).join('');
+  }
+
+  // Fecha por defecto
+  const fechaEl = document.getElementById('lote-fecha');
+  if(fechaEl && !fechaEl.value) fechaEl.value = new Date().toISOString().split('T')[0];
+
+  // Cargar tabla de lotes
+  const { data: lotes } = await sb.from('lotes')
+    .select('*, compras(fecha, proveedores(nombre))')
+    .order('fecha', {ascending: false}).limit(50);
+
+  const tb = document.getElementById('lotes-table');
+  if(!lotes || !lotes.length) {
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">⬡</div><p>Sin lotes registrados aún.</p></div>';
+    return;
+  }
+
+  const estadoColor = { pendiente: '#e8b84b', en_proceso: '#5dade2', completado: '#27a66a' };
+
+  tb.innerHTML = '<table>' +
+    '<tr><th>Fecha desposte</th><th>Partida</th><th>Animales</th><th>Estado</th><th>Notas</th><th></th></tr>' +
+    lotes.map(l => '<tr>' +
+      '<td style="color:var(--text3)">' + l.fecha + '</td>' +
+      '<td style="color:var(--text)">' + (l.compras?.proveedores?.nombre||'—') + ' — ' + (l.compras?.fecha||'—') + '</td>' +
+      '<td style="font-weight:600;color:var(--azul)">' + l.num_animales + '</td>' +
+      '<td><span class="badge" style="background:' + (estadoColor[l.estado]||'#888') + '22;color:' + (estadoColor[l.estado]||'#888') + '">' + l.estado + '</span></td>' +
+      '<td style="color:var(--text3);font-size:12px">' + (l.notas||'—') + '</td>' +
+      '<td><select onchange="cambiarEstadoLote('' + l.id + '',this.value)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">' +
+        '<option value="">Cambiar estado...</option>' +
+        '<option value="pendiente">Pendiente</option>' +
+        '<option value="en_proceso">En proceso</option>' +
+        '<option value="completado">Completado</option>' +
+      '</select></td>' +
+    '</tr>').join('') +
+    '</table>';
+}
+
+async function guardarLote() {
+  const partida_id = document.getElementById('lote-partida').value;
+  const fecha      = document.getElementById('lote-fecha').value;
+  const num_animales = parseInt(document.getElementById('lote-animales').value) || 1;
+  const estado     = document.getElementById('lote-estado').value;
+  const notas      = document.getElementById('lote-notas').value;
+
+  if(!partida_id) { alert('Seleccioná la partida (compra).'); return; }
+  if(!fecha)      { alert('Seleccioná la fecha de desposte.'); return; }
+
+  const { error } = await sb.from('lotes').insert({
+    partida_id, fecha, num_animales, estado, notas: notas || null
+  });
+
+  if(error) { alert('Error: ' + error.message); return; }
+  showToast('Lote registrado ✓');
+  document.getElementById('lote-animales').value = '';
+  document.getElementById('lote-notas').value = '';
+  loadLotes();
+}
+
+async function cambiarEstadoLote(lote_id, nuevo_estado) {
+  if(!nuevo_estado) return;
+  const { error } = await sb.from('lotes').update({ estado: nuevo_estado }).eq('id', lote_id);
+  if(error) { alert('Error: ' + error.message); return; }
+  showToast('Estado actualizado ✓');
+  loadLotes();
+}
+
+// ===== CICLO OPERATIVO =====
+async function loadCicloOperativo() {
+  document.getElementById('ciclo-actualizado').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-VE');
+
+  const hoy = new Date().toISOString().split('T')[0];
+
+  // Cargar datos en paralelo
+  const [comprasRes, lotesRes, movinvRes, ventasRes, movfinRes] = await Promise.all([
+    sb.from('compras').select('id,fecha,total_usd,saldo_pendiente,proveedores(nombre),condicion,status_pago').order('fecha',{ascending:false}).limit(100),
+    sb.from('lotes').select('id,partida_id,fecha,num_animales,estado').order('fecha',{ascending:false}),
+    sb.from('movimientos_inventario').select('lote_id,tipo,cantidad_kg,producto_id,fecha,productos(nombre)'),
+    sb.from('ventas').select('id,fecha,total_usd,saldo_pendiente,status,notas').order('fecha',{ascending:false}).limit(200),
+    sb.from('movimientos_financieros').select('venta_id,monto_usd,monto,moneda,tipo').eq('tipo','ingreso')
+  ]);
+
+  const compras  = comprasRes.data  || [];
+  const lotes    = lotesRes.data    || [];
+  const movinv   = movinvRes.data   || [];
+  const ventas   = ventasRes.data   || [];
+  const cobros   = movfinRes.data   || [];
+
+  // CxC y CxP consolidado
+  const cxcVentas = ventas.filter(v => Number(v.saldo_pendiente) > 0);
+  const cxcTotal  = cxcVentas.reduce((s,v) => s + Number(v.saldo_pendiente||0), 0);
+  const cxpCompras = compras.filter(c => c.condicion === 'credito' && c.status_pago !== 'pagada' && Number(c.saldo_pendiente||0) > 0);
+  const cxpTotal  = cxpCompras.reduce((s,c) => s + Number(c.saldo_pendiente||0), 0);
+  const posicion  = cxcTotal - cxpTotal;
+
+  document.getElementById('ciclo-cxc').textContent = '$' + cxcTotal.toFixed(0);
+  document.getElementById('ciclo-cxc-n').textContent = cxcVentas.length + ' ventas pendientes';
+  document.getElementById('ciclo-cxp').textContent = '$' + cxpTotal.toFixed(0);
+  document.getElementById('ciclo-cxp-n').textContent = cxpCompras.length + ' compras pendientes';
+  document.getElementById('ciclo-posicion').textContent = '$' + posicion.toFixed(0);
+  document.getElementById('ciclo-posicion').style.color = posicion >= 0 ? 'var(--success)' : 'var(--danger)';
+  document.getElementById('ciclo-posicion-card').style.borderColor = posicion >= 0 ? 'rgba(39,166,106,0.3)' : 'rgba(192,57,43,0.3)';
+
+  // CCE promedio — días desde fecha compra hasta hoy para compras activas
+  const cceValues = compras.filter(c => c.saldo_pendiente > 0 || c.status_pago !== 'pagada').map(c => {
+    const dias = Math.floor((new Date(hoy) - new Date(c.fecha)) / 86400000);
+    return dias;
+  });
+  const ccePromedio = cceValues.length > 0 ? Math.round(cceValues.reduce((s,v)=>s+v,0) / cceValues.length) : 0;
+  const cceColor = ccePromedio <= 21 ? 'var(--success)' : ccePromedio <= 35 ? '#e8b84b' : 'var(--danger)';
+  document.getElementById('ciclo-cce').textContent = ccePromedio + ' días';
+  document.getElementById('ciclo-cce').style.color = cceColor;
+
+  // Mapa de cobros por venta
+  const cobrosMap = {};
+  cobros.forEach(c => {
+    if(!c.venta_id) return;
+    if(!cobrosMap[c.venta_id]) cobrosMap[c.venta_id] = 0;
+    cobrosMap[c.venta_id] += Number(c.monto_usd || c.monto || 0);
+  });
+
+  // Mapa de lotes por partida
+  const lotesByPartida = {};
+  lotes.forEach(l => {
+    if(!lotesByPartida[l.partida_id]) lotesByPartida[l.partida_id] = [];
+    lotesByPartida[l.partida_id].push(l);
+  });
+
+  // Inventario producido por lote
+  const producidoByLote = {};
+  movinv.filter(m => m.tipo === 'entrada' && m.lote_id).forEach(m => {
+    if(!producidoByLote[m.lote_id]) producidoByLote[m.lote_id] = 0;
+    producidoByLote[m.lote_id] += Number(m.cantidad_kg || 0);
+  });
+
+  // Inventario vendido (salidas)
+  const vendidoTotal = movinv.filter(m => m.tipo === 'salida').reduce((s,m) => s + Number(m.cantidad_kg||0), 0);
+
+  // Tabla por partida
+  const alertas = [];
+  let tablaHTML = '<table><tr><th>Partida</th><th>Fecha</th><th>Lotes</th><th>Costo USD</th><th>CxP viva</th><th>CCE días</th><th>Semáforo</th></tr>';
+
+  compras.slice(0, 20).forEach(c => {
+    const lotesPartida = lotesByPartida[c.id] || [];
+    const diasDesdeCompra = Math.floor((new Date(hoy) - new Date(c.fecha)) / 86400000);
+    const semColor = diasDesdeCompra <= 21 ? '#27a66a' : diasDesdeCompra <= 35 ? '#e8b84b' : '#e74c3c';
+    const semLabel = diasDesdeCompra <= 21 ? '● Verde' : diasDesdeCompra <= 35 ? '● Amarillo' : '● Rojo';
+    const cxpViva = Number(c.saldo_pendiente || 0);
+
+    if(diasDesdeCompra > 21 && cxpViva > 0) {
+      alertas.push('⚠ Partida ' + (c.proveedores?.nombre||'?') + ' (' + c.fecha + ') lleva ' + diasDesdeCompra + ' días con CxP viva de $' + cxpViva.toFixed(0));
+    }
+
+    tablaHTML += '<tr>' +
+      '<td style="color:var(--text);font-weight:600">' + (c.proveedores?.nombre||'—') + '</td>' +
+      '<td style="color:var(--text3)">' + c.fecha + '</td>' +
+      '<td style="color:var(--azul)">' + lotesPartida.length + ' lote(s)</td>' +
+      '<td style="font-weight:600">$' + Number(c.total_usd||0).toFixed(0) + '</td>' +
+      '<td style="font-weight:600;color:' + (cxpViva>0?'var(--danger)':'var(--success)') + '">' + (cxpViva>0?'$'+cxpViva.toFixed(0):'✓ Pagada') + '</td>' +
+      '<td style="font-weight:600">' + diasDesdeCompra + 'd</td>' +
+      '<td style="font-weight:600;color:' + semColor + '">' + semLabel + '</td>' +
+    '</tr>';
+  });
+  tablaHTML += '</table>';
+  document.getElementById('ciclo-table').innerHTML = tablaHTML;
+
+  // Alertas
+  const alertasEl = document.getElementById('ciclo-alertas');
+  if(alertas.length) {
+    alertasEl.innerHTML = alertas.map(a =>
+      '<div style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.2);border-radius:8px;padding:10px 16px;margin-bottom:8px;font-size:13px;color:var(--danger)">' + a + '</div>'
+    ).join('');
+  } else {
+    alertasEl.innerHTML = '<div style="background:rgba(39,166,106,0.08);border:1px solid rgba(39,166,106,0.2);border-radius:8px;padding:10px 16px;font-size:13px;color:var(--success)">✓ Sin alertas activas</div>';
+  }
+
+  // Rotación por producto
+  const stockByProd = {};
+  movinv.forEach(m => {
+    if(!m.producto_id) return;
+    if(!stockByProd[m.producto_id]) stockByProd[m.producto_id] = { nombre: m.productos?.nombre||'—', entrada: 0, salida: 0, ultimaEntrada: null };
+    if(m.tipo === 'entrada') {
+      stockByProd[m.producto_id].entrada += Number(m.cantidad_kg||0);
+      if(!stockByProd[m.producto_id].ultimaEntrada || m.fecha > stockByProd[m.producto_id].ultimaEntrada)
+        stockByProd[m.producto_id].ultimaEntrada = m.fecha;
+    }
+    if(m.tipo === 'salida') stockByProd[m.producto_id].salida += Number(m.cantidad_kg||0);
+  });
+
+  const stockParado = Object.values(stockByProd)
+    .map(p => ({ ...p, stock: p.entrada - p.salida, dias: p.ultimaEntrada ? Math.floor((new Date(hoy) - new Date(p.ultimaEntrada)) / 86400000) : null }))
+    .filter(p => p.stock > 0.1)
+    .sort((a,b) => (b.dias||0) - (a.dias||0));
+
+  if(!stockParado.length) {
+    document.getElementById('ciclo-rotacion').innerHTML = '<div class="empty" style="padding:16px;text-align:center;color:var(--success)">✓ Sin stock parado</div>';
+  } else {
+    document.getElementById('ciclo-rotacion').innerHTML = '<table><tr><th>Producto</th><th>Stock (kg)</th><th>Días desde última entrada</th><th>Alerta</th></tr>' +
+      stockParado.map(p => {
+        const alert = !p.dias ? '' : p.dias > 21 ? '🔴 +21 días' : p.dias > 14 ? '🟡 +14 días' : '';
+        return '<tr>' +
+          '<td style="color:var(--text)">' + p.nombre + '</td>' +
+          '<td style="font-weight:600;color:var(--azul)">' + p.stock.toFixed(1) + ' kg</td>' +
+          '<td style="color:var(--text3)">' + (p.dias !== null ? p.dias + ' días' : '—') + '</td>' +
+          '<td>' + alert + '</td>' +
+        '</tr>';
+      }).join('') + '</table>';
+  }
 }
 
 function showToast(msg) {
