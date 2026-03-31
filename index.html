@@ -4431,7 +4431,7 @@ async function loadLotes() {
       '<td style="font-weight:600;color:var(--azul)">' + l.num_animales + '</td>' +
       '<td><span class="badge" style="background:' + (estadoColor[l.estado]||'#888') + '22;color:' + (estadoColor[l.estado]||'#888') + '">' + l.estado + '</span></td>' +
       '<td style="color:var(--text3);font-size:12px">' + (l.notas||'—') + '</td>' +
-      '<td><select onchange="cambiarEstadoLote('' + l.id + '',this.value)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">' +
+      '<td><button data-lid="' + l.id + '" onclick="abrirCambiarEstado(this)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Cambiar estado</button></td>' +
         '<option value="">Cambiar estado...</option>' +
         '<option value="pendiente">Pendiente</option>' +
         '<option value="en_proceso">En proceso</option>' +
@@ -4460,6 +4460,12 @@ async function guardarLote() {
   document.getElementById('lote-animales').value = '';
   document.getElementById('lote-notas').value = '';
   loadLotes();
+}
+
+function abrirCambiarEstado(btn) {
+  var lote_id = btn.dataset.lid;
+  var nuevo = prompt('Nuevo estado: pendiente / en_proceso / completado');
+  if(nuevo) cambiarEstadoLote(lote_id, nuevo);
 }
 
 async function cambiarEstadoLote(lote_id, nuevo_estado) {
