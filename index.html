@@ -3910,7 +3910,12 @@ async function loadMovimientos() {
 // COBRO DE VENTAS
 let cobroVentaId = null;
 
-function abrirModalCobro(venta_id, descripcion, total_usd) {
+async function abrirModalCobro(venta_id, descripcion, total_usd) {
+  // Recargar cuentas si están vacías
+  if(!cuentasSelectData || !cuentasSelectData.length) {
+    const { data } = await sb.from('cuentas').select('*').eq('activo', true);
+    cuentasSelectData = data || [];
+  }
   cobroVentaId = venta_id;
   document.getElementById('modal-cobro-venta').textContent = descripcion;
   document.getElementById('modal-cobro').style.display = 'flex';
@@ -4308,7 +4313,12 @@ function toggleCamposBs(prefix) {
 // ===== PAGO DE COMPRAS CxP =====
 let pagarCompraId = null;
 
-function abrirPagarCompra(compra_id, descripcion) {
+async function abrirPagarCompra(compra_id, descripcion) {
+  // Recargar cuentas si están vacías
+  if(!cuentasSelectData || !cuentasSelectData.length) {
+    const { data } = await sb.from('cuentas').select('*').eq('activo', true);
+    cuentasSelectData = data || [];
+  }
   pagarCompraId = compra_id;
   document.getElementById('pagar-compra-desc').textContent = descripcion;
   document.getElementById('pc-fecha').value = new Date().toISOString().split('T')[0];
