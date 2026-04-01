@@ -2103,7 +2103,7 @@ function navigate(pageId) {
 
   if(pageId === 'movimientos') loadMovimientos();
   if(pageId === 'compras') loadCompras();
-  if(pageId === 'ventas') { loadVentas(); }
+  if(pageId === 'ventas') { loadVentasSelects(); loadVentas(); }
   if(pageId === 'dashboard') loadDashboard();
   if(pageId === 'inventario') loadInventario();
   if(pageId === 'productos') loadProductos();
@@ -2846,7 +2846,7 @@ async function loadVentasSelects() {
   clientesCache = [...clientesData];
 
   const selSede = document.getElementById('v-sede');
-  if(selSede) selSede.innerHTML = (sedes.data||[]).map(s=>`<option value="${s.id}">${s.nombre}</option>`).join('');
+  if(selSede) selSede.innerHTML = (sedes.data||[]).map(s=>`<option value="${s.id}">${s.codigo} — ${s.nombre}</option>`).join('');
 
   const today = new Date().toISOString().split('T')[0];
   const vf = document.getElementById('v-fecha');
@@ -3461,7 +3461,7 @@ async function loadComprasSelects() {
   if(selProv) selProv.value = '';
 
   const selSede = document.getElementById('c-sede');
-  if(selSede) selSede.innerHTML = sedesData.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
+  if(selSede) selSede.innerHTML = sedesData.map(s => `<option value="${s.id}">${s.codigo} — ${s.nombre}</option>`).join('');
 
   // set fecha
   const today = new Date().toISOString().split('T')[0];
