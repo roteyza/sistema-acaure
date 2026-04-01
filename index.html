@@ -1443,6 +1443,47 @@
         </div>
       </div>
 
+      <!-- AUDITORÍA -->
+      <div class="page" id="page-auditoria">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="page-title">Auditoría</div>
+        </div>
+        <div class="page-sub">Registro de todas las acciones en el sistema</div>
+
+        <div class="form-card" style="padding:16px 20px;margin-bottom:0">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <select id="audit-usuario" onchange="loadAuditoria()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;min-width:160px">
+              <option value="">Todos los usuarios</option>
+            </select>
+            <select id="audit-accion" onchange="loadAuditoria()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;min-width:160px">
+              <option value="">Todas las acciones</option>
+              <option value="venta">Ventas</option>
+              <option value="compra">Compras</option>
+              <option value="cobro">Cobros</option>
+              <option value="pago">Pagos</option>
+              <option value="inventario">Inventario</option>
+              <option value="finanzas">Finanzas</option>
+              <option value="tasa">Tasas</option>
+              <option value="login">Login</option>
+            </select>
+            <input type="date" id="audit-desde" onchange="loadAuditoria()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            <span style="color:var(--text3);font-size:12px">→</span>
+            <input type="date" id="audit-hasta" onchange="loadAuditoria()" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            <div style="margin-left:auto">
+              <button onclick="exportarAuditoria('xlsx')" style="background:var(--azul);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;font-weight:600">↓ Excel</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="margin-top:0;border-top:none;border-radius:0 0 12px 12px">
+          <div class="table-head">
+            <div class="table-title" id="audit-titulo">Últimas acciones</div>
+            <div id="audit-count" style="font-size:12px;color:var(--text3)"></div>
+          </div>
+          <div id="audit-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
       <!-- MAESTROS -->
       <div class="page" id="page-maestros">
         <div class="page-title">Datos maestros</div>
@@ -1924,6 +1965,7 @@ const NAV = {
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
     { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
     { id: 'maestros', label: 'Datos maestros', icon: '◫' },
+    { id: 'auditoria', label: 'Auditoría', icon: '◷' },
   ],
   operaciones: [
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
@@ -2070,6 +2112,7 @@ function navigate(pageId) {
   if(pageId === 'maestros') loadMaestros();
   if(pageId === 'precios') loadListaPrecios();
   if(pageId === 'lotes') loadLotes();
+  if(pageId === 'auditoria') loadAuditoria();
   if(pageId === 'ciclo') loadCicloOperativo();
 }
 
@@ -2631,6 +2674,7 @@ async function guardarMovFinanciero() {
   if(error) { alert('Error al guardar: ' + error.message); return; }
 
   showToast('Movimiento registrado ✓');
+  registrarAuditoria('mov_inventario', 'movimientos_inventario', null, tipo + ' | ' + cantidad + ' kg | ' + (referencia||''));
   document.getElementById('mf-monto').value = '';
   document.getElementById('mf-contraparte').value = '';
   document.getElementById('mf-concepto').value = '';
@@ -2680,6 +2724,7 @@ async function guardarTasa() {
   if(error) { alert('Error al guardar: ' + error.message); return; }
 
   showToast('Tasa guardada ✓');
+  registrarAuditoria('tasa_guardada', 'tasas_cambio', null, nombre + ': ' + valor + ' Bs/$');
   document.getElementById('t-valor').value = '';
   document.getElementById('t-fecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('t-nombre').value = 'BCV';
@@ -3071,6 +3116,7 @@ async function guardarVenta() {
   }
 
   showToast('Venta registrada ✓');
+  registrarAuditoria('venta_registrada', 'ventas', venta.id, 'Canal: ' + canal + ' | Total: $' + total_usd.toFixed(2));
 
   // reset
   ventaItems = [];
@@ -3160,6 +3206,7 @@ async function anularVenta(venta_id) {
   if(error) { alert('Error: ' + error.message); return; }
 
   showToast('Venta anulada — inventario revertido ✓');
+  registrarAuditoria('venta_anulada', 'ventas', venta_id, 'Venta anulada');
   loadVentas();
   loadDashboard();
 }
@@ -3616,6 +3663,7 @@ async function guardarCompra() {
   }
 
   showToast('Compra registrada ✓');
+  registrarAuditoria('compra_registrada', 'compras', compra.id, 'Proveedor: ' + (document.getElementById('c-proveedor-search')?.value||'?') + ' | Total: $' + total_usd_bcv.toFixed(2));
 
   // reset form
   compraItems = [];
@@ -3807,6 +3855,7 @@ async function guardarMovInventario() {
   }
 
   showToast('Movimiento registrado ✓');
+  registrarAuditoria('mov_inventario', 'movimientos_inventario', null, tipo + ' | ' + cantidad + ' kg | ' + (referencia||''));
   document.getElementById('mi-cantidad').value = '';
   document.getElementById('mi-referencia').value = '';
   const loteEl = document.getElementById('mi-lote');
@@ -3962,6 +4011,7 @@ async function confirmarCobro() {
 
   cerrarModalCobro();
   showToast('Cobro registrado ✓ — saldo: $' + nuevoSaldo.toFixed(2));
+  registrarAuditoria('cobro_registrado', 'ventas', cobroVentaId, 'Cobro: $' + montoUSD.toFixed(2) + ' | Saldo restante: $' + nuevoSaldo.toFixed(2));
   loadVentas();
   loadDashboard();
 }
@@ -4340,6 +4390,7 @@ async function confirmarPagoCompra() {
 
   cerrarPagarCompra();
   showToast('Pago registrado ✓ — saldo: $' + nuevoSaldo.toFixed(2));
+  registrarAuditoria('pago_compra', 'compras', pagarCompraId, 'Pago: $' + montoUSD.toFixed(2) + ' a ' + provNombre + ' | Saldo: $' + nuevoSaldo.toFixed(2));
   loadCompras();
   loadDashboard();
 }
@@ -4652,6 +4703,110 @@ async function loadCicloOperativo() {
         '</tr>';
       }).join('') + '</table>';
   }
+}
+
+// ===== AUDITORÍA =====
+let auditoriaData = [];
+
+async function registrarAuditoria(accion, tabla, registro_id, detalle) {
+  try {
+    await sb.from('auditoria').insert({
+      usuario_id:    currentUser?.id || null,
+      usuario_email: currentUser?.email || null,
+      accion,
+      tabla:         tabla || null,
+      registro_id:   registro_id ? String(registro_id) : null,
+      detalle:       detalle || null
+    });
+  } catch(e) {
+    // Silencioso — no interrumpir el flujo por error de auditoría
+  }
+}
+
+async function loadAuditoria() {
+  const tb = document.getElementById('audit-table');
+  if(tb) tb.innerHTML = '<div class="loading">Cargando...</div>';
+
+  const usuarioFiltro = document.getElementById('audit-usuario')?.value || '';
+  const accionFiltro  = document.getElementById('audit-accion')?.value  || '';
+  const desde = document.getElementById('audit-desde')?.value || '';
+  const hasta  = document.getElementById('audit-hasta')?.value  || '';
+
+  // Fecha por defecto: últimos 30 días
+  if(!desde) {
+    const d = new Date(); d.setDate(d.getDate()-30);
+    const desdeEl = document.getElementById('audit-desde');
+    if(desdeEl) desdeEl.value = d.toISOString().split('T')[0];
+  }
+  if(!hasta) {
+    const hastaEl = document.getElementById('audit-hasta');
+    if(hastaEl) hastaEl.value = new Date().toISOString().split('T')[0];
+  }
+
+  // Cargar usuarios en el filtro
+  const selUsuario = document.getElementById('audit-usuario');
+  if(selUsuario && selUsuario.options.length <= 1) {
+    const { data: uds } = await sb.from('auditoria').select('usuario_email').not('usuario_email','is',null);
+    const emails = [...new Set((uds||[]).map(u => u.usuario_email))].sort();
+    emails.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e; opt.textContent = e;
+      selUsuario.appendChild(opt);
+    });
+  }
+
+  let query = sb.from('auditoria').select('*').order('created_at',{ascending:false}).limit(200);
+  if(usuarioFiltro) query = query.eq('usuario_email', usuarioFiltro);
+  if(accionFiltro)  query = query.ilike('accion', '%' + accionFiltro + '%');
+  if(desde) query = query.gte('created_at', desde + 'T00:00:00');
+  if(hasta)  query = query.lte('created_at', hasta + 'T23:59:59');
+
+  const { data } = await query;
+  auditoriaData = data || [];
+
+  const countEl = document.getElementById('audit-count');
+  if(countEl) countEl.textContent = auditoriaData.length + ' registros';
+
+  if(!tb) return;
+  if(!auditoriaData.length) {
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">◷</div><p>Sin registros en el período.</p></div>';
+    return;
+  }
+
+  const accionColor = {
+    'venta_registrada': '#27a66a', 'venta_anulada': '#e74c3c',
+    'cobro_registrado': '#27a66a', 'compra_registrada': '#5dade2',
+    'pago_compra': '#e8b84b', 'mov_inventario': '#af7ac5',
+    'finanzas': '#5dade2', 'tasa_guardada': '#95a5a6', 'login': '#003A70'
+  };
+
+  tb.innerHTML = '<table>' +
+    '<tr><th>Fecha/Hora</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr>' +
+    auditoriaData.map(a => {
+      const fecha = new Date(a.created_at).toLocaleString('es-VE');
+      const color = accionColor[a.accion] || '#888';
+      return '<tr>' +
+        '<td style="color:var(--text3);font-size:12px;white-space:nowrap">' + fecha + '</td>' +
+        '<td style="color:var(--text2);font-size:12px">' + (a.usuario_email||'—').split('@')[0] + '</td>' +
+        '<td><span class="badge" style="background:' + color + '22;color:' + color + '">' + (a.accion||'—') + '</span></td>' +
+        '<td style="color:var(--text);font-size:12px">' + (a.detalle||'—') + '</td>' +
+      '</tr>';
+    }).join('') +
+    '</table>';
+}
+
+function exportarAuditoria(fmt) {
+  if(!auditoriaData.length) { alert('No hay datos para exportar.'); return; }
+  const rows = auditoriaData.map(a => ({
+    fecha_hora: new Date(a.created_at).toLocaleString('es-VE'),
+    usuario: a.usuario_email || '—',
+    accion: a.accion || '—',
+    tabla: a.tabla || '—',
+    registro_id: a.registro_id || '—',
+    detalle: a.detalle || '—'
+  }));
+  if(fmt === 'xlsx') exportarXLSX(rows, 'auditoria');
+  else exportarCSV(rows, 'auditoria');
 }
 
 function showToast(msg) {
