@@ -7,6 +7,7 @@
 <link rel="icon" type="image/png" href="./favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
     /* Acaure Brand Colors */
@@ -833,7 +834,7 @@
         <div class="table-wrap">
           <div class="table-head">
             <div class="table-title">Stock actual</div>
-            <button onclick="exportarInventario()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Exportar CSV</button>
+            <button onclick="exportarInventario('csv')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ CSV</button> <button onclick="exportarInventario('xlsx')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Excel</button>
           </div>
           <div id="inv-table"><div class="loading">Cargando...</div></div>
         </div>
@@ -895,7 +896,7 @@
         <div class="table-wrap">
           <div class="table-head">
             <div class="table-title">Historial de movimientos</div>
-            <button onclick="exportarMovimientos()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Exportar CSV</button>
+            <button onclick="exportarMovimientos('csv')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ CSV</button> <button onclick="exportarMovimientos('xlsx')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Excel</button>
           </div>
           <div id="mi-table"><div class="loading">Cargando...</div></div>
         </div>
@@ -1003,7 +1004,7 @@
         <div class="table-wrap">
           <div class="table-head">
             <div class="table-title">Historial de compras</div>
-            <button onclick="exportarCompras()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Exportar CSV</button>
+            <button onclick="exportarCompras('csv')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ CSV</button> <button onclick="exportarCompras('xlsx')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Excel</button>
           </div>
           <div id="compras-table"><div class="loading">Cargando...</div></div>
         </div>
@@ -1120,7 +1121,16 @@
               <input type="number" id="v-tasa-ref" placeholder="ej: 95.50" step="0.01"
                 style="width:130px;background:white;border:1.5px solid var(--border);border-radius:6px;padding:6px 10px;font-family:'Sora',sans-serif;font-size:13px;outline:none;"
                 oninput="calcularTotalesVenta()">
-              <div style="font-size:11px;color:var(--text3)">(BCV, Paralelo o la que acordés con el cliente)</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-left:12px;padding-left:12px;border-left:1px solid var(--border)">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer">
+                  <input type="checkbox" id="v-delivery" onchange="calcularTotalesVenta()" style="width:16px;height:16px;cursor:pointer">
+                  <span>Delivery</span>
+                </label>
+                <span style="font-size:12px;color:var(--text3)">$</span>
+                <input type="number" id="v-delivery-monto" value="3" step="0.50" min="0"
+                  style="width:70px;background:white;border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-family:'Sora',sans-serif;font-size:13px;outline:none;"
+                  oninput="calcularTotalesVenta()">
+              </div>
             </div>
           </div>
 
@@ -1139,7 +1149,7 @@
         <div class="table-wrap">
           <div class="table-head">
             <div class="table-title">Historial de ventas</div>
-            <button onclick="exportarVentas()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Exportar CSV</button>
+            <button onclick="exportarVentas('csv')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ CSV</button> <button onclick="exportarVentas('xlsx')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Excel</button>
           </div>
           <div id="ventas-table"><div class="loading">Cargando...</div></div>
         </div>
@@ -1265,7 +1275,7 @@
               <option value="Venta">Venta</option>
             </select>
             <div style="margin-left:auto">
-              <button onclick="exportarEstadoCuenta()" style="background:var(--azul);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;font-weight:600">↓ Exportar CSV</button>
+              <button onclick="exportarEstadoCuenta('csv')" style="background:none;border:1.5px solid var(--azul);color:var(--azul);border-radius:8px;padding:6px 12px;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;font-weight:600">↓ CSV</button> <button onclick="exportarEstadoCuenta('xlsx')" style="background:var(--azul);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;font-weight:600">↓ Excel</button>
             </div>
           </div>
         </div>
@@ -2532,7 +2542,7 @@ async function loadFinanzas() {
     '</table>';
 }
 
-function exportarEstadoCuenta() {
+function exportarEstadoCuenta(fmt) {
   if(!finanzasDataGlobal.length) { alert('No hay datos para exportar.'); return; }
   let saldo = 0;
   const rows = finanzasDataGlobal.map(m => {
@@ -2551,7 +2561,7 @@ function exportarEstadoCuenta() {
       saldo_acumulado: saldo.toFixed(2)
     };
   });
-  exportarCSV(rows, 'estado_cuenta');
+  if(fmt === 'xlsx') exportarXLSX(rows, 'estado_cuenta'); else exportarCSV(rows, 'estado_cuenta');
 }
 
 // ===== CATEGORÍAS FINANZAS =====
@@ -2776,7 +2786,7 @@ async function loadVentasSelects() {
   const [clientes, sedes, prods, tasas, precios] = await Promise.all([
     sb.from('clientes').select('*').order('nombre'),
     sb.from('sedes').select('*'),
-    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').order('tipo').order('nombre'),
+    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').not('categoria','eq','mp').order('tipo').order('nombre'),
     sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(20),
     sb.from('lista_precios').select('producto_id,precio,fecha_desde').eq('activo',true).order('fecha_desde',{ascending:false})
   ]);
@@ -2983,15 +2993,21 @@ function updateItemVenta(idx) {
 }
 
 function calcularTotalesVenta() {
-  const items   = ventaItems.filter(Boolean).filter(i => i.usd_bcv_equiv > 0);
-  const totalUSD = items.reduce((s,i) => s+(i.usd_bcv_equiv||0), 0);
+  const items    = ventaItems.filter(Boolean).filter(i => i.usd_bcv_equiv > 0);
+  const subtotal = items.reduce((s,i) => s+(i.usd_bcv_equiv||0), 0);
   const totalKG  = items.reduce((s,i) => s+(i.cantidad||0), 0);
-  const tasaRef  = parseFloat(document.getElementById('v-tasa-ref')?.value) || 0;
-  const totalBS  = tasaRef > 0 ? totalUSD * tasaRef : 0;
 
-  document.getElementById('v-total-usd').textContent = totalUSD > 0 ? `$${totalUSD.toFixed(2)} USD` : '—';
-  document.getElementById('v-total-bs').textContent  = totalBS  > 0 ? `Bs ${totalBS.toFixed(0)}` : '—';
-  document.getElementById('v-total-kg').textContent  = totalKG  > 0 ? `${totalKG.toFixed(1)} kg` : '—';
+  // Delivery
+  const delivery      = document.getElementById('v-delivery')?.checked || false;
+  const deliveryMonto = delivery ? (parseFloat(document.getElementById('v-delivery-monto')?.value) || 0) : 0;
+  const totalUSD      = subtotal + deliveryMonto;
+
+  const tasaRef = parseFloat(document.getElementById('v-tasa-ref')?.value) || 0;
+  const totalBS = tasaRef > 0 ? totalUSD * tasaRef : 0;
+
+  document.getElementById('v-total-usd').textContent = totalUSD > 0 ? '$' + totalUSD.toFixed(2) + ' USD' + (deliveryMonto > 0 ? ' (+$' + deliveryMonto.toFixed(2) + ' delivery)' : '') : '—';
+  document.getElementById('v-total-bs').textContent  = totalBS  > 0 ? 'Bs ' + totalBS.toFixed(0) : '—';
+  document.getElementById('v-total-kg').textContent  = totalKG  > 0 ? totalKG.toFixed(1) + ' kg' : '—';
 }
 
 async function guardarVenta() {
@@ -3016,7 +3032,9 @@ async function guardarVenta() {
   if(!fecha)           { alert('Seleccioná una fecha.'); return; }
   if(items.length===0) { alert('Agregá al menos un producto con cantidad y precio.'); return; }
 
-  const total_usd = items.reduce((s,i) => s+(i.usd_bcv_equiv||0), 0);
+  const delivery      = document.getElementById('v-delivery')?.checked || false;
+  const deliveryMonto = delivery ? (parseFloat(document.getElementById('v-delivery-monto')?.value) || 0) : 0;
+  const total_usd     = items.reduce((s,i) => s+(i.usd_bcv_equiv||0), 0) + deliveryMonto;
   const tipo = canal.startsWith('mayor') ? 'mayor' : 'detal';
 
   // 1. Insertar venta cabecera
@@ -3030,7 +3048,7 @@ async function guardarVenta() {
     total_usd,
     saldo_pendiente: status === 'pagada' ? 0 : total_usd,
     usuario_id: currentUser?.id || null,
-    notas: `${canal.replace('_',' ')}${notas?' | '+notas:''} | Total: $${total_usd.toFixed(2)} USD BCV`
+    notas: `${canal.replace('_',' ')}${notas?' | '+notas:''}${deliveryMonto>0?' | Delivery: $'+deliveryMonto.toFixed(2):''} | Total: $${total_usd.toFixed(2)} USD BCV`
   }).select().single();
 
   if(errV) { alert('Error al guardar venta: ' + errV.message); return; }
@@ -3058,6 +3076,8 @@ async function guardarVenta() {
   ventaItems = [];
   document.getElementById('venta-items').innerHTML = '';
   document.getElementById('v-notas').value = '';
+  const deliveryEl = document.getElementById('v-delivery');
+  if(deliveryEl) deliveryEl.checked = false;
   agregarItemVenta();
   loadVentas();
 }
@@ -3382,7 +3402,7 @@ async function loadComprasSelects() {
     sb.from('proveedores').select('*').order('nombre'),
     sb.from('sedes').select('*'),
     sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(20),
-    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').order('tipo').order('nombre')
+    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').in('categoria',['mp','corte']).order('categoria').order('nombre')
   ]);
 
   sedesData = sedes.data || [];
@@ -3435,7 +3455,7 @@ function agregarItemCompra() {
       <div class="form-group">
         <label>Producto</label>
         <select id="item-prod-${idx}" onchange="updateItem(${idx})">
-          ${productosData.map(p => `<option value="${p.id}">${p.nombre} (${p.tipo})</option>`).join('')}
+          ${productosData.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
@@ -3956,7 +3976,7 @@ function exportarCSV(datos, nombre) {
     cols.map(c => {
       const val = row[c] ?? '';
       const str = typeof val === 'object' ? JSON.stringify(val) : String(val);
-      return `"${str.replace(/"/g, '""')}"`;
+      return '"' + str.replace(/"/g, '""') + '"';
     }).join(',')
   );
   const csv = [header, ...rows].join('\n');
@@ -3964,13 +3984,28 @@ function exportarCSV(datos, nombre) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${nombre}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = nombre + '_' + new Date().toISOString().split('T')[0] + '.csv';
   a.click();
   URL.revokeObjectURL(url);
-  showToast(`Reporte exportado ✓`);
+  showToast('Reporte CSV exportado ✓');
 }
 
-async function exportarVentas() {
+function exportarXLSX(datos, nombre) {
+  if(!datos || !datos.length) { alert('No hay datos para exportar.'); return; }
+  if(typeof XLSX === 'undefined') { alert('Error: librería Excel no cargada.'); return; }
+  const ws = XLSX.utils.json_to_sheet(datos);
+  // Ancho automático de columnas
+  const cols = Object.keys(datos[0]);
+  ws['!cols'] = cols.map(c => ({
+    wch: Math.max(c.length, ...datos.map(r => String(r[c]??'').length).slice(0,50)) + 2
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, nombre.substring(0,31));
+  XLSX.writeFile(wb, nombre + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
+  showToast('Reporte Excel exportado ✓');
+}
+
+async function exportarVentas(fmt) {
   const { data } = await sb.from('ventas')
     .select('fecha, status, notas, clientes(nombre), sedes(codigo)')
     .order('fecha', {ascending:false}).limit(500);
@@ -3978,20 +4013,20 @@ async function exportarVentas() {
     fecha: v.fecha, cliente: v.clientes?.nombre||'Detal',
     sede: v.sedes?.codigo||'—', status: v.status, notas: v.notas||''
   }));
-  exportarCSV(flat, 'ventas');
+  if(fmt === 'xlsx') exportarXLSX(flat, 'ventas'); else exportarCSV(flat, 'ventas');
 }
 
-async function exportarCompras() {
+async function exportarCompras(fmt) {
   const { data } = await sb.from('compras')
     .select('fecha, notas, proveedores(nombre)')
     .order('fecha', {ascending:false}).limit(500);
   const flat = (data||[]).map(c => ({
     fecha: c.fecha, proveedor: c.proveedores?.nombre||'—', notas: c.notas||''
   }));
-  exportarCSV(flat, 'compras');
+  if(fmt === 'xlsx') exportarXLSX(flat, 'compras'); else exportarCSV(flat, 'compras');
 }
 
-async function exportarInventario() {
+async function exportarInventario(fmt) {
   const { data } = await sb.from('inventario')
     .select('cantidad_kg, actualizado_at, productos(nombre,tipo,categoria), sedes(codigo)')
     .order('cantidad_kg', {ascending:false}).limit(500);
@@ -4000,10 +4035,10 @@ async function exportarInventario() {
     categoria: i.productos?.categoria||'—', sede: i.sedes?.codigo||'—',
     stock_kg: i.cantidad_kg, actualizado: i.actualizado_at?.split('T')[0]||'—'
   }));
-  exportarCSV(flat, 'inventario');
+  if(fmt === 'xlsx') exportarXLSX(flat, 'inventario'); else exportarCSV(flat, 'inventario');
 }
 
-async function exportarMovimientos() {
+async function exportarMovimientos(fmt) {
   const { data } = await sb.from('movimientos_inventario')
     .select('fecha, tipo, cantidad_kg, referencia, productos(nombre), sedes_origen:sede_origen_id(codigo), sedes_destino:sede_destino_id(codigo)')
     .order('created_at', {ascending:false}).limit(500);
@@ -4012,10 +4047,10 @@ async function exportarMovimientos() {
     cantidad_kg: m.cantidad_kg, origen: m.sedes_origen?.codigo||'—',
     destino: m.sedes_destino?.codigo||'—', referencia: m.referencia||''
   }));
-  exportarCSV(flat, 'movimientos');
+  if(fmt === 'xlsx') exportarXLSX(flat, 'movimientos'); else exportarCSV(flat, 'movimientos');
 }
 
-async function exportarFinanzas() {
+async function exportarFinanzas(fmt) {
   const { data } = await sb.from('movimientos_financieros')
     .select('fecha, tipo, concepto, monto, moneda, contraparte, status, cuentas(nombre)')
     .order('fecha', {ascending:false}).limit(500);
@@ -4024,7 +4059,7 @@ async function exportarFinanzas() {
     monto: m.monto, moneda: m.moneda, contraparte: m.contraparte||'—',
     cuenta: m.cuentas?.nombre||'—', status: m.status
   }));
-  exportarCSV(flat, 'finanzas');
+  if(fmt === 'xlsx') exportarXLSX(flat, 'finanzas'); else exportarCSV(flat, 'finanzas');
 }
 
 // ===== FACTURA =====
