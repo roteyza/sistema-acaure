@@ -889,6 +889,10 @@
               <label>Referencia / Nota</label>
               <input type="text" id="mi-referencia" placeholder="Ej: Compra Minco semana 12, Despacho RF...">
             </div>
+            <div class="form-group" id="field-costo-kg" style="display:none">
+              <label>Costo (USD/kg)</label>
+              <input type="number" id="mi-costo-kg" placeholder="0.0000" step="0.0001" min="0">
+            </div>
             <div class="form-group">
               <label>Lote de producción (opcional)</label>
               <select id="mi-lote" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
@@ -4001,39 +4005,47 @@ function toggleMovFields() {
   const tipo = document.getElementById('mi-tipo')?.value;
   const origen = document.getElementById('field-origen');
   const destino = document.getElementById('field-destino');
+  const fieldCosto = document.getElementById('field-costo-kg');
   if(!origen || !destino) return;
 
   if(tipo === 'entrada') {
     origen.style.display = 'none';
     destino.style.display = 'block';
     document.querySelector('#field-destino label').textContent = 'Sede destino (donde entra)';
+    if(fieldCosto) fieldCosto.style.display = 'block';
   } else if(tipo === 'salida' || tipo === 'merma') {
     origen.style.display = 'block';
     destino.style.display = 'none';
     document.querySelector('#field-origen label').textContent = 'Sede origen (donde sale)';
+    if(fieldCosto) fieldCosto.style.display = 'none';
   } else if(tipo === 'traslado') {
     origen.style.display = 'block';
     destino.style.display = 'block';
     document.querySelector('#field-origen label').textContent = 'Sede origen';
     document.querySelector('#field-destino label').textContent = 'Sede destino';
+    if(fieldCosto) fieldCosto.style.display = 'none';
   }
 }
 
 async function guardarMovInventario() {
-  const tipo      = document.getElementById('mi-tipo').value;
+  const tipo        = document.getElementById('mi-tipo').value;
   const producto_id = document.getElementById('mi-producto').value;
-  const cantidad  = parseFloat(document.getElementById('mi-cantidad').value);
-  const fecha     = document.getElementById('mi-fecha').value;
-  const referencia = document.getElementById('mi-referencia').value;
-  const origen_id = document.getElementById('mi-origen').value;
-  const destino_id = document.getElementById('mi-destino').value;
+  const cantidad    = parseFloat(document.getElementById('mi-cantidad').value);
+  const fecha       = document.getElementById('mi-fecha').value;
+  const referencia  = document.getElementById('mi-referencia').value;
+  const origen_id   = document.getElementById('mi-origen').value;
+  const destino_id  = document.getElementById('mi-destino').value;
+  const costo_kg_raw = document.getElementById('mi-costo-kg')?.value;
+  const costo_usd_kg = (tipo === 'entrada' && costo_kg_raw) ? parseFloat(costo_kg_raw) : null;
 
   if(!cantidad || cantidad <= 0) { alert('Ingresá una cantidad válida.'); return; }
   if(!fecha) { alert('Seleccioná una fecha.'); return; }
 
-  // 1. Guardar movimiento
   const lote_id_raw = document.getElementById('mi-lote')?.value || '';
   const lote_id = lote_id_raw || null;
+  const costo_usd_kg = tipo === 'entrada'
+    ? (parseFloat(document.getElementById('mi-costo-kg')?.value) || null)
+    : null;
 
   const { error: errMov } = await sb.from('movimientos_inventario').insert({
     tipo,
@@ -4044,12 +4056,13 @@ async function guardarMovInventario() {
     sede_origen_id:  (tipo === 'entrada') ? null : origen_id,
     sede_destino_id: (tipo === 'salida' || tipo === 'merma') ? null : destino_id,
     lote_id,
+    costo_usd_kg,
     usuario_id: currentUser?.id || null
   });
 
   if(errMov) { alert('Error al guardar movimiento: ' + errMov.message); return; }
 
-  // 2. Actualizar inventario
+  // Actualizar inventario
   if(tipo === 'entrada') {
     await upsertInventario(producto_id, destino_id, cantidad);
   } else if(tipo === 'salida' || tipo === 'merma') {
@@ -4063,6 +4076,7 @@ async function guardarMovInventario() {
   registrarAuditoria('mov_inventario', 'movimientos_inventario', null, tipo + ' | ' + cantidad + ' kg | ' + (referencia||''));
   document.getElementById('mi-cantidad').value = '';
   document.getElementById('mi-referencia').value = '';
+  if(document.getElementById('mi-costo-kg')) document.getElementById('mi-costo-kg').value = '';
   const loteEl = document.getElementById('mi-lote');
   if(loteEl) loteEl.value = '';
   loadMovimientos();
@@ -4099,12 +4113,13 @@ async function loadMovimientos() {
   const colorTipo = { entrada: '#27a66a', salida: '#e74c3c', traslado: '#5dade2', merma: '#af7ac5' };
 
   tb.innerHTML = `<table>
-    <tr><th>Fecha</th><th>Tipo</th><th>Producto</th><th>Cantidad</th><th>Origen</th><th>Destino</th><th>Referencia</th></tr>
+    <tr><th>Fecha</th><th>Tipo</th><th>Producto</th><th>Cantidad</th><th>Costo/kg</th><th>Origen</th><th>Destino</th><th>Referencia</th></tr>
     ${data.map(m => `<tr>
       <td style="color:var(--text3)">${m.fecha}</td>
       <td><span class="badge" style="background:${colorTipo[m.tipo]}22;color:${colorTipo[m.tipo]}">${m.tipo}</span></td>
       <td style="color:var(--text)">${m.productos?.nombre || '—'}</td>
       <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--accent2)">${Number(m.cantidad_kg).toFixed(1)} kg</td>
+      <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--azul)">${m.costo_usd_kg ? '$'+Number(m.costo_usd_kg).toFixed(4) : '—'}</td>
       <td style="color:var(--text3)">${m.sedes_origen?.codigo || '—'}</td>
       <td style="color:var(--text3)">${m.sedes_destino?.codigo || '—'}</td>
       <td style="color:var(--text3);font-size:12px">${m.referencia || '—'}</td>
