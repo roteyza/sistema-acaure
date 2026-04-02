@@ -4139,7 +4139,8 @@ async function abrirModalCobro(venta_id, descripcion, total_usd) {
   document.getElementById('cobro-fecha').value = today;
 
   const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
-  if(bcvTasa) document.getElementById('cobro-tasa').value = bcvTasa.valor;
+  const tasaEl = document.getElementById('cobro-tasa');
+  if(bcvTasa && tasaEl) tasaEl.value = bcvTasa.valor;
 
   // Auto-llenar monto en ambos campos (USD normal y USD-equiv de Bs)
   if(total_usd && parseFloat(total_usd) > 0) {
@@ -4152,8 +4153,6 @@ async function abrirModalCobro(venta_id, descripcion, total_usd) {
   }
   // Reset campos Bs
   document.getElementById('cobro-monto-bs').value = '';
-  // Resetear forma de pago a USD y ocultar campos Bs
-  document.getElementById('cobro-moneda').value = 'usd';
   toggleCamposBs('cobro');
 
   // cargar cuentas en el select y construir mapa de monedas
