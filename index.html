@@ -4043,9 +4043,6 @@ async function guardarMovInventario() {
 
   const lote_id_raw = document.getElementById('mi-lote')?.value || '';
   const lote_id = lote_id_raw || null;
-  const costo_usd_kg = tipo === 'entrada'
-    ? (parseFloat(document.getElementById('mi-costo-kg')?.value) || null)
-    : null;
 
   const { error: errMov } = await sb.from('movimientos_inventario').insert({
     tipo,
