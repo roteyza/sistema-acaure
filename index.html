@@ -4128,11 +4128,9 @@ async function loadMovimientos() {
 let cobroVentaId = null;
 
 async function abrirModalCobro(venta_id, descripcion, total_usd) {
-  // Recargar cuentas si están vacías
-  if(!cuentasSelectData || !cuentasSelectData.length) {
-    const { data } = await sb.from('cuentas').select('*').eq('activo', true);
-    cuentasSelectData = data || [];
-  }
+  // Siempre recargar cuentas al abrir el modal
+  const { data: cuentasData } = await sb.from('cuentas').select('*').eq('activo', true);
+  cuentasSelectData = cuentasData || [];
   cobroVentaId = venta_id;
   document.getElementById('modal-cobro-venta').textContent = descripcion;
   document.getElementById('modal-cobro').style.display = 'flex';
@@ -4531,11 +4529,9 @@ function toggleCamposBs(prefix) {
 let pagarCompraId = null;
 
 async function abrirPagarCompra(compra_id, descripcion) {
-  // Recargar cuentas si están vacías
-  if(!cuentasSelectData || !cuentasSelectData.length) {
-    const { data } = await sb.from('cuentas').select('*').eq('activo', true);
-    cuentasSelectData = data || [];
-  }
+  // Siempre recargar cuentas al abrir el modal
+  const { data: cuentasData } = await sb.from('cuentas').select('*').eq('activo', true);
+  cuentasSelectData = cuentasData || [];
   pagarCompraId = compra_id;
   document.getElementById('pagar-compra-desc').textContent = descripcion;
   document.getElementById('pc-fecha').value = new Date().toISOString().split('T')[0];
