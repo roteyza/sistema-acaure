@@ -515,6 +515,11 @@
   }
   .badge-corte    { background: rgba(0,58,112,0.08);  color: var(--azul); }
   .badge-preparado{ background: rgba(26,140,90,0.1);  color: #1a7a4a; }
+  /* Badges fases F1-F4 */
+  .badge-f1 { background: rgba(255,103,29,0.12); color: var(--naranja2); }
+  .badge-f2 { background: rgba(0,58,112,0.10);   color: var(--azul); }
+  .badge-f3 { background: rgba(26,140,90,0.12);  color: #1a7a4a; }
+  .badge-f4 { background: rgba(52,152,219,0.13); color: #2471a3; }
 
   /* FORM */
   .form-card {
@@ -1024,9 +1029,74 @@
       <!-- PRODUCTOS -->
       <div class="page" id="page-productos">
         <div class="page-title">Catálogo de productos</div>
-        <div class="page-sub">Todos los productos registrados en el sistema</div>
+        <div class="page-sub">F1 Canal · F2 Cortes · F3 Preparados Casita1 · F4 Preparados Galpon1</div>
+
+        <!-- Form nuevo producto (admin/operaciones) -->
+        <div class="form-card" id="form-nuevo-producto" style="display:none">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:600;margin-bottom:16px;">Nuevo producto</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="np-nombre" placeholder="Ej: F2 - Lomito sucio">
+            </div>
+            <div class="form-group">
+              <label>Fase / Categoría</label>
+              <select id="np-categoria">
+                <option value="">— Seleccionar —</option>
+                <option value="f1">F1 — Canal</option>
+                <option value="f2">F2 — Cortes</option>
+                <option value="f3">F3 — Preparados Casita1</option>
+                <option value="f4">F4 — Preparados Galpon1</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tipo / Subcategoría</label>
+              <select id="np-tipo">
+                <option value="">— Seleccionar —</option>
+                <option value="canal">Canal (res/búfalo/cerdo)</option>
+                <option value="premium">Premium (F2)</option>
+                <option value="primera">Primera (F2)</option>
+                <option value="segunda">Segunda (F2)</option>
+                <option value="tercera">Tercera (F2)</option>
+                <option value="descarte">Descarte (F2)</option>
+                <option value="res">Res</option>
+                <option value="pollo">Pollo</option>
+                <option value="cerdo">Cerdo</option>
+                <option value="otros">Otros</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Unidad</label>
+              <select id="np-unidad">
+                <option value="kg">kg</option>
+                <option value="ud">ud</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Precio base (USD)</label>
+              <input type="number" id="np-precio" placeholder="0.00" step="0.01" min="0">
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:4px">
+            <button class="btn-action" onclick="guardarNuevoProducto()">Guardar producto</button>
+            <button class="btn-secondary" onclick="document.getElementById('form-nuevo-producto').style.display='none'">Cancelar</button>
+          </div>
+        </div>
+
         <div class="table-wrap">
-          <div class="table-head"><div class="table-title">Productos</div></div>
+          <div class="table-head">
+            <div class="table-title">Productos</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select id="prod-filtro-cat" onchange="loadProductos()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;font-family:'Sora',sans-serif;color:var(--text2)">
+                <option value="">Todas las fases</option>
+                <option value="f1">F1 — Canal</option>
+                <option value="f2">F2 — Cortes</option>
+                <option value="f3">F3 — Casita1</option>
+                <option value="f4">F4 — Galpon1</option>
+              </select>
+              <button id="btn-nuevo-producto" onclick="document.getElementById('form-nuevo-producto').style.display='block';window.scrollTo(0,0)" style="display:none;background:var(--azul);color:white;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-family:'Sora',sans-serif;font-weight:600;cursor:pointer">+ Nuevo producto</button>
+            </div>
+          </div>
           <div id="prod-table"><div class="loading">Cargando...</div></div>
         </div>
       </div>
@@ -2424,19 +2494,145 @@ async function loadDashboard() {
 }
 
 // PRODUCTOS
+const FASE_LABELS = { f1:'F1 — Canal', f2:'F2 — Cortes', f3:'F3 — Casita1', f4:'F4 — Galpon1' };
+const FASE_CANALES = {
+  f1: 'Solo compras',
+  f2: 'Compras · Detal Aca · Mayor Aca · Mayor CCS',
+  f3: 'Detal Aca · Detal CCS',
+  f4: 'Detal Aca · Mayor Aca · Detal CCS · Mayor CCS'
+};
+
 async function loadProductos() {
-  const { data } = await sb.from('productos').select('*').order('tipo').order('categoria').order('nombre');
+  // Mostrar botón nuevo solo a admin/operaciones
+  const btnNuevo = document.getElementById('btn-nuevo-producto');
+  if(btnNuevo) {
+    const rol = currentUser?.rol;
+    btnNuevo.style.display = (rol === 'admin' || rol === 'operaciones') ? 'inline-block' : 'none';
+  }
+
+  const catFiltro = document.getElementById('prod-filtro-cat')?.value || '';
+  let query = sb.from('productos').select('*').order('categoria').order('tipo').order('nombre');
+  if(catFiltro) query = query.eq('categoria', catFiltro);
+  const { data, error } = await query;
+
   const tb = document.getElementById('prod-table');
-  if(!data || !data.length) { tb.innerHTML = '<div class="loading">Sin datos</div>'; return; }
+  if(error || !data || !data.length) {
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><p>Sin productos registrados.</p></div>';
+    return;
+  }
+
+  const rol = currentUser?.rol;
+  const puedeEditar = rol === 'admin' || rol === 'operaciones';
+
   tb.innerHTML = `<table>
-    <tr><th>Nombre</th><th>Tipo</th><th>Categoría</th><th>Unidad</th></tr>
-    ${data.map(p => `<tr>
-      <td style="color:var(--text)">${p.nombre}</td>
-      <td><span class="badge badge-${p.tipo}">${p.tipo}</span></td>
-      <td>${p.categoria ? `<span class="badge badge-${p.categoria}">${p.categoria}</span>` : '<span style="color:var(--text3)">—</span>'}</td>
-      <td style="color:var(--text3)">${p.unidad}</td>
+    <tr>
+      <th>Nombre</th>
+      <th>Fase</th>
+      <th>Tipo</th>
+      <th>Unidad</th>
+      <th>Precio base</th>
+      <th>Canales de venta</th>
+      ${puedeEditar ? '<th></th>' : ''}
+    </tr>
+    ${data.map(p => `<tr id="prod-row-${p.id}">
+      <td style="color:var(--text);font-weight:500">${p.nombre}</td>
+      <td><span class="badge badge-${p.categoria}" style="font-size:11px">${FASE_LABELS[p.categoria]||p.categoria}</span></td>
+      <td style="color:var(--text3);font-size:12px">${p.tipo||'—'}</td>
+      <td style="color:var(--text3)">${p.unidad||'kg'}</td>
+      <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--azul)">${p.precio_base ? '$'+Number(p.precio_base).toFixed(2) : '—'}</td>
+      <td style="color:var(--text3);font-size:11px">${FASE_CANALES[p.categoria]||'—'}</td>
+      ${puedeEditar ? `<td><button onclick="editarProducto('${p.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2);cursor:pointer;font-family:'Sora',sans-serif">Editar</button></td>` : ''}
     </tr>`).join('')}
   </table>`;
+}
+
+async function guardarNuevoProducto() {
+  const nombre    = document.getElementById('np-nombre')?.value?.trim();
+  const categoria = document.getElementById('np-categoria')?.value;
+  const tipo      = document.getElementById('np-tipo')?.value;
+  const unidad    = document.getElementById('np-unidad')?.value || 'kg';
+  const precio    = parseFloat(document.getElementById('np-precio')?.value) || null;
+
+  if(!nombre || !categoria) { alert('Nombre y fase son obligatorios.'); return; }
+
+  const { error } = await sb.from('productos').insert([{
+    nombre, categoria, tipo: tipo||null, unidad, precio_base: precio, activo: true
+  }]);
+
+  if(error) { alert('Error al guardar: ' + error.message); return; }
+
+  // Limpiar form
+  ['np-nombre','np-precio'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['np-categoria','np-tipo'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('form-nuevo-producto').style.display = 'none';
+  await registrarAuditoria('producto_creado', 'productos', null, `Nuevo: ${nombre} (${categoria})`);
+  loadProductos();
+}
+
+async function editarProducto(id) {
+  const row = document.getElementById(`prod-row-${id}`);
+  if(!row) return;
+
+  // Obtener datos actuales del producto
+  const { data: p } = await sb.from('productos').select('*').eq('id', id).single();
+  if(!p) return;
+
+  row.innerHTML = `
+    <td><input type="text" id="ep-nombre-${id}" value="${p.nombre}" style="width:100%;padding:6px 8px;border:1.5px solid var(--azul);border-radius:6px;font-family:'Sora',sans-serif;font-size:13px"></td>
+    <td>
+      <select id="ep-cat-${id}" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:'Sora',sans-serif;font-size:12px">
+        <option value="f1" ${p.categoria==='f1'?'selected':''}>F1 — Canal</option>
+        <option value="f2" ${p.categoria==='f2'?'selected':''}>F2 — Cortes</option>
+        <option value="f3" ${p.categoria==='f3'?'selected':''}>F3 — Casita1</option>
+        <option value="f4" ${p.categoria==='f4'?'selected':''}>F4 — Galpon1</option>
+      </select>
+    </td>
+    <td>
+      <select id="ep-tipo-${id}" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:'Sora',sans-serif;font-size:12px">
+        <option value="">—</option>
+        <option value="canal" ${p.tipo==='canal'?'selected':''}>Canal</option>
+        <option value="premium" ${p.tipo==='premium'?'selected':''}>Premium</option>
+        <option value="primera" ${p.tipo==='primera'?'selected':''}>Primera</option>
+        <option value="segunda" ${p.tipo==='segunda'?'selected':''}>Segunda</option>
+        <option value="tercera" ${p.tipo==='tercera'?'selected':''}>Tercera</option>
+        <option value="descarte" ${p.tipo==='descarte'?'selected':''}>Descarte</option>
+        <option value="res" ${p.tipo==='res'?'selected':''}>Res</option>
+        <option value="pollo" ${p.tipo==='pollo'?'selected':''}>Pollo</option>
+        <option value="cerdo" ${p.tipo==='cerdo'?'selected':''}>Cerdo</option>
+        <option value="otros" ${p.tipo==='otros'?'selected':''}>Otros</option>
+      </select>
+    </td>
+    <td>
+      <select id="ep-unidad-${id}" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:'Sora',sans-serif;font-size:12px">
+        <option value="kg" ${p.unidad==='kg'?'selected':''}>kg</option>
+        <option value="ud" ${p.unidad==='ud'?'selected':''}>ud</option>
+      </select>
+    </td>
+    <td><input type="number" id="ep-precio-${id}" value="${p.precio_base||''}" step="0.01" min="0" style="width:90px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:'Sora',sans-serif;font-size:13px"></td>
+    <td style="color:var(--text3);font-size:11px">${FASE_CANALES[p.categoria]||'—'}</td>
+    <td style="display:flex;gap:6px">
+      <button onclick="confirmarEditarProducto('${id}')" style="background:var(--azul);color:white;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;font-weight:600">✓</button>
+      <button onclick="loadProductos()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'Sora',sans-serif">✕</button>
+    </td>
+  `;
+}
+
+async function confirmarEditarProducto(id) {
+  const nombre    = document.getElementById(`ep-nombre-${id}`)?.value?.trim();
+  const categoria = document.getElementById(`ep-cat-${id}`)?.value;
+  const tipo      = document.getElementById(`ep-tipo-${id}`)?.value;
+  const unidad    = document.getElementById(`ep-unidad-${id}`)?.value;
+  const precio    = parseFloat(document.getElementById(`ep-precio-${id}`)?.value) || null;
+
+  if(!nombre || !categoria) { alert('Nombre y fase son obligatorios.'); return; }
+
+  const { error } = await sb.from('productos').update({
+    nombre, categoria, tipo: tipo||null, unidad, precio_base: precio
+  }).eq('id', id);
+
+  if(error) { alert('Error al actualizar: ' + error.message); return; }
+  await registrarAuditoria('producto_editado', 'productos', id, `Editado: ${nombre}`);
+  loadProductos();
 }
 
 // INVENTARIO
@@ -2831,7 +3027,7 @@ async function loadVentasSelects() {
   const [clientes, sedes, prods, tasas, precios] = await Promise.all([
     sb.from('clientes').select('*').order('nombre'),
     sb.from('sedes').select('*'),
-    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').not('categoria','eq','mp').order('tipo').order('nombre'),
+    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').not('categoria','eq','f1').order('categoria').order('nombre'),
     sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(20),
     sb.from('lista_precios').select('producto_id,precio,fecha_desde').eq('activo',true).order('fecha_desde',{ascending:false})
   ]);
@@ -2910,12 +3106,20 @@ function agregarItemVenta() {
   div.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;';
 
   const canal = document.getElementById('v-canal')?.value || '';
-  const esDetal = canal === 'detal_ccs' || canal === 'detal_acarigua';
 
-  // Filtrar productos por canal
-  const prodsFiltrados = esDetal
-    ? (productosData||[]).filter(p => p.categoria === 'detal')
-    : (productosData||[]).filter(p => p.categoria === 'corte' || p.categoria === 'mayor');
+  // Matriz de visibilidad por canal (F1 nunca en ventas)
+  // detal_acarigua (Venta1): F2, F3, F4
+  // mayor_acarigua (Venta2): F2, F4
+  // detal_ccs      (Venta3): F3, F4
+  // mayor_ccs      (Venta4): F2, F4
+  const canalCats = {
+    detal_acarigua: ['f2','f3','f4'],
+    mayor_acarigua: ['f2','f4'],
+    detal_ccs:      ['f3','f4'],
+    mayor_ccs:      ['f2','f4'],
+  };
+  const categoriasPermitidas = canalCats[canal] || ['f2','f3','f4'];
+  const prodsFiltrados = (productosData||[]).filter(p => categoriasPermitidas.includes(p.categoria));
 
   div.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -3449,7 +3653,7 @@ async function loadComprasSelects() {
     sb.from('proveedores').select('*').order('nombre'),
     sb.from('sedes').select('*'),
     sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(20),
-    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').in('categoria',['mp','corte']).order('categoria').order('nombre')
+    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').in('categoria',['f1','f2']).order('categoria').order('nombre')
   ]);
 
   sedesData = sedes.data || [];
@@ -3775,13 +3979,13 @@ async function verDetalleCompra(compra_id, titulo) {
 // MOVIMIENTOS INVENTARIO
 async function loadMovimientosSelects() {
   const [prods, sedes] = await Promise.all([
-    sb.from('productos').select('id,nombre,tipo').order('tipo').order('nombre'),
+    sb.from('productos').select('id,nombre,categoria').order('categoria').order('nombre'),
     sb.from('sedes').select('*')
   ]);
 
   const selProd = document.getElementById('mi-producto');
   if(selProd) selProd.innerHTML = (prods.data||[]).map(p =>
-    `<option value="${p.id}">${p.nombre} (${p.tipo})</option>`).join('');
+    `<option value="${p.id}">${p.nombre} (${p.categoria?.toUpperCase()||'—'})</option>`).join('');
 
   ['mi-origen','mi-destino'].forEach(id => {
     const sel = document.getElementById(id);
