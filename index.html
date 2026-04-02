@@ -3038,6 +3038,7 @@ async function loadVentasSelects() {
     if(!listaPreciosMap[lp.producto_id]) listaPreciosMap[lp.producto_id] = lp.precio;
   });
 
+  productosData = prods.data || [];
   clientesData = clientes.data || [];
   clientesCache = [...clientesData];
 
