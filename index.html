@@ -1291,7 +1291,7 @@
           <div class="form-row">
             <div class="form-group">
               <label>Categoría</label>
-              <select id="mf-categoria" onchange="actualizarCategoriasFinanzas()">
+              <select id="mf-categoria">
                 <option value="">— Seleccionar —</option>
               </select>
             </div>
@@ -1454,9 +1454,15 @@
               </select>
             </div>
           </div>
-          <div class="form-group" style="margin-bottom:16px">
-            <label>Notas</label>
-            <input type="text" id="lote-notas" placeholder="Ej: 4 toros — lote 1 de partida Álvaro" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+          <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <div class="form-group">
+              <label>Nomenclatura del lote</label>
+              <input type="text" id="lote-nomenclatura" placeholder="Ej: KC4TO010426" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;letter-spacing:1px;">
+            </div>
+            <div class="form-group">
+              <label>Notas</label>
+              <input type="text" id="lote-notas" placeholder="Ej: 4 toros — lote 1 de partida Álvaro" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            </div>
           </div>
           <button class="btn-action" onclick="guardarLote()">Registrar lote</button>
         </div>
@@ -1738,10 +1744,6 @@
         <input type="date" id="pc-fecha"
           style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
       </div>
-    </div>
-    <div class="form-group" style="margin-bottom:16px">
-      <label>Cuenta bancaria utilizada</label>
-      <select id="pc-cuenta" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;"></select>
     </div>
     <div class="form-group" style="margin-bottom:16px">
       <label>Cuenta a debitar</label>
@@ -4732,19 +4734,18 @@ async function loadLotes() {
   const estadoColor = { pendiente: '#e8b84b', en_proceso: '#5dade2', completado: '#27a66a' };
 
   tb.innerHTML = '<table>' +
-    '<tr><th>Fecha desposte</th><th>Partida</th><th>Animales</th><th>Estado</th><th>Notas</th><th></th></tr>' +
+    '<tr><th>Fecha desposte</th><th>Nomenclatura</th><th>Partida</th><th>Animales</th><th>Estado</th><th>Notas</th></tr>' +
     lotes.map(l => '<tr>' +
       '<td style="color:var(--text3)">' + l.fecha + '</td>' +
+      '<td style="font-family:monospace;font-weight:600;color:var(--azul);letter-spacing:1px">' + (l.nomenclatura||'—') + '</td>' +
       '<td style="color:var(--text)">' + (l.compras?.proveedores?.nombre||'—') + ' — ' + (l.compras?.fecha||'—') + '</td>' +
       '<td style="font-weight:600;color:var(--azul)">' + l.num_animales + '</td>' +
-      '<td><span class="badge" style="background:' + (estadoColor[l.estado]||'#888') + '22;color:' + (estadoColor[l.estado]||'#888') + '">' + l.estado + '</span></td>' +
-      '<td style="color:var(--text3);font-size:12px">' + (l.notas||'—') + '</td>' +
-      '<td><button data-lid="' + l.id + '" onclick="abrirCambiarEstado(this)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Cambiar estado</button></td>' +
-        '<option value="">Cambiar estado...</option>' +
-        '<option value="pendiente">Pendiente</option>' +
-        '<option value="en_proceso">En proceso</option>' +
-        '<option value="completado">Completado</option>' +
+      '<td><select data-lid="' + l.id + '" onchange="cambiarEstadoLote(this.dataset.lid, this.value)" style="background:' + (estadoColor[l.estado]||'#888') + '18;border:1px solid ' + (estadoColor[l.estado]||'#888') + '44;border-radius:6px;padding:4px 8px;font-size:11px;font-family:\'Sora\',sans-serif;color:' + (estadoColor[l.estado]||'#888') + ';font-weight:600;cursor:pointer">' +
+        '<option value="pendiente"' + (l.estado==='pendiente'?' selected':'') + '>Pendiente</option>' +
+        '<option value="en_proceso"' + (l.estado==='en_proceso'?' selected':'') + '>En proceso</option>' +
+        '<option value="completado"' + (l.estado==='completado'?' selected':'') + '>Completado</option>' +
       '</select></td>' +
+      '<td style="color:var(--text3);font-size:12px">' + (l.notas||'—') + '</td>' +
     '</tr>').join('') +
     '</table>';
 }
@@ -4756,24 +4757,22 @@ async function guardarLote() {
   const estado     = document.getElementById('lote-estado').value;
   const notas      = document.getElementById('lote-notas').value;
 
+  const nomenclatura = document.getElementById('lote-nomenclatura').value.trim().toUpperCase();
+
   if(!partida_id) { alert('Seleccioná la partida (compra).'); return; }
   if(!fecha)      { alert('Seleccioná la fecha de desposte.'); return; }
 
   const { error } = await sb.from('lotes').insert({
-    partida_id, fecha, num_animales, estado, notas: notas || null
+    partida_id, fecha, num_animales, estado, notas: notas || null,
+    nomenclatura: nomenclatura || null
   });
 
   if(error) { alert('Error: ' + error.message); return; }
   showToast('Lote registrado ✓');
   document.getElementById('lote-animales').value = '';
   document.getElementById('lote-notas').value = '';
+  document.getElementById('lote-nomenclatura').value = '';
   loadLotes();
-}
-
-function abrirCambiarEstado(btn) {
-  var lote_id = btn.dataset.lid;
-  var nuevo = prompt('Nuevo estado: pendiente / en_proceso / completado');
-  if(nuevo) cambiarEstadoLote(lote_id, nuevo);
 }
 
 async function cambiarEstadoLote(lote_id, nuevo_estado) {
