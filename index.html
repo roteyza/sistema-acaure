@@ -3539,10 +3539,13 @@ async function verDetalleVenta(venta_id, titulo) {
       (Number(saldo)>0 ? 'Saldo pendiente: $' + Number(saldo).toFixed(2) : '✓ Venta completamente cobrada') + '</div>';
   }
 
-  document.getElementById('venta-detalle-contenido').innerHTML = html;
-}
+  const anulada = venta?.status === 'anulada';
+  if(anulada) html = '<div style="background:#fdecea;border:1px solid #e74c3c44;border-radius:8px;padding:10px 14px;margin-bottom:16px;color:#c0392b;font-weight:600;font-size:13px">⚠ Esta venta está anulada</div>' + html;
 
-// COMPRAS
+  const btnAnular = anulada ? '' : `<button onclick="anularVenta('${venta_id}', this)" style="background:#fdecea;color:var(--danger);border:1px solid #e74c3c44;border-radius:8px;padding:8px 18px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-top:20px">Anular venta</button>`;
+
+  document.getElementById('venta-detalle-contenido').innerHTML = html + btnAnular;
+}
 let compraItems = [];
 let sedesData = [];
 let tasasData = [];
@@ -3962,23 +3965,18 @@ async function verDetalleCompra(compra_id, titulo) {
   const [detRes, pagosRes, compraRes] = await Promise.all([
     sb.from('compras_detalle').select('*, productos(nombre,tipo)').eq('compra_id', compra_id),
     sb.from('movimientos_financieros').select('fecha,monto,monto_bs,monto_usd,moneda,concepto,cuentas(nombre)').eq('compra_id', compra_id).order('fecha',{ascending:true}),
-    sb.from('compras').select('total_usd,saldo_pendiente,status_pago,condicion').eq('id', compra_id).maybeSingle()
+    sb.from('compras').select('total_usd,saldo_pendiente,status_pago,condicion,status_pago').eq('id', compra_id).maybeSingle()
   ]);
-
-  document.getElementById('detalle-titulo').textContent = titulo;
-  document.getElementById('compra-detalle-panel').style.display = 'block';
 
   const data   = detRes.data || [];
   const pagos  = pagosRes.data || [];
   const compra = compraRes.data;
+  const anulada = compra?.status_pago === 'anulada';
 
-  if(!data.length) {
-    document.getElementById('compra-detalle-contenido').innerHTML = '<div class="empty">Sin detalle</div>';
-    return;
-  }
+  var html = '';
+  if(anulada) html += '<div style="background:#fdecea;border:1px solid #e74c3c44;border-radius:8px;padding:10px 14px;margin-bottom:16px;color:#c0392b;font-weight:600;font-size:13px">⚠ Esta compra está anulada</div>';
 
-  // Tabla de productos
-  var html = '<table style="margin-bottom:20px"><tr><th>Producto</th><th>Tipo</th><th>Cantidad (kg)</th><th>Precio unit.</th><th>Moneda</th></tr>';
+  html += '<table style="margin-bottom:20px"><tr><th>Producto</th><th>Tipo</th><th>Cantidad (kg)</th><th>Precio unit.</th><th>Moneda</th></tr>';
   data.forEach(function(d) {
     html += '<tr>' +
       '<td style="color:var(--text)">' + (d.productos?.nombre||'—') + '</td>' +
@@ -3990,7 +3988,6 @@ async function verDetalleCompra(compra_id, titulo) {
   });
   html += '</table>';
 
-  // Historial de pagos (solo si es crédito)
   if(compra?.condicion === 'credito') {
     html += '<div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin:16px 0 10px">Historial de pagos</div>';
     if(!pagos.length) {
@@ -4021,7 +4018,24 @@ async function verDetalleCompra(compra_id, titulo) {
       (Number(saldo)>0 ? 'Saldo pendiente: $' + Number(saldo).toFixed(2) : '✓ Compra completamente pagada') + '</div>';
   }
 
-  document.getElementById('compra-detalle-contenido').innerHTML = html;
+  // Botón anular
+  const btnAnular = anulada ? '' : `<button onclick="anularCompra('${compra_id}', this)" style="background:#fdecea;color:var(--danger);border:1px solid #e74c3c44;border-radius:8px;padding:8px 18px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Anular compra</button>`;
+
+  const modal = document.createElement('div');
+  modal.id = 'modal-ver-compra';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:600;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:white;border-radius:16px;padding:32px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;margin:24px;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="font-size:17px;font-weight:700;color:var(--azul)">${titulo}</div>
+        <button onclick="document.getElementById('modal-ver-compra').remove()" style="background:none;border:none;font-size:20px;color:var(--text3);cursor:pointer">✕</button>
+      </div>
+      ${html}
+      <div style="margin-top:20px">${btnAnular}</div>
+    </div>`;
+  document.getElementById('modal-ver-compra')?.remove();
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
 }
 
 // MOVIMIENTOS INVENTARIO
@@ -4184,6 +4198,8 @@ async function verMovimiento(id) {
   const kg = Number(m.cantidad_kg) || 0;
   const costo = Number(m.costo_usd_kg) || 0;
 
+  const btnAnular = `<div style="margin-top:20px"><button onclick="anularMovimiento('${m.id}', this)" style="background:#fdecea;color:var(--danger);border:1px solid #e74c3c44;border-radius:8px;padding:8px 18px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Anular movimiento</button></div>`;
+
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:600;display:flex;align-items:center;justify-content:center';
   modal.innerHTML = `
@@ -4212,6 +4228,7 @@ async function verMovimiento(id) {
           <td style="padding:8px 0;font-weight:500;color:var(--text)">${v}</td>
         </tr>`).join('')}
       </table>
+      ${btnAnular}
     </div>`;
   document.body.appendChild(modal);
   modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
@@ -4874,7 +4891,93 @@ async function cambiarEstadoLote(lote_id, nuevo_estado) {
   loadLotes();
 }
 
-// ===== CICLO OPERATIVO =====
+// ===== ANULACIONES =====
+async function anularVenta(venta_id, btn) {
+  if(!confirm('¿Anular esta venta? Los productos volverán al inventario y se eliminará de CxC. Esta acción queda registrada en auditoría.')) return;
+  btn.disabled = true; btn.textContent = 'Anulando...';
+
+  // 1. Obtener detalle de la venta
+  const { data: venta } = await sb.from('ventas').select('sede_id, status').eq('id', venta_id).single();
+  const { data: items } = await sb.from('ventas_detalle').select('producto_id, cantidad').eq('venta_id', venta_id);
+
+  if(venta?.status === 'anulada') { alert('Ya está anulada.'); return; }
+
+  // 2. Devolver productos al inventario
+  for(const item of (items||[])) {
+    await upsertInventario(item.producto_id, venta.sede_id, Number(item.cantidad));
+  }
+
+  // 3. Anular movimientos de salida asociados (los auto-generados por la venta)
+  await sb.from('movimientos_inventario')
+    .update({ referencia: '[ANULADO] ' })
+    .eq('tipo', 'salida')
+    .like('referencia', '%Venta%');
+
+  // 4. Marcar venta como anulada
+  await sb.from('ventas').update({ status: 'anulada', saldo_pendiente: 0 }).eq('id', venta_id);
+
+  await registrarAuditoria('venta_anulada', 'ventas', venta_id, 'Venta anulada — productos revertidos al inventario');
+  showToast('Venta anulada ✓');
+  document.getElementById('venta-detalle-panel').style.display = 'none';
+  loadVentas();
+}
+
+async function anularCompra(compra_id, btn) {
+  if(!confirm('¿Anular esta compra? Se revertirá el inventario y se eliminará de CxP. Esta acción queda registrada en auditoría.')) return;
+  btn.disabled = true; btn.textContent = 'Anulando...';
+
+  const { data: compra } = await sb.from('compras').select('sede_id, status_pago').eq('id', compra_id).single();
+  const { data: items }  = await sb.from('compras_detalle').select('producto_id, cantidad_kg').eq('compra_id', compra_id);
+
+  if(compra?.status_pago === 'anulada') { alert('Ya está anulada.'); return; }
+
+  // Revertir inventario (quitar lo que entró)
+  for(const item of (items||[])) {
+    await upsertInventario(item.producto_id, compra.sede_id, -Number(item.cantidad_kg));
+  }
+
+  // Marcar compra como anulada
+  await sb.from('compras').update({ status_pago: 'anulada', saldo_pendiente: 0 }).eq('id', compra_id);
+
+  await registrarAuditoria('compra_anulada', 'compras', compra_id, 'Compra anulada — inventario revertido');
+  showToast('Compra anulada ✓');
+  document.getElementById('modal-ver-compra')?.remove();
+  loadCompras();
+}
+
+async function anularMovimiento(mov_id, btn) {
+  if(!confirm('¿Anular este movimiento? Se revertirá el efecto en inventario. Esta acción queda registrada en auditoría.')) return;
+  btn.disabled = true; btn.textContent = 'Anulando...';
+
+  const { data: m } = await sb.from('movimientos_inventario')
+    .select('tipo, producto_id, cantidad_kg, sede_origen_id, sede_destino_id')
+    .eq('id', mov_id).single();
+
+  if(!m) { alert('Movimiento no encontrado.'); return; }
+
+  // Revertir efecto en inventario
+  if(m.tipo === 'entrada') {
+    await upsertInventario(m.producto_id, m.sede_destino_id, -Number(m.cantidad_kg));
+  } else if(m.tipo === 'salida' || m.tipo === 'merma') {
+    await upsertInventario(m.producto_id, m.sede_origen_id, Number(m.cantidad_kg));
+  } else if(m.tipo === 'traslado') {
+    await upsertInventario(m.producto_id, m.sede_origen_id, Number(m.cantidad_kg));
+    await upsertInventario(m.producto_id, m.sede_destino_id, -Number(m.cantidad_kg));
+  }
+
+  // Marcar referencia como anulado
+  await sb.from('movimientos_inventario')
+    .update({ referencia: '[ANULADO]', tipo: 'merma' })
+    .eq('id', mov_id);
+
+  await registrarAuditoria('mov_inventario', 'movimientos_inventario', mov_id, 'Movimiento anulado — inventario revertido');
+  showToast('Movimiento anulado ✓');
+  document.querySelector('div[style*="position:fixed"][style*="z-index:600"]')?.remove();
+  loadMovimientos();
+  loadInventario();
+}
+
+
 async function loadCicloOperativo() {
   document.getElementById('ciclo-actualizado').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-VE');
 
@@ -4896,9 +4999,9 @@ async function loadCicloOperativo() {
   const cobros   = movfinRes.data   || [];
 
   // CxC y CxP consolidado
-  const cxcVentas = ventas.filter(v => Number(v.saldo_pendiente) > 0);
+  const cxcVentas = ventas.filter(v => Number(v.saldo_pendiente) > 0 && v.status !== 'anulada');
   const cxcTotal  = cxcVentas.reduce((s,v) => s + Number(v.saldo_pendiente||0), 0);
-  const cxpCompras = compras.filter(c => c.condicion === 'credito' && c.status_pago !== 'pagada' && Number(c.saldo_pendiente||0) > 0);
+  const cxpCompras = compras.filter(c => c.condicion === 'credito' && c.status_pago !== 'pagada' && c.status_pago !== 'anulada' && Number(c.saldo_pendiente||0) > 0);
   const cxpTotal  = cxpCompras.reduce((s,c) => s + Number(c.saldo_pendiente||0), 0);
   const posicion  = cxcTotal - cxpTotal;
 
@@ -4945,11 +5048,16 @@ async function loadCicloOperativo() {
   // Inventario vendido (salidas)
   const vendidoTotal = movinv.filter(m => m.tipo === 'salida').reduce((s,m) => s + Number(m.cantidad_kg||0), 0);
 
-  // Tabla por partida
+  // Tabla por partida — excluir anuladas y partidas con todos los lotes completados
   const alertas = [];
   let tablaHTML = '<table><tr><th>Partida</th><th>Fecha</th><th>Lotes</th><th>Costo USD</th><th>CxP viva</th><th>CCE días</th><th>Semáforo</th></tr>';
 
-  compras.slice(0, 20).forEach(c => {
+  compras.filter(c => {
+    if(c.status_pago === 'anulada') return false;
+    const lotesPartida = lotesByPartida[c.id] || [];
+    if(lotesPartida.length > 0 && lotesPartida.every(l => l.estado === 'completado')) return false;
+    return true;
+  }).slice(0, 20).forEach(c => {
     const lotesPartida = lotesByPartida[c.id] || [];
     const diasDesdeCompra = Math.floor((new Date(hoy) - new Date(c.fecha)) / 86400000);
     const semColor = diasDesdeCompra <= 21 ? '#27a66a' : diasDesdeCompra <= 35 ? '#e8b84b' : '#e74c3c';
