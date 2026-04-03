@@ -839,8 +839,15 @@
         <div class="table-wrap">
           <div class="table-head">
             <div class="table-title">Stock actual</div>
-            <button onclick="exportarInventario('csv')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ CSV</button> <button onclick="exportarInventario('xlsx')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Excel</button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select id="inv-filtro-sede" onchange="loadInventario()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;font-family:'Sora',sans-serif;color:var(--text2)">
+                <option value="">Todas las sedes</option>
+              </select>
+              <button onclick="exportarInventario('csv')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ CSV</button>
+              <button onclick="exportarInventario('xlsx')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Excel</button>
+            </div>
           </div>
+          <div id="inv-total-bar" style="display:none;padding:12px 16px;background:var(--azul);color:white;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;border-radius:0 0 0 0"></div>
           <div id="inv-table"><div class="loading">Cargando...</div></div>
         </div>
       </div>
@@ -1244,6 +1251,9 @@
         <div class="page-title">Movimientos financieros</div>
         <div class="page-sub">Registro de ingresos y egresos</div>
 
+        <!-- SALDOS POR CUENTA -->
+        <div id="fin-saldos-panel" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px"></div>
+
         <div class="form-card" id="form-finanzas">
           <div style="font-family: 'Syne', sans-serif; font-size:14px; font-weight:600; margin-bottom:16px;">Registrar movimiento</div>
           <div class="form-row">
@@ -1364,65 +1374,6 @@
       </div>
 
       <!-- TASAS -->
-      <div class="page" id="page-tasas">
-        <div class="page-title">Tasas de cambio</div>
-        <div class="page-sub">Registrá la tasa del día antes de operar</div>
-        <div class="form-card">
-          <div style="font-family: 'Syne', sans-serif; font-size:14px; font-weight:600; margin-bottom:16px;">Nueva tasa</div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Nombre</label>
-              <select id="t-nombre">
-                <option value="BCV">BCV</option>
-                <option value="Paralelo">Paralelo</option>
-                <option value="Interno">Interno</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Valor (Bs por $1)</label>
-              <input type="number" id="t-valor" placeholder="ej: 95.50" step="0.01">
-            </div>
-            <div class="form-group">
-              <label>Fecha</label>
-              <input type="date" id="t-fecha">
-            </div>
-          </div>
-          <button class="btn-action" onclick="guardarTasa()">Guardar tasa</button>
-        </div>
-        <div class="table-wrap">
-          <div class="table-head"><div class="table-title">Historial de tasas</div></div>
-          <div id="tasas-table"><div class="loading">Cargando...</div></div>
-        </div>
-      </div>
-
-      <!-- LISTA DE PRECIOS -->
-      <div class="page" id="page-precios">
-        <div class="page-title">Lista de precios</div>
-        <div class="page-sub">Precios semanales por producto — actualizá cada lunes</div>
-        <div class="form-card">
-          <div style="font-family:'Sora',sans-serif;font-size:14px;font-weight:600;margin-bottom:16px;">Actualizar precio</div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Producto</label>
-              <select id="lp-producto"></select>
-            </div>
-            <div class="form-group">
-              <label>Precio (USD)</label>
-              <input type="number" id="lp-precio" placeholder="0.00" step="0.01">
-            </div>
-            <div class="form-group">
-              <label>Válido desde</label>
-              <input type="date" id="lp-fecha">
-            </div>
-          </div>
-          <button class="btn-action" onclick="guardarPrecio()">Guardar precio</button>
-        </div>
-        <div class="table-wrap">
-          <div class="table-head"><div class="table-title">Precios vigentes</div></div>
-          <div id="precios-table"><div class="loading">Cargando...</div></div>
-        </div>
-      </div>
-
       <!-- LOTES -->
       <div class="page" id="page-lotes">
         <div class="page-title">Lotes de producción</div>
@@ -1879,51 +1830,6 @@
   </div>
 </div>
 
-<!-- MODAL NUEVO CLIENTE -->
-<div id="modal-nuevo-cli" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
-  <div style="background:white;width:500px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
-    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px">Nuevo cliente</div>
-    <div style="font-size:13px;color:var(--text3);margin-bottom:24px">Agregá el cliente antes de registrar la venta</div>
-    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px">
-      <div class="form-group">
-        <label>Nombre</label>
-        <input type="text" id="nc-nombre" placeholder="Ej: Supermercado El Valle"
-          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-      </div>
-      <div class="form-group">
-        <label>Teléfono</label>
-        <input type="text" id="nc-telefono" placeholder="Ej: 04141234567"
-          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-      </div>
-    </div>
-    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-top:4px">
-      <div class="form-group">
-        <label>Tipo</label>
-        <select id="nc-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-          <option value="b2b">B2B (Mayor)</option>
-          <option value="b2c">B2C (Detal)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Canal</label>
-        <select id="nc-canal" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-          <option value="mayor">Mayor</option>
-          <option value="detal">Detal</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group" style="margin-top:4px">
-      <label>Dirección</label>
-      <input type="text" id="nc-direccion" placeholder="Ej: La Lagunita, Caracas"
-        style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-    </div>
-    <div style="display:flex;gap:8px;margin-top:24px">
-      <button onclick="guardarNuevoCliente()" class="btn-action" style="flex:1">Guardar cliente</button>
-      <button onclick="cerrarNuevoCliente()" class="btn-secondary">Cancelar</button>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL NUEVO PROVEEDOR -->
 <div id="modal-nuevo-prov" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
   <div style="background:white;width:460px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
@@ -2037,9 +1943,7 @@ const NAV = {
     { id: 'lotes', label: 'Lotes', icon: '⬡' },
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
-    { id: 'precios', label: 'Lista de precios', icon: '◑' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
-    { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
     { id: 'maestros', label: 'Datos maestros', icon: '◫' },
     { id: 'auditoria', label: 'Auditoría', icon: '◷' },
   ],
@@ -2051,15 +1955,12 @@ const NAV = {
     { id: 'lotes', label: 'Lotes', icon: '⬡' },
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
-    { id: 'precios', label: 'Lista de precios', icon: '◑' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
-    { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
   ],
   finanzas: [
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
-    { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
     { id: 'maestros', label: 'Datos maestros', icon: '◫' },
   ],
   ventas: [
@@ -2067,15 +1968,12 @@ const NAV = {
     { id: 'inventario', label: 'Inventario', icon: '▦' },
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
-    { id: 'precios', label: 'Lista de precios', icon: '◑' },
   ],
   oficina: [
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'compras', label: 'Compras', icon: '◳' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
-    { id: 'tasas', label: 'Tasas de cambio', icon: '⟳' },
     { id: 'maestros', label: 'Datos maestros', icon: '◫' },
-    { id: 'precios', label: 'Lista de precios', icon: '◑' },
   ],
   socio: [
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
@@ -2085,7 +1983,6 @@ const NAV = {
     { id: 'compras', label: 'Compras', icon: '◳' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
     { id: 'productos', label: 'Productos', icon: '◉' },
-    { id: 'precios', label: 'Lista de precios', icon: '◑' },
   ]
 };
 
@@ -2643,21 +2540,62 @@ async function confirmarEditarProducto(id) {
 
 // INVENTARIO
 async function loadInventario() {
-  const { data } = await sb.from('inventario').select('*, productos(nombre,tipo,categoria), sedes(nombre,codigo)').order('cantidad_kg', {ascending:false});
+  // Cargar sedes en filtro si está vacío
+  const selSede = document.getElementById('inv-filtro-sede');
+  if(selSede && selSede.options.length <= 1) {
+    const { data: sedes } = await sb.from('sedes').select('*');
+    (sedes||[]).forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.id; o.textContent = s.codigo + ' — ' + s.nombre;
+      selSede.appendChild(o);
+    });
+  }
+  const sedeId = selSede?.value || '';
+
+  let query = sb.from('inventario')
+    .select('*, productos(nombre,tipo,categoria,precio_base), sedes(nombre,codigo)')
+    .order('cantidad_kg', {ascending:false});
+  if(sedeId) query = query.eq('sede_id', sedeId);
+
+  const { data } = await query;
   const tb = document.getElementById('inv-table');
+  const totalBar = document.getElementById('inv-total-bar');
+
   if(!data || !data.length) {
-    tb.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><p>Sin movimientos de inventario aún.</p></div>';
+    tb.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><p>Sin stock registrado aún.</p></div>';
+    if(totalBar) totalBar.style.display = 'none';
     return;
   }
+
+  // Calcular totales
+  let totalKg = 0, totalValor = 0;
+  data.forEach(i => {
+    totalKg += Number(i.cantidad_kg) || 0;
+    const precio = Number(i.productos?.precio_base) || 0;
+    totalValor += (Number(i.cantidad_kg) || 0) * precio;
+  });
+
+  if(totalBar) {
+    totalBar.style.display = 'block';
+    totalBar.innerHTML = `Total: ${totalKg.toFixed(1)} kg${totalValor > 0 ? ' &nbsp;|&nbsp; Valor est. $'+totalValor.toFixed(2) : ''}`;
+  }
+
   tb.innerHTML = `<table>
-    <tr><th>Producto</th><th>Sede</th><th>Categoría</th><th>Stock (kg)</th><th>Actualizado</th></tr>
-    ${data.map(i => `<tr>
-      <td style="color:var(--text)">${i.productos?.nombre || '—'}</td>
-      <td><span style="color:var(--text3)">${i.sedes?.codigo || '—'}</span></td>
-      <td>${i.productos?.categoria ? `<span class="badge badge-${i.productos.categoria}">${i.productos.categoria}</span>` : '—'}</td>
-      <td style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600">${Number(i.cantidad_kg).toFixed(1)} kg</td>
-      <td style="color:var(--text3);font-size:12px">${i.actualizado_at ? new Date(i.actualizado_at).toLocaleDateString('es-VE') : '—'}</td>
-    </tr>`).join('')}
+    <tr><th>Producto</th><th>Sede</th><th>Fase</th><th>Stock (kg)</th><th>Precio base</th><th>Valor est.</th><th>Actualizado</th></tr>
+    ${data.map(i => {
+      const kg = Number(i.cantidad_kg) || 0;
+      const precio = Number(i.productos?.precio_base) || 0;
+      const valor = kg * precio;
+      return `<tr>
+        <td style="color:var(--text)">${i.productos?.nombre || '—'}</td>
+        <td><span style="color:var(--text3)">${i.sedes?.codigo || '—'}</span></td>
+        <td>${i.productos?.categoria ? `<span class="badge badge-${i.productos.categoria}">${i.productos.categoria.toUpperCase()}</span>` : '—'}</td>
+        <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--azul)">${kg.toFixed(1)} kg</td>
+        <td style="color:var(--text3)">${precio > 0 ? '$'+precio.toFixed(2) : '—'}</td>
+        <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--success)">${valor > 0 ? '$'+valor.toFixed(2) : '—'}</td>
+        <td style="color:var(--text3);font-size:12px">${i.actualizado_at ? new Date(i.actualizado_at).toLocaleDateString('es-VE') : '—'}</td>
+      </tr>`;
+    }).join('')}
   </table>`;
 }
 
@@ -2710,7 +2648,39 @@ async function initFinanzasFiltros() {
   if(hastaEl && !hastaEl.value) hastaEl.value = hoy.toISOString().split('T')[0];
 }
 
+async function loadSaldosCuentas() {
+  const panel = document.getElementById('fin-saldos-panel');
+  if(!panel) return;
+  const { data: cuentas } = await sb.from('cuentas').select('*').eq('activo', true);
+  if(!cuentas?.length) { panel.innerHTML = ''; return; }
+
+  // Para cada cuenta sumar ingresos - egresos de movimientos_financieros
+  const { data: movs } = await sb.from('movimientos_financieros')
+    .select('cuenta_id, tipo, monto_usd, monto');
+
+  const saldos = {};
+  cuentas.forEach(c => { saldos[c.id] = 0; });
+  (movs||[]).forEach(m => {
+    if(saldos[m.cuenta_id] === undefined) return;
+    const val = Number(m.monto_usd || m.monto) || 0;
+    saldos[m.cuenta_id] += m.tipo === 'ingreso' ? val : -val;
+  });
+
+  const monedaIcon = { banco_bs:'Bs', banco_usd:'$', efectivo_usd:'$', efectivo_bs:'Bs', zelle:'$' };
+  panel.innerHTML = cuentas.map(c => {
+    const saldo = saldos[c.id] || 0;
+    const color = saldo >= 0 ? 'var(--success)' : 'var(--danger)';
+    const icon = monedaIcon[c.tipo] || '$';
+    return `<div style="background:white;border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">${c.nombre}</div>
+      <div style="font-size:18px;font-weight:700;font-family:'Syne',sans-serif;color:${color}">${icon}${Math.abs(saldo).toFixed(2)}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px">${c.moneda?.toUpperCase()} · ${c.tipo?.replace('_',' ')}</div>
+    </div>`;
+  }).join('');
+}
+
 async function loadFinanzas() {
+  loadSaldosCuentas();
   const tb = document.getElementById('mf-table');
   tb.innerHTML = '<div class="loading">Cargando...</div>';
 
