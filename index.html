@@ -2553,11 +2553,24 @@ async function loadInventario() {
   const sedeId = selSede?.value || '';
 
   let query = sb.from('inventario')
-    .select('*, productos(nombre,tipo,categoria,precio_base), sedes(nombre,codigo)')
+    .select('*, productos(nombre,tipo,categoria), sedes(nombre,codigo)')
     .order('cantidad_kg', {ascending:false});
   if(sedeId) query = query.eq('sede_id', sedeId);
-
   const { data } = await query;
+
+  // Cargar último costo_usd_kg por producto desde movimientos_inventario (entradas)
+  const { data: movs } = await sb.from('movimientos_inventario')
+    .select('producto_id, costo_usd_kg, created_at')
+    .eq('tipo', 'entrada')
+    .not('costo_usd_kg', 'is', null)
+    .order('created_at', {ascending: false});
+
+  // Mapa: producto_id → último costo_usd_kg
+  const costoMap = {};
+  (movs||[]).forEach(m => {
+    if(!costoMap[m.producto_id]) costoMap[m.producto_id] = m.costo_usd_kg;
+  });
+
   const tb = document.getElementById('inv-table');
   const totalBar = document.getElementById('inv-total-bar');
 
@@ -2571,27 +2584,27 @@ async function loadInventario() {
   let totalKg = 0, totalValor = 0;
   data.forEach(i => {
     totalKg += Number(i.cantidad_kg) || 0;
-    const precio = Number(i.productos?.precio_base) || 0;
-    totalValor += (Number(i.cantidad_kg) || 0) * precio;
+    const costo = Number(costoMap[i.producto_id]) || 0;
+    totalValor += (Number(i.cantidad_kg) || 0) * costo;
   });
 
   if(totalBar) {
     totalBar.style.display = 'block';
-    totalBar.innerHTML = `Total: ${totalKg.toFixed(1)} kg${totalValor > 0 ? ' &nbsp;|&nbsp; Valor est. $'+totalValor.toFixed(2) : ''}`;
+    totalBar.innerHTML = `Total stock: ${totalKg.toFixed(1)} kg${totalValor > 0 ? ' &nbsp;|&nbsp; Valor a costo: $'+totalValor.toFixed(2) : ''}`;
   }
 
   tb.innerHTML = `<table>
-    <tr><th>Producto</th><th>Sede</th><th>Fase</th><th>Stock (kg)</th><th>Precio base</th><th>Valor est.</th><th>Actualizado</th></tr>
+    <tr><th>Producto</th><th>Sede</th><th>Fase</th><th>Stock (kg)</th><th>Costo/kg</th><th>Valor a costo</th><th>Actualizado</th></tr>
     ${data.map(i => {
       const kg = Number(i.cantidad_kg) || 0;
-      const precio = Number(i.productos?.precio_base) || 0;
-      const valor = kg * precio;
+      const costo = Number(costoMap[i.producto_id]) || 0;
+      const valor = kg * costo;
       return `<tr>
         <td style="color:var(--text)">${i.productos?.nombre || '—'}</td>
         <td><span style="color:var(--text3)">${i.sedes?.codigo || '—'}</span></td>
         <td>${i.productos?.categoria ? `<span class="badge badge-${i.productos.categoria}">${i.productos.categoria.toUpperCase()}</span>` : '—'}</td>
         <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--azul)">${kg.toFixed(1)} kg</td>
-        <td style="color:var(--text3)">${precio > 0 ? '$'+precio.toFixed(2) : '—'}</td>
+        <td style="color:var(--text3)">${costo > 0 ? '$'+costo.toFixed(4) : '—'}</td>
         <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--success)">${valor > 0 ? '$'+valor.toFixed(2) : '—'}</td>
         <td style="color:var(--text3);font-size:12px">${i.actualizado_at ? new Date(i.actualizado_at).toLocaleDateString('es-VE') : '—'}</td>
       </tr>`;
