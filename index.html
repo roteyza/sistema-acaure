@@ -2594,12 +2594,12 @@ async function loadInventario() {
   }
 
   tb.innerHTML = `<table>
-    <tr><th>Producto</th><th>Sede</th><th>Fase</th><th>Stock (kg)</th><th>Costo/kg</th><th>Valor a costo</th><th>Actualizado</th></tr>
+    <tr><th>Producto</th><th>Sede</th><th>Fase</th><th>Stock (kg)</th><th>Costo/kg</th><th>Valor a costo</th><th>Actualizado</th><th></th></tr>
     ${data.map(i => {
       const kg = Number(i.cantidad_kg) || 0;
       const costo = Number(costoMap[i.producto_id]) || 0;
       const valor = kg * costo;
-      return `<tr>
+      return `<tr id="inv-row-${i.id}">
         <td style="color:var(--text)">${i.productos?.nombre || '—'}</td>
         <td><span style="color:var(--text3)">${i.sedes?.codigo || '—'}</span></td>
         <td>${i.productos?.categoria ? `<span class="badge badge-${i.productos.categoria}">${i.productos.categoria.toUpperCase()}</span>` : '—'}</td>
@@ -2607,6 +2607,7 @@ async function loadInventario() {
         <td style="color:var(--text3)">${costo > 0 ? '$'+costo.toFixed(4) : '—'}</td>
         <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--success)">${valor > 0 ? '$'+valor.toFixed(2) : '—'}</td>
         <td style="color:var(--text3);font-size:12px">${i.actualizado_at ? new Date(i.actualizado_at).toLocaleDateString('es-VE') : '—'}</td>
+        <td><button onclick="ajustarInventario('${i.id}', ${kg}, ${costo})" title="Ajustar" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;color:var(--text3)">✎</button></td>
       </tr>`;
     }).join('')}
   </table>`;
@@ -2659,6 +2660,53 @@ async function initFinanzasFiltros() {
   const hastaEl = document.getElementById('fin-hasta');
   if(desdeEl && !desdeEl.value) desdeEl.value = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
   if(hastaEl && !hastaEl.value) hastaEl.value = hoy.toISOString().split('T')[0];
+}
+
+function ajustarInventario(id, kgActual, costoActual) {
+  const row = document.getElementById(`inv-row-${id}`);
+  if(!row) return;
+  const cells = row.querySelectorAll('td');
+  // Reemplazar celda kg y costo con inputs
+  cells[3].innerHTML = `<input type="number" id="aj-kg-${id}" value="${kgActual}" step="0.1" min="0" style="width:80px;padding:4px 6px;border:1.5px solid var(--azul);border-radius:6px;font-family:'Sora',sans-serif;font-size:13px">`;
+  cells[4].innerHTML = `<input type="number" id="aj-costo-${id}" value="${costoActual||''}" step="0.0001" min="0" placeholder="0.0000" style="width:90px;padding:4px 6px;border:1.5px solid var(--border);border-radius:6px;font-family:'Sora',sans-serif;font-size:13px">`;
+  cells[7].innerHTML = `
+    <button onclick="confirmarAjusteInventario('${id}')" title="Guardar" style="background:var(--azul);color:white;border:none;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;margin-right:4px">✓</button>
+    <button onclick="loadInventario()" title="Cancelar" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;color:var(--text3)">✕</button>
+  `;
+}
+
+async function confirmarAjusteInventario(id) {
+  const kg    = parseFloat(document.getElementById(`aj-kg-${id}`)?.value);
+  const costo = parseFloat(document.getElementById(`aj-costo-${id}`)?.value) || null;
+
+  if(isNaN(kg) || kg < 0) { alert('Cantidad inválida.'); return; }
+
+  const { error } = await sb.from('inventario')
+    .update({ cantidad_kg: kg, actualizado_at: new Date().toISOString() })
+    .eq('id', id);
+
+  if(error) { alert('Error: ' + error.message); return; }
+
+  // Si se cambió el costo, registrar un movimiento de ajuste con ese costo
+  if(costo && costo > 0) {
+    const { data: inv } = await sb.from('inventario').select('producto_id, sede_id').eq('id', id).single();
+    if(inv) {
+      await sb.from('movimientos_inventario').insert({
+        tipo: 'entrada',
+        producto_id: inv.producto_id,
+        cantidad_kg: 0,
+        fecha: new Date().toISOString().split('T')[0],
+        referencia: 'Ajuste manual de costo',
+        sede_destino_id: inv.sede_id,
+        costo_usd_kg: costo,
+        usuario_id: currentUser?.id || null
+      });
+    }
+  }
+
+  showToast('Inventario ajustado ✓');
+  await registrarAuditoria('mov_inventario', 'inventario', id, `Ajuste manual: ${kg} kg`);
+  loadInventario();
 }
 
 async function loadSaldosCuentas() {
