@@ -2968,7 +2968,7 @@ async function anularMovFinanciero(id) {
   loadFinanzas();
 }
 
-
+function actualizarCatsFinanzas() {
   const tipo = document.getElementById('mf-tipo')?.value || 'egreso';
   const sel  = document.getElementById('mf-categoria');
   if(!sel) return;
