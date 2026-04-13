@@ -457,6 +457,10 @@
     border-bottom: 1px solid var(--border);
     background: var(--surface2);
   }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--azul); background: var(--surface2); }
+  th.sort-asc::after { content: ' ↑'; color: var(--azul); }
+  th.sort-desc::after { content: ' ↓'; color: var(--azul); }
 
   td {
     padding: 13px 20px;
@@ -2447,6 +2451,7 @@ async function loadProductos() {
       ${puedeEditar ? `<td><button onclick="editarProducto('${p.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text2);cursor:pointer;font-family:'Sora',sans-serif">Editar</button></td>` : ''}
     </tr>`).join('')}
   </table>`;
+  makeSortable(document.getElementById('prod-table')?.querySelector('table'));
 }
 
 async function guardarNuevoProducto() {
@@ -2611,6 +2616,7 @@ async function loadInventario() {
       </tr>`;
     }).join('')}
   </table>`;
+  makeSortable(tb.querySelector('table'));
 }
 
 // CUENTAS SELECT
@@ -2696,6 +2702,7 @@ async function confirmarAjusteInventario(id) {
         producto_id: inv.producto_id,
         cantidad_kg: 0,
         fecha: new Date().toISOString().split('T')[0],
+        hora: new Date().toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'America/Caracas'}),
         referencia: 'Ajuste manual de costo',
         sede_destino_id: inv.sede_id,
         costo_usd_kg: costo,
@@ -2786,7 +2793,7 @@ async function loadFinanzas() {
     const montoStr = (esIngreso ? '+' : '-') + monto.toFixed(2) + ' ' + (m.moneda||'').toUpperCase();
     const saldoColor = saldo >= 0 ? 'var(--azul)' : 'var(--danger)';
 
-    return '<tr>' +
+    return '<tr id="fin-row-' + m.id + '">' +
       '<td style="color:var(--text3);white-space:nowrap">' + m.fecha + '</td>' +
       '<td><span class="badge" style="background:' + (esIngreso?'rgba(39,166,106,0.15)':'rgba(192,57,43,0.15)') + ';color:' + (esIngreso?'#27a66a':'#e74c3c') + '">' + m.tipo + '</span></td>' +
       '<td style="color:var(--text2);font-size:12px">' + (m.categoria||'—') + '</td>' +
@@ -2796,6 +2803,7 @@ async function loadFinanzas() {
       '<td style="color:var(--text3);font-size:12px">' + (m.cuentas?.nombre||'—') + '</td>' +
       '<td style="font-weight:600;color:' + (esIngreso?'#27a66a':'#e74c3c') + '">' + montoStr + '</td>' +
       '<td style="font-weight:700;color:' + saldoColor + '">' + saldo.toFixed(2) + '</td>' +
+      '<td><button onclick="editarMovFinanciero(\'' + m.id + '\')" title="Editar" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;color:var(--text3)">✎</button></td>' +
     '</tr>';
   });
 
@@ -2813,9 +2821,10 @@ async function loadFinanzas() {
     '<span style="color:var(--azul);font-weight:700">= Saldo: ' + saldo.toFixed(2) + '</span>';
 
   tb.innerHTML = '<table>' +
-    '<tr><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Depto.</th><th>Concepto</th><th>Contraparte</th><th>Cuenta</th><th>Monto</th><th>Saldo acumulado</th></tr>' +
+    '<tr><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Depto.</th><th>Concepto</th><th>Contraparte</th><th>Cuenta</th><th>Monto</th><th>Saldo acumulado</th><th></th></tr>' +
     filas.join('') +
     '</table>';
+  makeSortable(tb.querySelector('table'));
 }
 
 function exportarEstadoCuenta(fmt) {
@@ -2844,7 +2853,122 @@ function exportarEstadoCuenta(fmt) {
 const CATS_EGRESO  = ['Costos directos', 'Nómina', 'Gastos operativos', 'Gastos comerciales', 'Gastos financieros', 'Fiscal', 'Seguros', 'Canje', 'Otros egresos'];
 const CATS_INGRESO = ['Ventas', 'Aporte de socio', 'Préstamo', 'Canje', 'Otros ingresos'];
 
-function actualizarCategoriasFinanzas() {
+function editarMovFinanciero(id) {
+  const m = finanzasDataGlobal.find(x => x.id === id);
+  if(!m) return;
+
+  const cats = m.tipo === 'ingreso' ? CATS_INGRESO : CATS_EGRESO;
+  const catsOpts = cats.map(c => `<option value="${c}" ${m.categoria===c?'selected':''}>${c}</option>`).join('');
+  const cuentasOpts = cuentasSelectData.map(c => `<option value="${c.id}" ${m.cuenta_id===c.id?'selected':''}>${c.nombre}</option>`).join('');
+  const depOpts = ['ADM','OP','Venta'].map(d => `<option value="${d}" ${m.departamento===d?'selected':''}>${d}</option>`).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'modal-edit-fin';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:600;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:white;border-radius:16px;padding:32px;width:100%;max-width:480px;margin:24px;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="font-size:16px;font-weight:700;color:var(--azul)">Editar movimiento financiero</div>
+        <button onclick="document.getElementById('modal-edit-fin').remove()" style="background:none;border:none;font-size:20px;color:var(--text3);cursor:pointer">✕</button>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:8px 14px;margin-bottom:16px;font-size:12px;color:var(--text3)">
+        Tipo: <strong style="color:${m.tipo==='ingreso'?'#27a66a':'#e74c3c'}">${m.tipo}</strong>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Fecha</label>
+          <input type="date" id="ef-fecha" value="${m.fecha}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Monto</label>
+          <input type="number" id="ef-monto" value="${m.monto}" step="0.01" min="0" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Categoría</label>
+        <select id="ef-cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px">
+          <option value="">— Sin categoría —</option>${catsOpts}
+        </select>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Concepto</label>
+        <input type="text" id="ef-concepto" value="${m.concepto||''}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Contraparte</label>
+        <input type="text" id="ef-contraparte" value="${m.contraparte||''}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Departamento</label>
+          <select id="ef-dep" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px">
+            <option value="">— Sin depto —</option>${depOpts}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Moneda</label>
+          <select id="ef-moneda" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px">
+            <option value="usd" ${m.moneda==='usd'?'selected':''}>USD</option>
+            <option value="bs" ${m.moneda==='bs'?'selected':''}>Bs</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Cuenta</label>
+        <select id="ef-cuenta" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px">
+          ${cuentasOpts}
+        </select>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="confirmarEditMovFin('${id}')" style="flex:1;background:var(--azul);color:white;border:none;border-radius:8px;padding:10px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Guardar cambios</button>
+        <button onclick="anularMovFinanciero('${id}')" style="background:#fdecea;color:var(--danger);border:1px solid #e74c3c44;border-radius:8px;padding:10px 16px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Anular</button>
+      </div>
+    </div>`;
+  document.getElementById('modal-edit-fin')?.remove();
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+}
+
+async function confirmarEditMovFin(id) {
+  const fecha       = document.getElementById('ef-fecha')?.value;
+  const monto       = parseFloat(document.getElementById('ef-monto')?.value);
+  const categoria   = document.getElementById('ef-cat')?.value || null;
+  const concepto    = document.getElementById('ef-concepto')?.value || null;
+  const contraparte = document.getElementById('ef-contraparte')?.value || null;
+  const departamento= document.getElementById('ef-dep')?.value || null;
+  const moneda      = document.getElementById('ef-moneda')?.value || null;
+  const cuenta_id   = document.getElementById('ef-cuenta')?.value || null;
+
+  if(!fecha || isNaN(monto) || monto <= 0) { alert('Fecha y monto son obligatorios.'); return; }
+
+  const { error } = await sb.from('movimientos_financieros').update({
+    fecha, monto, monto_usd: monto, categoria, concepto, contraparte, departamento, moneda, cuenta_id
+  }).eq('id', id);
+
+  if(error) { alert('Error: ' + error.message); return; }
+  await registrarAuditoria('mov_financiero_editado', 'movimientos_financieros', id,
+    `Editado: $${monto} | ${concepto||''} | ${categoria||''} | ${departamento||''}`);
+  showToast('Movimiento actualizado ✓');
+  document.getElementById('modal-edit-fin')?.remove();
+  loadFinanzas();
+}
+
+async function anularMovFinanciero(id) {
+  if(!confirm('¿Anular este movimiento financiero? Quedará registrado en auditoría.')) return;
+
+  const { error } = await sb.from('movimientos_financieros').update({
+    concepto: '[ANULADO] ' + (finanzasDataGlobal.find(m=>m.id===id)?.concepto||''),
+    monto: 0, monto_usd: 0
+  }).eq('id', id);
+
+  if(error) { alert('Error: ' + error.message); return; }
+  await registrarAuditoria('mov_financiero_anulado', 'movimientos_financieros', id, 'Movimiento financiero anulado');
+  showToast('Movimiento anulado ✓');
+  document.getElementById('modal-edit-fin')?.remove();
+  loadFinanzas();
+}
+
+
   const tipo = document.getElementById('mf-tipo')?.value || 'egreso';
   const sel  = document.getElementById('mf-categoria');
   if(!sel) return;
@@ -3360,6 +3484,7 @@ async function guardarVenta() {
       producto_id: item.producto_id,
       cantidad_kg: item.cantidad,
       fecha,
+      hora: new Date().toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'America/Caracas'}),
       referencia: `Venta ${canal.replace('_',' ')}${notas?' — '+notas:''}`,
       sede_origen_id: sede_id,
       sede_destino_id: null,
@@ -3421,6 +3546,7 @@ async function loadVentas(filtro) {
       </td>
     </tr>`).join('')}
   </table>`;
+  makeSortable(document.getElementById('ventas-table')?.querySelector('table'));
 }
 
 async function filtrarVentas(filtro) {
@@ -3959,6 +4085,7 @@ async function loadCompras() {
       </td>
     </tr>`).join('')}
   </table>`;
+  makeSortable(document.getElementById('compras-table')?.querySelector('table'));
 }
 
 async function verDetalleCompra(compra_id, titulo) {
@@ -4106,6 +4233,7 @@ async function guardarMovInventario() {
     producto_id,
     cantidad_kg: cantidad,
     fecha,
+    hora: new Date().toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'America/Caracas'}),
     referencia: referencia || null,
     sede_origen_id:  (tipo === 'entrada') ? null : origen_id,
     sede_destino_id: (tipo === 'salida' || tipo === 'merma') ? null : destino_id,
@@ -4181,10 +4309,14 @@ async function loadMovimientos() {
         <td style="color:var(--text3)">${m.costo_usd_kg ? '$'+Number(m.costo_usd_kg).toFixed(4) : '—'}</td>
         <td style="color:var(--text3)">${sede}</td>
         <td style="color:var(--text3);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.referencia || '—'}</td>
-        <td><button onclick="verMovimiento('${m.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--text2);cursor:pointer;font-family:'Sora',sans-serif">Ver</button></td>
+        <td style="display:flex;gap:4px">
+          <button onclick="verMovimiento('${m.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--text2);cursor:pointer;font-family:'Sora',sans-serif">Ver</button>
+          <button onclick="editarMovimiento('${m.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;color:var(--text3)" title="Editar">✎</button>
+        </td>
       </tr>`;
     }).join('')}
   </table>`;
+  makeSortable(tb.querySelector('table'));
 }
 
 async function verMovimiento(id) {
@@ -4419,13 +4551,17 @@ async function exportarInventario(fmt) {
 
 async function exportarMovimientos(fmt) {
   const { data } = await sb.from('movimientos_inventario')
-    .select('fecha, tipo, cantidad_kg, referencia, productos(nombre), sedes_origen:sede_origen_id(codigo), sedes_destino:sede_destino_id(codigo)')
+    .select('fecha, hora, created_at, tipo, cantidad_kg, costo_usd_kg, referencia, productos(nombre), sedes_origen:sede_origen_id(codigo), sedes_destino:sede_destino_id(codigo)')
     .order('created_at', {ascending:false}).limit(500);
-  const flat = (data||[]).map(m => ({
-    fecha: m.fecha, tipo: m.tipo, producto: m.productos?.nombre||'—',
-    cantidad_kg: m.cantidad_kg, origen: m.sedes_origen?.codigo||'—',
-    destino: m.sedes_destino?.codigo||'—', referencia: m.referencia||''
-  }));
+  const flat = (data||[]).map(m => {
+    const horaVal = m.hora || (m.created_at ? new Date(m.created_at).toLocaleTimeString('es-VE', {hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'America/Caracas'}) : '—');
+    return {
+      fecha: m.fecha, hora: horaVal, tipo: m.tipo, producto: m.productos?.nombre||'—',
+      cantidad_kg: m.cantidad_kg, costo_usd_kg: m.costo_usd_kg||'',
+      origen: m.sedes_origen?.codigo||'—', destino: m.sedes_destino?.codigo||'—',
+      referencia: m.referencia||''
+    };
+  });
   if(fmt === 'xlsx') exportarXLSX(flat, 'movimientos'); else exportarCSV(flat, 'movimientos');
 }
 
@@ -4856,6 +4992,7 @@ async function loadLotes() {
       '<td style="color:var(--text3);font-size:12px">' + (l.notas||'—') + '</td>' +
     '</tr>').join('') +
     '</table>';
+  makeSortable(document.getElementById('lotes-table')?.querySelector('table'));
 }
 
 async function guardarLote() {
@@ -4943,6 +5080,99 @@ async function anularCompra(compra_id, btn) {
   showToast('Compra anulada ✓');
   document.getElementById('modal-ver-compra')?.remove();
   loadCompras();
+}
+
+// ===== EDITAR MOVIMIENTO INVENTARIO (#23) =====
+async function editarMovimiento(id) {
+  // Cargar datos del movimiento
+  const { data: m } = await sb.from('movimientos_inventario')
+    .select('*, productos(nombre,categoria), sedes_origen:sede_origen_id(id,codigo), sedes_destino:sede_destino_id(id,codigo), lotes(id,nomenclatura)')
+    .eq('id', id).single();
+  if(!m) return;
+
+  // Cargar sedes y lotes para selects
+  const [{ data: sedes }, { data: lotes }] = await Promise.all([
+    sb.from('sedes').select('id,codigo,nombre').eq('activo',true),
+    sb.from('lotes').select('id,nomenclatura,fecha').order('fecha',{ascending:false}).limit(50)
+  ]);
+
+  const sedesOpts = (sedes||[]).map(s =>
+    `<option value="${s.id}" ${(m.sedes_origen?.id===s.id||m.sedes_destino?.id===s.id)?'selected':''}>${s.codigo} — ${s.nombre}</option>`
+  ).join('');
+
+  const loteOpts = `<option value="">— Sin lote —</option>` + (lotes||[]).map(l =>
+    `<option value="${l.id}" ${m.lote_id===l.id?'selected':''}>${l.nomenclatura||l.id.substring(0,8)} (${l.fecha})</option>`
+  ).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'modal-edit-mov';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:600;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:white;border-radius:16px;padding:32px;width:100%;max-width:480px;margin:24px;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="font-size:16px;font-weight:700;color:var(--azul)">Editar movimiento</div>
+        <button onclick="document.getElementById('modal-edit-mov').remove()" style="background:none;border:none;font-size:20px;color:var(--text3);cursor:pointer">✕</button>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--text3)">
+        Producto: <strong style="color:var(--text)">${m.productos?.nombre||'—'}</strong> &nbsp;|&nbsp; Tipo: <strong>${m.tipo}</strong>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Fecha</label>
+          <input type="date" id="em-fecha" value="${m.fecha||''}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Cantidad (kg)</label>
+          <input type="number" id="em-cantidad" value="${Number(m.cantidad_kg)||0}" step="0.01" min="0" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Costo/kg (USD)</label>
+        <input type="number" id="em-costo" value="${Number(m.costo_usd_kg)||''}" step="0.0001" min="0" placeholder="Solo aplica a entradas" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Sede</label>
+        <select id="em-sede" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px">
+          <option value="">— Seleccionar —</option>${sedesOpts}
+        </select>
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Lote</label>
+        <select id="em-lote" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px">
+          ${loteOpts}
+        </select>
+      </div>
+      <button onclick="confirmarEditMovimiento('${id}','${m.tipo}')" style="width:100%;background:var(--azul);color:white;border:none;border-radius:8px;padding:11px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Guardar cambios</button>
+    </div>`;
+  document.getElementById('modal-edit-mov')?.remove();
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+}
+
+async function confirmarEditMovimiento(id, tipo) {
+  const fecha     = document.getElementById('em-fecha')?.value;
+  const cantidad  = parseFloat(document.getElementById('em-cantidad')?.value);
+  const costo     = parseFloat(document.getElementById('em-costo')?.value) || null;
+  const sedeId    = document.getElementById('em-sede')?.value || null;
+  const loteId    = document.getElementById('em-lote')?.value || null;
+
+  if(!fecha || isNaN(cantidad) || cantidad < 0) { alert('Fecha y cantidad son obligatorios.'); return; }
+
+  const update = { fecha, cantidad_kg: cantidad, lote_id: loteId };
+  if(costo !== null) update.costo_usd_kg = costo;
+  if(sedeId) {
+    if(tipo === 'entrada') update.sede_destino_id = sedeId;
+    else update.sede_origen_id = sedeId;
+  }
+
+  const { error } = await sb.from('movimientos_inventario').update(update).eq('id', id);
+  if(error) { alert('Error: ' + error.message); return; }
+
+  await registrarAuditoria('mov_inventario_editado', 'movimientos_inventario', id,
+    `Editado: ${cantidad} kg | fecha ${fecha} | costo ${costo||'—'}`);
+  showToast('Movimiento actualizado ✓');
+  document.getElementById('modal-edit-mov')?.remove();
+  loadMovimientos();
 }
 
 async function anularMovimiento(mov_id, btn) {
@@ -5213,6 +5443,7 @@ async function loadAuditoria() {
       '</tr>';
     }).join('') +
     '</table>';
+  makeSortable(tb.querySelector('table'));
 }
 
 function exportarAuditoria(fmt) {
@@ -5227,6 +5458,35 @@ function exportarAuditoria(fmt) {
   }));
   if(fmt === 'xlsx') exportarXLSX(rows, 'auditoria');
   else exportarCSV(rows, 'auditoria');
+}
+
+// ===== SORT DE TABLAS =====
+function makeSortable(table) {
+  if(!table) return;
+  const headers = table.querySelectorAll('th');
+  let sortCol = -1, sortAsc = true;
+  headers.forEach((th, colIdx) => {
+    th.classList.add('sortable');
+    th.addEventListener('click', () => {
+      if(sortCol === colIdx) { sortAsc = !sortAsc; }
+      else { sortCol = colIdx; sortAsc = true; }
+      headers.forEach(h => h.classList.remove('sort-asc','sort-desc'));
+      th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+      const tbody = table.querySelector('tbody') || table;
+      const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.querySelector('td'));
+      rows.sort((a, b) => {
+        const aVal = a.querySelectorAll('td')[colIdx]?.textContent?.trim() || '';
+        const bVal = b.querySelectorAll('td')[colIdx]?.textContent?.trim() || '';
+        const aNum = parseFloat(aVal.replace(/[^0-9.\-]/g,''));
+        const bNum = parseFloat(bVal.replace(/[^0-9.\-]/g,''));
+        let cmp;
+        if(!isNaN(aNum) && !isNaN(bNum)) { cmp = aNum - bNum; }
+        else { cmp = aVal.localeCompare(bVal, 'es', {sensitivity:'base'}); }
+        return sortAsc ? cmp : -cmp;
+      });
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
 }
 
 function showToast(msg) {
