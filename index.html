@@ -1526,6 +1526,38 @@
         </div>
       </div>
 
+      <!-- TASAS DE CAMBIO -->
+      <div class="page" id="page-tasas">
+        <div class="page-title">Tasas de cambio</div>
+        <div class="page-sub">Registrá BCV y Paralelo diariamente. Los modales las pre-cargan automáticamente.</div>
+
+        <div class="form-card">
+          <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:end">
+            <div class="form-group">
+              <label>Tipo</label>
+              <select id="nt-nombre" style="width:100%">
+                <option value="BCV">BCV (oficial)</option>
+                <option value="Paralelo">Paralelo / Binance</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Valor (Bs por $1 USD)</label>
+              <input type="number" id="nt-valor" placeholder="ej: 480.50" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" id="nt-fecha">
+            </div>
+          </div>
+          <button onclick="guardarTasa()" class="btn-action" style="margin-top:8px">Guardar tasa</button>
+        </div>
+
+        <div class="table-wrap" style="margin-top:0;border-top:none;border-radius:0 0 12px 12px">
+          <div class="table-head"><div class="table-title">Historial de tasas</div></div>
+          <div id="tasas-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
       <!-- MAESTROS -->
       <div class="page" id="page-maestros">
         <div class="page-title">Datos maestros</div>
@@ -1982,6 +2014,7 @@ const NAV = {
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
+    { id: 'tasas', label: 'Tasas de cambio', icon: '₿' },
     { id: 'maestros', label: 'Datos maestros', icon: '◫' },
     { id: 'auditoria', label: 'Auditoría', icon: '◷' },
   ],
@@ -1999,6 +2032,7 @@ const NAV = {
     { id: 'dashboard', label: 'Dashboard', icon: '◈' },
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
+    { id: 'tasas', label: 'Tasas de cambio', icon: '₿' },
     { id: 'maestros', label: 'Datos maestros', icon: '◫' },
   ],
   ventas: [
@@ -3044,9 +3078,18 @@ function calcularEquivFinanzas() {
 }
 
 // Calcula USD desde Bs automáticamente en modales cobro/pago
+// También actualiza tasa-valor cuando cambia el tipo (BCV/Paralelo)
 function calcularUSDdesdeBs(prefix) {
-  const bs    = parseFloat(document.getElementById(prefix+'-monto-bs')?.value) || 0;
-  const tasa  = parseFloat(document.getElementById(prefix+'-tasa-valor')?.value) || 0;
+  // Si se acaba de cambiar el tipo, auto-rellenar la tasa correspondiente
+  const tipoEl = document.getElementById(prefix+'-tasa-tipo');
+  const tasaValEl = document.getElementById(prefix+'-tasa-valor');
+  if(tipoEl && tasaValEl && document.activeElement === tipoEl) {
+    const tipo = tipoEl.value;
+    const t = (tasasData||[]).find(x => x.nombre === tipo);
+    if(t) tasaValEl.value = t.valor;
+  }
+  const bs   = parseFloat(document.getElementById(prefix+'-monto-bs')?.value) || 0;
+  const tasa = parseFloat(document.getElementById(prefix+'-tasa-valor')?.value) || 0;
   const usdEl = document.getElementById(prefix+'-monto-usd-bs');
   if(!usdEl) return;
   usdEl.value = (bs > 0 && tasa > 0) ? (bs / tasa).toFixed(2) : '';
@@ -4457,7 +4500,8 @@ async function abrirModalCobro(venta_id, descripcion, total_usd) {
   if(selCuenta && cuentasSelectData) {
     cuentasMonedaMap = {};
     cuentasSelectData.forEach(c => { cuentasMonedaMap[c.id] = c.moneda; });
-    selCuenta.innerHTML = cuentasSelectData.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+    const monedaLabel = { banco_bs:'Bs', banco_usd:'USD', efectivo_usd:'USD efectivo', efectivo_bs:'Bs efectivo', zelle:'Zelle USD' };
+    selCuenta.innerHTML = cuentasSelectData.map(c=>`<option value="${c.id}">${c.nombre} (${monedaLabel[c.tipo]||c.moneda.toUpperCase()})</option>`).join('');
     // Guardar el prefilled para usarlo al cambiar cuenta
     selCuenta._prefilled = total_usd;
     onCuentaChange('cobro');
@@ -4770,12 +4814,15 @@ function onCuentaChange(prefix) {
   var sel = document.getElementById(selId);
   if(!sel) return;
   var cuentaId = sel.value;
-  var moneda = cuentasMonedaMap[cuentaId] || 'usd';
+  // Buscar directamente en cuentasSelectData para no depender del mapa
+  var cuenta = cuentasSelectData.find(function(c){ return c.id === cuentaId; });
+  var moneda = cuenta ? cuenta.moneda : (cuentasMonedaMap[cuentaId] || 'usd');
   var esBs = moneda === 'bs';
 
   if(prefix === 'cobro') {
     var camposBs   = document.getElementById('cobro-campos-bs');
     var montoLabel = document.getElementById('cobro-monto-label');
+    var montoRow   = montoLabel ? montoLabel.closest('.form-row') : null;
     var montoInput = document.getElementById('cobro-monto');
     if(camposBs)   camposBs.style.display  = esBs ? 'block' : 'none';
     if(montoInput) montoInput.style.display = esBs ? 'none'  : 'block';
@@ -4784,13 +4831,12 @@ function onCuentaChange(prefix) {
       // Pre-llenar equivalente USD con el saldo pendiente
       var usdBsEl = document.getElementById('cobro-monto-usd-bs');
       var montoEl = document.getElementById('cobro-monto');
-      if(usdBsEl && montoEl && montoEl._prefilled) {
-        usdBsEl.value = montoEl._prefilled;
-      }
+      if(usdBsEl && montoEl && montoEl._prefilled) usdBsEl.value = montoEl._prefilled;
     }
   } else if(prefix === 'pc') {
-    var camposBsPc  = document.getElementById('pc-campos-bs');
+    var camposBsPc   = document.getElementById('pc-campos-bs');
     var montoInputPc = document.getElementById('pc-monto');
+    var montoLabelPc = document.querySelector('label[for="pc-monto"], #modal-pagar-compra label');
     if(camposBsPc)   camposBsPc.style.display  = esBs ? 'block' : 'none';
     if(montoInputPc) montoInputPc.style.display = esBs ? 'none'  : 'block';
   }
@@ -4851,8 +4897,9 @@ async function abrirPagarCompra(compra_id, descripcion) {
   if(selCuenta && cuentasSelectData) {
     cuentasMonedaMap = {};
     cuentasSelectData.forEach(function(c) { cuentasMonedaMap[c.id] = c.moneda; });
+    var monedaLabelPc = { banco_bs:'Bs', banco_usd:'USD', efectivo_usd:'USD efectivo', efectivo_bs:'Bs efectivo', zelle:'Zelle USD' };
     selCuenta.innerHTML = cuentasSelectData.map(function(c) {
-      return '<option value="' + c.id + '">' + c.nombre + '</option>';
+      return '<option value="' + c.id + '">' + c.nombre + ' (' + (monedaLabelPc[c.tipo]||c.moneda.toUpperCase()) + ')</option>';
     }).join('');
     onCuentaChange('pc');
   }
