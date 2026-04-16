@@ -1293,12 +1293,19 @@
               <label>Fecha</label>
               <input type="date" id="mf-fecha">
             </div>
+            <div class="form-group" id="field-tasa-tipo-fin" style="display:none">
+              <label>Tipo de tasa</label>
+              <select id="mf-tasa-tipo" onchange="calcularEquivFinanzas()" style="width:100%">
+                <option value="BCV">BCV (oficial)</option>
+                <option value="Paralelo">Paralelo / Binance</option>
+              </select>
+            </div>
             <div class="form-group" id="field-tasa-fin" style="display:none">
-              <label>Tasa BCV (Bs/$)</label>
+              <label>Tasa (Bs/$)</label>
               <input type="number" id="mf-tasa" placeholder="0.00" step="0.01" oninput="calcularEquivFinanzas()">
             </div>
             <div class="form-group" id="field-equiv-fin" style="display:none">
-              <label>Equivalente USD</label>
+              <label>Equivalente USD <span style="font-size:10px;color:var(--text3)">(calculado)</span></label>
               <input type="text" id="mf-equiv-usd" readonly style="color:var(--azul);font-weight:600;background:var(--surface2);" value="—">
             </div>
           </div>
@@ -1708,16 +1715,30 @@
     <!-- Campos Bs pago compra -->
     <div id="pc-campos-bs" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
       <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Detalle en bolívares</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div>
+          <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Tipo de tasa</label>
+          <select id="pc-tasa-tipo" onchange="calcularUSDdesdeBs('pc')" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px">
+            <option value="BCV">BCV (oficial)</option>
+            <option value="Paralelo">Paralelo / Binance</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Tasa (Bs por USD)</label>
+          <input type="number" id="pc-tasa-valor" placeholder="0.00" step="0.01" oninput="calcularUSDdesdeBs('pc')"
+            style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div>
           <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Monto Bs pagados</label>
-          <input type="number" id="pc-monto-bs" placeholder="0.00" step="0.01"
-            style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <input type="number" id="pc-monto-bs" placeholder="0.00" step="0.01" oninput="calcularUSDdesdeBs('pc')"
+            style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Equivalente USD</label>
-          <input type="number" id="pc-monto-usd-bs" placeholder="0.00" step="0.01"
-            style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Equivalente USD <span style="font-size:10px;color:var(--text3)">(calculado)</span></label>
+          <input type="number" id="pc-monto-usd-bs" placeholder="0.00" step="0.01" readonly
+            style="width:100%;background:#f0f4f8;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
         </div>
       </div>
       <div style="font-size:11px;color:var(--text3);margin-top:6px">Los Bs se debitan de la cuenta. El USD equivalente actualiza el saldo de la compra.</div>
@@ -1892,17 +1913,30 @@
     <!-- Campos Bs — solo cuando forma de pago es Bs -->
     <div id="cobro-campos-bs" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
       <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Detalle en bolívares</div>
+      <div class="form-row" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div class="form-group">
+          <label>Tipo de tasa</label>
+          <select id="cobro-tasa-tipo" onchange="calcularUSDdesdeBs('cobro')" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px">
+            <option value="BCV">BCV (oficial)</option>
+            <option value="Paralelo">Paralelo / Binance</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tasa (Bs por USD)</label>
+          <input type="number" id="cobro-tasa-valor" placeholder="0.00" step="0.01" oninput="calcularUSDdesdeBs('cobro')" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px">
+        </div>
+      </div>
       <div class="form-row" style="grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group">
           <label>Monto Bs recibidos</label>
-          <input type="number" id="cobro-monto-bs" placeholder="0.00" step="0.01">
+          <input type="number" id="cobro-monto-bs" placeholder="0.00" step="0.01" oninput="calcularUSDdesdeBs('cobro')">
         </div>
         <div class="form-group">
-          <label>Equivalente USD</label>
-          <input type="number" id="cobro-monto-usd-bs" placeholder="0.00" step="0.01">
+          <label>Equivalente USD <span style="font-size:10px;color:var(--text3)">(calculado)</span></label>
+          <input type="number" id="cobro-monto-usd-bs" placeholder="0.00" step="0.01" style="background:#f0f4f8">
         </div>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:4px">Los Bs se acreditan a la cuenta seleccionada. El USD equivalente actualiza el saldo de la venta.</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Los Bs se acreditan a la cuenta. El USD equivalente actualiza el saldo de la venta.</div>
     </div>
 
     <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px">
@@ -2979,19 +3013,22 @@ function actualizarCatsFinanzas() {
 
 function toggleTasaFinanzas() {
   const moneda = document.getElementById('mf-moneda')?.value;
+  const fieldTasaTipo = document.getElementById('field-tasa-tipo-fin');
   const fieldTasa  = document.getElementById('field-tasa-fin');
   const fieldEquiv = document.getElementById('field-equiv-fin');
   if(moneda === 'bs') {
-    fieldTasa.style.display  = 'block';
-    fieldEquiv.style.display = 'block';
+    if(fieldTasaTipo) fieldTasaTipo.style.display = 'block';
+    if(fieldTasa)     fieldTasa.style.display     = 'block';
+    if(fieldEquiv)    fieldEquiv.style.display    = 'block';
     // pre-cargar tasa BCV
     const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
     const tasaEl = document.getElementById('mf-tasa');
     if(tasaEl && bcvTasa && !tasaEl.value) tasaEl.value = bcvTasa.valor;
     calcularEquivFinanzas();
   } else {
-    fieldTasa.style.display  = 'none';
-    fieldEquiv.style.display = 'none';
+    if(fieldTasaTipo) fieldTasaTipo.style.display = 'none';
+    if(fieldTasa)     fieldTasa.style.display     = 'none';
+    if(fieldEquiv)    fieldEquiv.style.display    = 'none';
     document.getElementById('mf-equiv-usd').value = '—';
   }
 }
@@ -3004,6 +3041,15 @@ function calcularEquivFinanzas() {
   const equiv = tasa > 0 ? monto / tasa : 0;
   const equivEl = document.getElementById('mf-equiv-usd');
   if(equivEl) equivEl.value = equiv > 0 ? `$${equiv.toFixed(2)} USD` : '—';
+}
+
+// Calcula USD desde Bs automáticamente en modales cobro/pago
+function calcularUSDdesdeBs(prefix) {
+  const bs    = parseFloat(document.getElementById(prefix+'-monto-bs')?.value) || 0;
+  const tasa  = parseFloat(document.getElementById(prefix+'-tasa-valor')?.value) || 0;
+  const usdEl = document.getElementById(prefix+'-monto-usd-bs');
+  if(!usdEl) return;
+  usdEl.value = (bs > 0 && tasa > 0) ? (bs / tasa).toFixed(2) : '';
 }
 
 async function guardarMovFinanciero() {
@@ -3020,18 +3066,26 @@ async function guardarMovFinanciero() {
   const categoria    = document.getElementById('mf-categoria')?.value || null;
   const departamento = document.getElementById('mf-departamento')?.value || null;
 
+  // Tasa e equivalente si es Bs
+  const esBs = moneda === 'bs';
+  const tasa_tipo  = esBs ? (document.getElementById('mf-tasa-tipo')?.value || 'BCV') : 'USD';
+  const tasa_valor = esBs ? (parseFloat(document.getElementById('mf-tasa')?.value) || null) : null;
+  const monto_nativo = esBs ? monto : null;
+  const monto_usd  = esBs && tasa_valor ? parseFloat((monto / tasa_valor).toFixed(2)) : (esBs ? null : monto);
+
   const { error } = await sb.from('movimientos_financieros').insert({
     tipo, cuenta_id, moneda, monto, contraparte, fecha,
     concepto: concepto || '—',
     categoria: categoria || null,
     departamento: departamento || null,
+    tasa_tipo, tasa_valor, monto_nativo, monto_usd,
     status: 'registrado'
   });
 
   if(error) { alert('Error al guardar: ' + error.message); return; }
 
   showToast('Movimiento registrado ✓');
-  registrarAuditoria('mov_inventario', 'movimientos_inventario', null, tipo + ' | ' + cantidad + ' kg | ' + (referencia||''));
+  registrarAuditoria('mov_financiero', 'movimientos_financieros', null, tipo + ' | $' + monto + ' | ' + (concepto||''));
   document.getElementById('mf-monto').value = '';
   document.getElementById('mf-contraparte').value = '';
   document.getElementById('mf-concepto').value = '';
@@ -4381,7 +4435,8 @@ async function abrirModalCobro(venta_id, descripcion, total_usd) {
   document.getElementById('cobro-fecha').value = today;
 
   const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
-  const tasaEl = document.getElementById('cobro-tasa');
+  const parTasa = (tasasData||[]).find(t=>t.nombre==='Paralelo');
+  const tasaEl = document.getElementById('cobro-tasa-valor');
   if(bcvTasa && tasaEl) tasaEl.value = bcvTasa.valor;
 
   // Auto-llenar monto en ambos campos (USD normal y USD-equiv de Bs)
@@ -4442,6 +4497,10 @@ async function confirmarCobro() {
   if(!cobroVentaId)           { alert('Error: no hay venta seleccionada.'); return; }
 
   // 1. Registrar movimiento financiero
+  const tasa_tipo  = esBs ? (document.getElementById('cobro-tasa-tipo')?.value || 'BCV') : 'USD';
+  const tasa_valor = esBs ? (parseFloat(document.getElementById('cobro-tasa-valor')?.value) || null) : null;
+  const monto_nativo = esBs ? montoBS : null;
+
   const { error: errMF } = await sb.from('movimientos_financieros').insert({
     fecha,
     cuenta_id: cuentaId,
@@ -4451,6 +4510,7 @@ async function confirmarCobro() {
     monto_bs: esBs ? montoBS  : null,
     monto_usd: montoUSD,
     moneda:   esBs ? 'bs' : 'usd',
+    tasa_tipo, tasa_valor, monto_nativo,
     contraparte: nota || null,
     status: 'registrado',
     venta_id: cobroVentaId,
@@ -4781,6 +4841,10 @@ async function abrirPagarCompra(compra_id, descripcion) {
   document.getElementById('pagar-compra-desc').textContent = descripcion;
   document.getElementById('pc-fecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('pc-monto').value = '';
+  // Pre-llenar tasa BCV
+  const bcvTasaPc = (tasasData||[]).find(t=>t.nombre==='BCV');
+  const tasaElPc = document.getElementById('pc-tasa-valor');
+  if(bcvTasaPc && tasaElPc) tasaElPc.value = bcvTasaPc.valor;
 
   // Cargar cuentas y mapa de monedas
   var selCuenta = document.getElementById('pc-cuenta');
@@ -4833,6 +4897,10 @@ async function confirmarPagoCompra() {
   var nuevoStatus = nuevoSaldo <= 0 ? 'pagada' : status;
 
   // 1. Registrar egreso
+  const tasa_tipo_pc  = esBs ? (document.getElementById('pc-tasa-tipo')?.value || 'BCV') : 'USD';
+  const tasa_valor_pc = esBs ? (parseFloat(document.getElementById('pc-tasa-valor')?.value) || null) : null;
+  const monto_nativo_pc = esBs ? montoBS : null;
+
   var errMF = await sb.from('movimientos_financieros').insert({
     fecha: fecha,
     cuenta_id: cuentaIdPc,
@@ -4842,6 +4910,7 @@ async function confirmarPagoCompra() {
     monto_bs:  esBs ? montoBS : null,
     monto_usd: montoUSD,
     moneda:    monedaCuentaPc,
+    tasa_tipo: tasa_tipo_pc, tasa_valor: tasa_valor_pc, monto_nativo: monto_nativo_pc,
     contraparte: provNombre,
     status: 'registrado',
     compra_id: pagarCompraId,
