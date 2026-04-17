@@ -723,7 +723,17 @@
         </div>
         <div class="page-sub" id="dash-periodo-label">Mostrando últimos 30 días</div>
 
-        <!-- TASAS ACTIVAS -->
+        <!-- TASAS ACTIVAS + TOGGLE VISTA -->
+        <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+          <div id="tasa-hoy-display" style="display:flex;gap:6px;align-items:center;font-family:'Sora',sans-serif;font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 16px">
+            <span style="color:var(--text3);font-size:11px">Sin tasas del día</span>
+          </div>
+          <div onclick="toggleVistaMoneda()" style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 14px;user-select:none" title="Cambiar vista de moneda">
+            <div id="vista-moneda-dot" style="width:8px;height:8px;border-radius:50%;background:var(--azul);transition:background .2s"></div>
+            <span id="vista-moneda-label" style="font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0.5px">USD BCV</span>
+            <span style="font-size:10px;color:var(--text3)">⇄</span>
+          </div>
+        </div>
         <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap" id="dash-tasas"></div>
 
         <!-- VENTAS POR CANAL -->
@@ -807,6 +817,29 @@
         </div>
         <div class="table-wrap" style="margin-bottom:24px">
           <div id="dash-cuentas"><div class="loading">Cargando...</div></div>
+        </div>
+
+        <!-- PÉRDIDA CAMBIARIA -->
+        <div style="font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Exposición cambiaria</div>
+        <div class="cards-grid" style="margin-bottom:8px">
+          <div class="stat-card" style="border-color:rgba(192,57,43,0.3)">
+            <div class="stat-label">Saldo Bs expuesto</div>
+            <div class="stat-value" id="dash-expo-bs" style="color:var(--danger)">—</div>
+            <div class="stat-desc" id="dash-expo-bs-usd">— equiv. USD</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(192,57,43,0.3)">
+            <div class="stat-label">Pérdida cambiaria (mes)</div>
+            <div class="stat-value" id="dash-perdida-cambiaria" style="color:var(--danger)">—</div>
+            <div class="stat-desc" id="dash-perdida-cambiaria-desc">estimada por devaluación</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Devaluación BCV (30d)</div>
+            <div class="stat-value" id="dash-deval-pct" style="font-size:20px">—</div>
+            <div class="stat-desc" id="dash-deval-desc">variación tasa BCV</div>
+          </div>
+        </div>
+        <div style="margin-bottom:24px">
+          <button onclick="generarAsientoPerdidaCambiaria()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-family:'Sora',sans-serif;font-size:11px;color:var(--text3);cursor:pointer">Generar asiento mensual de pérdida cambiaria</button>
         </div>
 
         <!-- RESUMEN CxC / CxP -->
@@ -1529,27 +1562,26 @@
       <!-- TASAS DE CAMBIO -->
       <div class="page" id="page-tasas">
         <div class="page-title">Tasas de cambio</div>
-        <div class="page-sub">Registrá BCV y Paralelo diariamente. Los modales las pre-cargan automáticamente.</div>
+        <div class="page-sub">Registrá ambas tasas por día. Se puede actualizar la paralelo intra-día.</div>
 
         <div class="form-card">
-          <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:end">
-            <div class="form-group">
-              <label>Tipo</label>
-              <select id="nt-nombre" style="width:100%">
-                <option value="BCV">BCV (oficial)</option>
-                <option value="Paralelo">Paralelo / Binance</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Valor (Bs por $1 USD)</label>
-              <input type="number" id="nt-valor" placeholder="ej: 480.50" step="0.01" min="0">
-            </div>
+          <div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;align-items:end">
             <div class="form-group">
               <label>Fecha</label>
-              <input type="date" id="nt-fecha">
+              <input type="date" id="t-fecha">
+            </div>
+            <div class="form-group">
+              <label>BCV (Bs/$)</label>
+              <input type="number" id="t-bcv" placeholder="ej: 95.50" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+              <label>Paralelo (Bs/$)</label>
+              <input type="number" id="t-paralelo" placeholder="ej: 132.00" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+              <button onclick="guardarTasa()" class="btn-action" style="margin-top:0">Guardar</button>
             </div>
           </div>
-          <button onclick="guardarTasa()" class="btn-action" style="margin-top:8px">Guardar tasa</button>
         </div>
 
         <div class="table-wrap" style="margin-top:0;border-top:none;border-radius:0 0 12px 12px">
@@ -1992,6 +2024,24 @@
   </div>
 </div>
 
+<!-- MODAL BLOQUEANTE: TASA DIARIA -->
+<div class="modal-overlay" id="modal-tasa-diaria" style="display:none;z-index:9999">
+  <div class="modal" style="max-width:420px">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px">Tasas del día</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:20px">Registra BCV y Paralelo antes de operar.</div>
+    <div class="form-group">
+      <label>BCV (Bs por USD)</label>
+      <input type="number" id="td-bcv" placeholder="ej: 95.50" step="0.01" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px">
+    </div>
+    <div class="form-group">
+      <label>Paralelo / Binance (Bs por USD)</label>
+      <input type="number" id="td-paralelo" placeholder="ej: 132.00" step="0.01" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px">
+    </div>
+    <div id="td-spread-preview" style="font-size:12px;color:var(--text3);margin-bottom:12px;min-height:18px"></div>
+    <button onclick="guardarTasaDiaria()" class="btn-action" style="width:100%">Guardar y continuar</button>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://rthwwkqilzqoeblpgzdw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0aHd3a3FpbHpxb2VibHBnemR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzAzOTksImV4cCI6MjA4OTg0NjM5OX0.bqhfJS24pn8uuEgsz1RTvpewG8WtCRv65PFacvrUbVs';
@@ -2001,6 +2051,115 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null;
 let currentRole = null;
 let cuentasSelectData = [];
+
+// ── SISTEMA DE MONEDA ──
+let tasaHoy = { bcv: null, paralelo: null, fecha: null };
+let vistaMoneda = 'bcv'; // 'bcv' o 'paralelo' — toggle global
+
+/**
+ * Función central de conversión monetaria.
+ * Convierte cualquier monto a USD según la vista seleccionada.
+ * 
+ * @param {number} monto - Monto original
+ * @param {string} moneda_original - 'USD' o 'BS'
+ * @param {string} tasa_pactada - 'BCV' o 'PARALELO'
+ * @param {number} tasa_bcv - Tasa BCV del día de la transacción
+ * @param {number} tasa_paralelo - Tasa paralelo del día de la transacción
+ * @param {string} [vista] - 'bcv' o 'paralelo' (default: vistaMoneda global)
+ * @returns {number} Monto en USD según la vista
+ */
+function convertir(monto, moneda_original, tasa_pactada, tasa_bcv, tasa_paralelo, vista) {
+  if(!monto || !tasa_bcv) return 0;
+  const v = vista || vistaMoneda;
+  const tp = tasa_paralelo || tasa_bcv; // fallback si no hay paralelo
+
+  if(moneda_original === 'USD') {
+    // Se pactó en dólares
+    if(tasa_pactada === 'BCV') {
+      // Dólares BCV (ej: venta detal cobrada en zelle)
+      if(v === 'bcv') return monto;
+      // En vista paralelo: $1 BCV = (bcv/paralelo) dólares reales
+      return monto * (tasa_bcv / tp);
+    } else {
+      // Dólares paralelo (ej: alquiler en cash)
+      if(v === 'paralelo') return monto;
+      // En vista BCV: $1 paralelo = (paralelo/bcv) dólares BCV
+      return monto * (tp / tasa_bcv);
+    }
+  } else {
+    // Se pactó en Bs
+    if(v === 'bcv') return monto / tasa_bcv;
+    return monto / tp;
+  }
+}
+
+/**
+ * Verifica si existen tasas del día. Si no, muestra modal bloqueante.
+ * Retorna true si las tasas existen, false si hay que esperar.
+ */
+async function checkTasaDiaria() {
+  const hoy = new Date().toISOString().split('T')[0];
+  const { data } = await sb.from('tasas_diarias').select('*').eq('fecha', hoy).maybeSingle();
+  
+  if(data) {
+    tasaHoy = { bcv: Number(data.bcv), paralelo: Number(data.paralelo), fecha: data.fecha, id: data.id };
+    actualizarDisplayTasas();
+    return true;
+  }
+  
+  // Mostrar modal bloqueante
+  document.getElementById('modal-tasa-diaria').style.display = 'flex';
+  return false;
+}
+
+function actualizarDisplayTasas() {
+  const el = document.getElementById('tasa-hoy-display');
+  if(el && tasaHoy.bcv) {
+    el.innerHTML = `<span style="color:var(--text3);font-size:11px">BCV</span> <strong>${tasaHoy.bcv.toFixed(2)}</strong>
+      <span style="color:var(--text3);font-size:11px;margin-left:8px">PAR</span> <strong>${tasaHoy.paralelo.toFixed(2)}</strong>
+      <span style="color:var(--text3);font-size:11px;margin-left:8px">Spread</span> <strong>${((tasaHoy.paralelo/tasaHoy.bcv - 1)*100).toFixed(0)}%</strong>`;
+  }
+}
+
+async function guardarTasaDiaria() {
+  const bcv = parseFloat(document.getElementById('td-bcv').value);
+  const par = parseFloat(document.getElementById('td-paralelo').value);
+  
+  if(!bcv || bcv <= 0) { alert('Ingresá la tasa BCV.'); return; }
+  if(!par || par <= 0) { alert('Ingresá la tasa Paralelo.'); return; }
+  if(par <= bcv) { alert('La tasa paralelo debe ser mayor que BCV.'); return; }
+
+  const hoy = new Date().toISOString().split('T')[0];
+  
+  // Upsert: si ya existe para hoy, actualizar (permite corregir paralelo intra-día)
+  const { data, error } = await sb.from('tasas_diarias')
+    .upsert({ fecha: hoy, bcv, paralelo: par, registrado_por: currentUser?.id || null, updated_at: new Date().toISOString() }, 
+            { onConflict: 'fecha' })
+    .select()
+    .single();
+  
+  if(error) { alert('Error guardando tasas: ' + error.message); return; }
+  
+  tasaHoy = { bcv: Number(data.bcv), paralelo: Number(data.paralelo), fecha: data.fecha, id: data.id };
+  actualizarDisplayTasas();
+  document.getElementById('modal-tasa-diaria').style.display = 'none';
+  showToast('Tasas del día registradas ✓');
+  registrarAuditoria('tasa_diaria', 'tasas_diarias', data.id, `BCV: ${bcv} | PAR: ${par}`);
+  
+  // Recargar dashboard si estamos ahí
+  if(document.getElementById('page-dashboard').classList.contains('active')) loadDashboard();
+}
+
+function toggleVistaMoneda() {
+  vistaMoneda = vistaMoneda === 'bcv' ? 'paralelo' : 'bcv';
+  const el = document.getElementById('vista-moneda-label');
+  if(el) el.textContent = vistaMoneda === 'bcv' ? 'USD BCV' : 'USD Real';
+  const dot = document.getElementById('vista-moneda-dot');
+  if(dot) dot.style.background = vistaMoneda === 'bcv' ? 'var(--azul)' : 'var(--naranja)';
+  // Recargar vista activa
+  if(document.getElementById('page-dashboard').classList.contains('active')) loadDashboard();
+  if(document.getElementById('page-ciclo').classList.contains('active')) loadCicloOperativo();
+}
 
 // NAV CONFIG por rol
 const NAV = {
@@ -2105,6 +2264,23 @@ async function loadApp(user) {
   ['mf-fecha','t-fecha'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = today;
+  });
+
+  // Verificar tasas del día (modal bloqueante si no existen)
+  await checkTasaDiaria();
+
+  // Spread preview en modal de tasas
+  ['td-bcv','td-paralelo'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', () => {
+      const b = parseFloat(document.getElementById('td-bcv').value) || 0;
+      const p = parseFloat(document.getElementById('td-paralelo').value) || 0;
+      const prev = document.getElementById('td-spread-preview');
+      if(prev && b > 0 && p > 0) {
+        const spread = ((p/b - 1)*100).toFixed(1);
+        prev.textContent = `Spread: ${spread}% · $1 BCV = $${(b/p).toFixed(3)} real`;
+      }
+    });
   });
 
   loadDashboard();
@@ -2238,38 +2414,46 @@ async function loadDashboard() {
   // Cargar todo en paralelo
   const [ventas, ventasDetalle, compras, comprasDetalle, cuentas, movFin, tasas, cartera, cxp] = await Promise.all([
     sb.from('ventas').select('id,fecha,notas,status').gte('fecha', desde).lte('fecha', hasta),
-    sb.from('ventas_detalle').select('venta_id,cantidad,precio,moneda'),
+    sb.from('ventas_detalle').select('venta_id,cantidad,precio,moneda,moneda_original,tasa_pactada,tasa_bcv_dia,tasa_paralelo_dia'),
     sb.from('compras').select('id,fecha,notas').gte('fecha', desde).lte('fecha', hasta),
-    sb.from('compras_detalle').select('compra_id,cantidad_kg,precio,moneda,tasa_id'),
+    sb.from('compras_detalle').select('compra_id,cantidad_kg,precio,moneda,moneda_original,tasa_pactada,tasa_bcv_dia,tasa_paralelo_dia'),
     sb.from('cuentas').select('*').eq('activo', true),
-    sb.from('movimientos_financieros').select('cuenta_id,tipo,monto,moneda,tasa_id'),
-    sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(10),
+    sb.from('movimientos_financieros').select('cuenta_id,tipo,monto,moneda,monto_usd,tasa_pactada,tasa_bcv_dia,tasa_paralelo_dia'),
+    sb.from('tasas_diarias').select('*').order('fecha',{ascending:false}).limit(10),
     sb.from('ventas').select('*, clientes(nombre), sedes(codigo)').in('status',['pendiente','parcial']).order('fecha',{ascending:false}),
     sb.from('compras').select('*, proveedores(nombre), sedes(codigo)').eq('condicion','credito').neq('status_pago','pagada').order('fecha',{ascending:false})
   ]);
 
-  // TASAS ACTIVAS
+  // TASAS - mostrar historial reciente
   const tasasEl = document.getElementById('dash-tasas');
-  const latestTasas = {};
-  (tasas.data||[]).forEach(t => { if(!latestTasas[t.nombre]) latestTasas[t.nombre] = t; });
-  tasasEl.innerHTML = Object.values(latestTasas).map(t => `
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 16px;display:flex;gap:12px;align-items:center">
-      <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">${t.nombre}</span>
-      <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2)">Bs ${Number(t.valor).toFixed(2)}</span>
-      <span style="font-size:11px;color:var(--text3)">${t.fecha}</span>
-    </div>`).join('');
+  if(tasas.data?.length) {
+    tasasEl.innerHTML = tasas.data.slice(0,5).map(t => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 16px;display:flex;gap:12px;align-items:center">
+        <span style="font-size:11px;color:var(--text3)">${t.fecha}</span>
+        <span style="font-size:11px;color:var(--text3)">BCV</span><span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2)">${Number(t.bcv).toFixed(2)}</span>
+        <span style="font-size:11px;color:var(--text3)">PAR</span><span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--naranja)">${Number(t.paralelo).toFixed(2)}</span>
+      </div>`).join('');
+  } else {
+    tasasEl.innerHTML = '<div style="color:var(--text3);font-size:12px">Sin tasas registradas</div>';
+  }
 
-  const bcvTasa = latestTasas['BCV']?.valor || 1;
-  const parTasa = latestTasas['Paralelo']?.valor || bcvTasa;
+  // Tasas de referencia para cálculos (usa tasaHoy si disponible, sino la más reciente)
+  const bcvRef = tasaHoy.bcv || tasas.data?.[0]?.bcv || 1;
+  const parRef = tasaHoy.paralelo || tasas.data?.[0]?.paralelo || bcvRef;
 
-  // Función para calcular USD BCV equiv de una venta/compra
-  function calcUSDBCV(monto, moneda, tasa_valor) {
+  // Función para convertir montos de registros (con fallback para datos legacy sin los nuevos campos)
+  function dashConvertir(monto, d) {
     if(!monto) return 0;
-    const t = tasa_valor || bcvTasa;
-    if(moneda === 'usd' || moneda === 'zelle') return monto;
-    if(moneda === 'cash') return monto * (parTasa / bcvTasa);
-    if(moneda === 'bs_bcv' || moneda === 'bs') return monto / t;
-    if(moneda === 'bs_paralelo') return monto / bcvTasa;
+    // Si tiene los nuevos campos, usar convertir()
+    if(d.tasa_bcv_dia && d.tasa_paralelo_dia && d.moneda_original) {
+      return convertir(monto, d.moneda_original, d.tasa_pactada || 'BCV', d.tasa_bcv_dia, d.tasa_paralelo_dia);
+    }
+    // Fallback legacy: usar moneda vieja + tasas de referencia actuales
+    const mon = d.moneda || 'usd';
+    if(mon === 'usd' || mon === 'zelle') return convertir(monto, 'USD', 'BCV', bcvRef, parRef);
+    if(mon === 'bs' || mon === 'bs_bcv')  return convertir(monto, 'BS', 'BCV', bcvRef, parRef);
+    if(mon === 'bs_paralelo')             return convertir(monto, 'BS', 'PARALELO', bcvRef, parRef);
+    if(mon === 'cash')                    return convertir(monto, 'USD', 'PARALELO', bcvRef, parRef);
     return monto;
   }
 
@@ -2284,7 +2468,7 @@ async function loadDashboard() {
     const v = ventasMap[d.venta_id];
     if(!v) return;
     const subtotal = Number(d.cantidad) * Number(d.precio);
-    const usd = calcUSDBCV(subtotal, d.moneda, bcvTasa);
+    const usd = dashConvertir(subtotal, d);
     const kg = Number(d.cantidad);
     totalVentasUSD += usd;
     totalVentasKG  += kg;
@@ -2309,7 +2493,7 @@ async function loadDashboard() {
   let totalComprasUSD = 0, totalComprasKG = 0;
   (comprasDetalle.data||[]).forEach(d => {
     const subtotal = Number(d.cantidad_kg) * Number(d.precio);
-    totalComprasUSD += calcUSDBCV(subtotal, d.moneda, bcvTasa);
+    totalComprasUSD += dashConvertir(subtotal, d);
     totalComprasKG  += Number(d.cantidad_kg);
   });
 
@@ -2338,9 +2522,8 @@ async function loadDashboard() {
 
   let gastosOtros = 0;
   movFinPeriodo.forEach(m => {
-    const monto = Number(m.monto);
-    if(m.moneda === 'usd') gastosOtros += monto;
-    else gastosOtros += monto / bcvTasa;
+    const monto = Number(m.monto_usd || m.monto);
+    gastosOtros += dashConvertir(monto, { moneda: m.moneda, moneda_original: m.moneda === 'bs' ? 'BS' : 'USD', tasa_pactada: m.tasa_pactada, tasa_bcv_dia: m.tasa_bcv_dia, tasa_paralelo_dia: m.tasa_paralelo_dia });
   });
 
   const gastoTotal   = gastosMP + gastosOtros;
@@ -2407,13 +2590,40 @@ async function loadDashboard() {
       </table>`;
   }
 
+  // PÉRDIDA CAMBIARIA — exposición de saldos Bs
+  const totalBS_saldo = cuentasArr.filter(c=>c.cuenta.moneda==='bs').reduce((s,c)=>s+(c.ingresos-c.egresos),0);
+  const parHoy = tasaHoy.paralelo || parRef;
+  const bcvHoy = tasaHoy.bcv || bcvRef;
+  const usdEquivBS = parHoy > 0 ? totalBS_saldo / parHoy : 0;
+
+  document.getElementById('dash-expo-bs').textContent = `Bs ${Math.abs(totalBS_saldo).toFixed(0)}`;
+  document.getElementById('dash-expo-bs-usd').textContent = `≈ $${usdEquivBS.toFixed(2)} USD real`;
+
+  // Buscar tasa de hace ~30 días para calcular devaluación
+  const tasasHist = tasas.data || [];
+  const tasa30d = tasasHist.length > 1 ? tasasHist[tasasHist.length - 1] : null;
+  if(tasa30d && tasa30d.paralelo > 0 && parHoy > 0) {
+    const parViejo = Number(tasa30d.paralelo);
+    const devalPct = ((parHoy / parViejo) - 1) * 100;
+    // Pérdida = lo que valían los Bs antes menos lo que valen ahora
+    const usdAntes = totalBS_saldo / parViejo;
+    const usdAhora = totalBS_saldo / parHoy;
+    const perdida = usdAntes - usdAhora;
+
+    document.getElementById('dash-perdida-cambiaria').textContent = perdida > 0 ? `-$${perdida.toFixed(2)}` : '$0';
+    document.getElementById('dash-perdida-cambiaria-desc').textContent = `${tasa30d.fecha} → hoy`;
+    document.getElementById('dash-deval-pct').textContent = `${devalPct.toFixed(1)}%`;
+    document.getElementById('dash-deval-desc').textContent = `PAR: ${parViejo.toFixed(0)} → ${parHoy.toFixed(0)}`;
+  } else {
+    document.getElementById('dash-perdida-cambiaria').textContent = '—';
+    document.getElementById('dash-perdida-cambiaria-desc').textContent = 'Necesita historial de tasas';
+    document.getElementById('dash-deval-pct').textContent = '—';
+  }
+
   // CARTERA CxC
   const carteraEl = document.getElementById('dash-cartera');
   const cxcData = cartera.data || [];
-  const cxcTotal = cxcData.reduce((s,v) => {
-    const match = (v.notas||'').match(/Total: \$([0-9.]+)/);
-    return s + (match ? parseFloat(match[1]) : 0);
-  }, 0);
+  const cxcTotal = cxcData.reduce((s,v) => s + Number(v.saldo_pendiente || 0), 0);
 
   if(document.getElementById('dash-cxc-total')) {
     document.getElementById('dash-cxc-total').textContent = '$' + cxcTotal.toFixed(0);
@@ -2432,7 +2642,7 @@ async function loadDashboard() {
           <td style="color:var(--text3)">${v.sedes?.codigo||'—'}</td>
           <td style="color:var(--text2);font-size:12px">${v.notas||'—'}</td>
           <td><span class="badge" style="background:${v.status==='parcial'?'rgba(232,184,75,0.15)':'rgba(192,57,43,0.12)'};color:${v.status==='parcial'?'var(--accent2)':'#e74c3c'}">${v.status}</span></td>
-          <td><button data-vid="${v.id}" data-desc="${(v.clientes?.nombre||v.cliente_nombre||'Detal')+' — '+v.fecha}" data-total="${v.saldo_pendiente!=null ? Number(v.saldo_pendiente).toFixed(2) : ((v.notas||'').match(/Total: \$([0-9.]+)/)||[])[1]||''}" onclick="abrirModalCobro(this.dataset.vid,this.dataset.desc,this.dataset.total)" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button></td>
+          <td><button data-vid="${v.id}" data-desc="${(v.clientes?.nombre||v.cliente_nombre||'Detal')+' — '+v.fecha}" data-total="${Number(v.saldo_pendiente||0).toFixed(2)}" onclick="abrirModalCobro(this.dataset.vid,this.dataset.desc,this.dataset.total)" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button></td>
         </tr>`).join('')}
       </table>`;
   }
@@ -2440,11 +2650,7 @@ async function loadDashboard() {
   // CxP — Compras por pagar
   const cxpData = cxp.data || [];
   const cxpEl = document.getElementById('dash-cxp');
-  let cxpTotal = 0;
-  cxpData.forEach(c => {
-    const match = (c.notas||'').match(/Total: \$([0-9.]+)/);
-    if(match) cxpTotal += parseFloat(match[1]);
-  });
+  const cxpTotal = cxpData.reduce((s,c) => s + Number(c.saldo_pendiente || 0), 0);
 
   if(document.getElementById('dash-cxp-total')) {
     document.getElementById('dash-cxp-total').textContent = '$' + cxpTotal.toFixed(0);
@@ -2791,14 +2997,15 @@ async function loadSaldosCuentas() {
   if(!cuentas?.length) { panel.innerHTML = ''; return; }
 
   // Para cada cuenta sumar ingresos - egresos de movimientos_financieros
+  // Usar monto nativo (no monto_usd) porque los saldos bancarios son en su moneda original
   const { data: movs } = await sb.from('movimientos_financieros')
-    .select('cuenta_id, tipo, monto_usd, monto');
+    .select('cuenta_id, tipo, monto, moneda');
 
   const saldos = {};
   cuentas.forEach(c => { saldos[c.id] = 0; });
   (movs||[]).forEach(m => {
     if(saldos[m.cuenta_id] === undefined) return;
-    const val = Number(m.monto_usd || m.monto) || 0;
+    const val = Number(m.monto) || 0;
     saldos[m.cuenta_id] += m.tipo === 'ingreso' ? val : -val;
   });
 
@@ -2918,7 +3125,7 @@ function exportarEstadoCuenta(fmt) {
 }
 
 // ===== CATEGORÍAS FINANZAS =====
-const CATS_EGRESO  = ['Costos directos', 'Nómina', 'Gastos operativos', 'Gastos comerciales', 'Gastos financieros', 'Fiscal', 'Seguros', 'Canje', 'Otros egresos'];
+const CATS_EGRESO  = ['Costos directos', 'Nómina', 'Gastos operativos', 'Gastos comerciales', 'Gastos financieros', 'Pérdida cambiaria', 'Fiscal', 'Seguros', 'Canje', 'Otros egresos'];
 const CATS_INGRESO = ['Ventas', 'Aporte de socio', 'Préstamo', 'Canje', 'Otros ingresos'];
 
 function editarMovFinanciero(id) {
@@ -3122,6 +3329,9 @@ async function guardarMovFinanciero() {
     categoria: categoria || null,
     departamento: departamento || null,
     tasa_tipo, tasa_valor, monto_nativo, monto_usd,
+    tasa_pactada: esBs ? tasa_tipo : 'BCV',
+    tasa_bcv_dia: tasaHoy.bcv,
+    tasa_paralelo_dia: tasaHoy.paralelo,
     status: 'registrado'
   });
 
@@ -3140,16 +3350,20 @@ async function guardarMovFinanciero() {
 
 // TASAS
 async function loadTasas() {
-  const { data } = await sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(30);
+  const { data } = await sb.from('tasas_diarias').select('*').order('fecha',{ascending:false}).limit(30);
   const tb = document.getElementById('tasas-table');
   if(!data || !data.length) { tb.innerHTML = '<div class="empty"><div>Sin tasas registradas.</div></div>'; return; }
   tb.innerHTML = `<table>
-    <tr><th>Fecha</th><th>Nombre</th><th>Valor (Bs/$)</th></tr>
-    ${data.map(t => `<tr>
-      <td>${t.fecha}</td>
-      <td>${t.nombre}</td>
-      <td style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600">${Number(t.valor).toFixed(2)}</td>
-    </tr>`).join('')}
+    <tr><th>Fecha</th><th>BCV (Bs/$)</th><th>Paralelo (Bs/$)</th><th>Spread</th></tr>
+    ${data.map(t => {
+      const spread = t.bcv > 0 ? ((t.paralelo/t.bcv - 1)*100).toFixed(1) : '—';
+      return `<tr>
+        <td>${t.fecha}</td>
+        <td style="color:var(--accent2);font-family:'Syne',sans-serif;font-weight:600">${Number(t.bcv).toFixed(2)}</td>
+        <td style="color:var(--naranja);font-family:'Syne',sans-serif;font-weight:600">${Number(t.paralelo).toFixed(2)}</td>
+        <td style="color:var(--text3);font-size:12px">${spread}%</td>
+      </tr>`;
+    }).join('')}
   </table>`;
 }
 
@@ -3158,30 +3372,50 @@ function initTasasForm() {
   if(fechaEl && !fechaEl.value) {
     fechaEl.value = new Date().toISOString().split('T')[0];
   }
+  // Pre-cargar tasas de hoy si existen
+  if(tasaHoy.bcv) {
+    const bcvEl = document.getElementById('t-bcv');
+    const parEl = document.getElementById('t-paralelo');
+    if(bcvEl && !bcvEl.value) bcvEl.value = tasaHoy.bcv;
+    if(parEl && !parEl.value) parEl.value = tasaHoy.paralelo;
+  }
 }
 
 async function guardarTasa() {
-  const nombre = document.getElementById('t-nombre').value;
-  const valor  = parseFloat(document.getElementById('t-valor').value);
+  const bcv  = parseFloat(document.getElementById('t-bcv').value);
+  const par  = parseFloat(document.getElementById('t-paralelo').value);
   const fecha  = document.getElementById('t-fecha').value;
 
-  if(!nombre)             { alert('Seleccioná el tipo de tasa.'); return; }
-  if(!valor || valor <= 0){ alert('Ingresá un valor válido para la tasa.'); return; }
+  if(!bcv || bcv <= 0)    { alert('Ingresá la tasa BCV.'); return; }
+  if(!par || par <= 0)    { alert('Ingresá la tasa Paralelo.'); return; }
+  if(par <= bcv)          { alert('La tasa paralelo debe ser mayor que BCV.'); return; }
   if(!fecha)              { alert('Seleccioná la fecha.'); return; }
 
   const btn = document.querySelector('#page-tasas .btn-action');
   if(btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
 
-  const { error } = await sb.from('tasas_cambio').insert({ nombre, valor, fecha });
+  const { data, error } = await sb.from('tasas_diarias')
+    .upsert({ fecha, bcv, paralelo: par, registrado_por: currentUser?.id || null, updated_at: new Date().toISOString() },
+            { onConflict: 'fecha' })
+    .select()
+    .single();
 
-  if(btn) { btn.disabled = false; btn.textContent = 'Guardar tasa'; }
+  if(btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
   if(error) { alert('Error al guardar: ' + error.message); return; }
 
-  showToast('Tasa guardada ✓');
-  registrarAuditoria('tasa_guardada', 'tasas_cambio', null, nombre + ': ' + valor + ' Bs/$');
-  document.getElementById('t-valor').value = '';
-  document.getElementById('t-fecha').value = new Date().toISOString().split('T')[0];
-  document.getElementById('t-nombre').value = 'BCV';
+  showToast('Tasas guardadas ✓');
+  registrarAuditoria('tasa_guardada', 'tasas_diarias', data?.id, `${fecha}: BCV ${bcv} | PAR ${par}`);
+
+  // Actualizar tasaHoy si es la fecha de hoy
+  const hoy = new Date().toISOString().split('T')[0];
+  if(fecha === hoy && data) {
+    tasaHoy = { bcv: Number(data.bcv), paralelo: Number(data.paralelo), fecha: data.fecha, id: data.id };
+    actualizarDisplayTasas();
+  }
+
+  document.getElementById('t-bcv').value = '';
+  document.getElementById('t-paralelo').value = '';
+  document.getElementById('t-fecha').value = hoy;
   loadTasas();
 }
 
@@ -3286,7 +3520,7 @@ async function loadVentasSelects() {
     sb.from('clientes').select('*').order('nombre'),
     sb.from('sedes').select('*'),
     sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').not('categoria','eq','f1').order('categoria').order('nombre'),
-    sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(20),
+    sb.from('tasas_diarias').select('*').order('fecha',{ascending:false}).limit(5),
     sb.from('lista_precios').select('producto_id,precio,fecha_desde').eq('activo',true).order('fecha_desde',{ascending:false})
   ]);
 
@@ -3300,6 +3534,15 @@ async function loadVentasSelects() {
   clientesData = clientes.data || [];
   clientesCache = [...clientesData];
 
+  // Populate backward-compatible tasasData if not already loaded
+  if(!tasasData.length && tasas.data?.length) {
+    const latest = tasas.data[0];
+    tasasData = [
+      { nombre: 'BCV', valor: latest.bcv, fecha: latest.fecha },
+      { nombre: 'Paralelo', valor: latest.paralelo, fecha: latest.fecha }
+    ];
+  }
+
   const selSede = document.getElementById('v-sede');
   if(selSede) selSede.innerHTML = (sedes.data||[]).map(s=>`<option value="${s.id}">${s.codigo} — ${s.nombre}</option>`).join('');
 
@@ -3312,9 +3555,8 @@ async function loadVentasSelects() {
   toggleVentaCanal();
 
   // Pre-cargar tasa BCV en el campo de referencia
-  const bcvTasa = (tasasData||[]).find(t=>t.nombre==='BCV');
   const tasaRefEl = document.getElementById('v-tasa-ref');
-  if(tasaRefEl && bcvTasa) tasaRefEl.value = bcvTasa.valor;
+  if(tasaRefEl && tasaHoy.bcv) tasaRefEl.value = tasaHoy.bcv;
 }
 
 function toggleVentaCanal() {
@@ -3543,6 +3785,7 @@ async function guardarVenta() {
   const delivery      = document.getElementById('v-delivery')?.checked || false;
   const deliveryMonto = delivery ? (parseFloat(document.getElementById('v-delivery-monto')?.value) || 0) : 0;
   const total_usd     = items.reduce((s,i) => s+(i.usd_bcv_equiv||0), 0) + deliveryMonto;
+  const total_usd_par = tasaHoy.paralelo > 0 ? total_usd * (tasaHoy.bcv / tasaHoy.paralelo) : total_usd;
   const tipo = canal.startsWith('mayor') ? 'mayor' : 'detal';
 
   // 1. Insertar venta cabecera
@@ -3554,6 +3797,7 @@ async function guardarVenta() {
     tipo,
     status,
     total_usd,
+    total_usd_paralelo: parseFloat(total_usd_par.toFixed(2)),
     saldo_pendiente: status === 'pagada' ? 0 : total_usd,
     usuario_id: currentUser?.id || null,
     notas: `${canal.replace('_',' ')}${notas?' | '+notas:''}${deliveryMonto>0?' | Delivery: $'+deliveryMonto.toFixed(2):''} | Total: $${total_usd.toFixed(2)} USD BCV`
@@ -3561,13 +3805,17 @@ async function guardarVenta() {
 
   if(errV) { alert('Error al guardar venta: ' + errV.message); return; }
 
-  // 2. Insertar detalle
+  // 2. Insertar detalle — con información completa de moneda
   const detalles = items.map(i => ({
     venta_id:   venta.id,
     producto_id: i.producto_id,
     cantidad:   i.cantidad,
     precio:     i.precio,
-    moneda:     i.moneda.startsWith('bs') ? 'bs' : 'usd'
+    moneda:     i.moneda.startsWith('bs') ? 'bs' : 'usd',
+    moneda_original: 'USD',
+    tasa_pactada: 'BCV',
+    tasa_bcv_dia: tasaHoy.bcv,
+    tasa_paralelo_dia: tasaHoy.paralelo
   }));
 
   const { error: errD } = await sb.from('ventas_detalle').insert(detalles);
@@ -3585,7 +3833,8 @@ async function guardarVenta() {
       referencia: `Venta ${canal.replace('_',' ')}${notas?' — '+notas:''}`,
       sede_origen_id: sede_id,
       sede_destino_id: null,
-      usuario_id: currentUser?.id || null
+      usuario_id: currentUser?.id || null,
+      venta_id: venta.id
     });
   }
 
@@ -3638,7 +3887,7 @@ async function loadVentas(filtro) {
       <td style="display:flex;gap:4px;align-items:center">
         <button onclick="verDetalleVenta('${v.id}','${v.clientes?.nombre||v.cliente_nombre||'Detal'} - ${v.fecha}')" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Ver</button>
         <button onclick="abrirFactura('${v.id}')" style="background:rgba(0,58,112,0.08);border:1px solid rgba(0,58,112,0.3);color:var(--azul);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">🧾 Factura</button>
-        ${(v.status !== 'pagada' && v.status !== 'anulada') || Number(v.saldo_pendiente) > 0 ? `<button data-vid="${v.id}" data-desc="${(v.clientes?.nombre||v.cliente_nombre||'Detal')+' — '+v.fecha}" data-total="${v.saldo_pendiente!=null ? Number(v.saldo_pendiente).toFixed(2) : ((v.notas||'').match(/Total: \$([0-9.]+)/)||[])[1]||''}" onclick="abrirModalCobro(this.dataset.vid,this.dataset.desc,this.dataset.total)" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button>` : ''}
+        ${(v.status !== 'pagada' && v.status !== 'anulada') || Number(v.saldo_pendiente) > 0 ? `<button data-vid="${v.id}" data-desc="${(v.clientes?.nombre||v.cliente_nombre||'Detal')+' — '+v.fecha}" data-total="${Number(v.saldo_pendiente||0).toFixed(2)}" onclick="abrirModalCobro(this.dataset.vid,this.dataset.desc,this.dataset.total)" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button>` : ''}
         ${v.status !== 'anulada' ? `<button onclick="anularVenta('${v.id}')" style="background:none;border:1px solid #e2dedd;color:#c0392b;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Anular</button>` : '<span style="font-size:11px;color:var(--text3)">Anulada</span>'}
       </td>
     </tr>`).join('')}
@@ -3660,30 +3909,6 @@ async function marcarPagada(venta_id) {
   if(error) { alert('Error: ' + error.message); return; }
   showToast('Venta marcada como pagada ✓');
   loadVentas();
-}
-
-async function anularVenta(venta_id) {
-  if(!confirm('¿Seguro que querés anular esta venta? Se revertirá el inventario.')) return;
-
-  // Obtener detalle para revertir inventario
-  const { data: venta } = await sb.from('ventas').select('sede_id').eq('id', venta_id).single();
-  const { data: detalle } = await sb.from('ventas_detalle').select('producto_id, cantidad').eq('venta_id', venta_id);
-
-  // Revertir inventario — devolver stock
-  if(detalle && venta) {
-    for(const d of detalle) {
-      await upsertInventario(d.producto_id, venta.sede_id, Number(d.cantidad));
-    }
-  }
-
-  // Marcar como anulada
-  const { error } = await sb.from('ventas').update({ status:'anulada' }).eq('id', venta_id);
-  if(error) { alert('Error: ' + error.message); return; }
-
-  showToast('Venta anulada — inventario revertido ✓');
-  registrarAuditoria('venta_anulada', 'ventas', venta_id, 'Venta anulada');
-  loadVentas();
-  loadDashboard();
 }
 
 async function verDetalleVenta(venta_id, titulo) {
@@ -3926,13 +4151,21 @@ async function loadComprasSelects() {
   const [provs, sedes, tasas, prods] = await Promise.all([
     sb.from('proveedores').select('*').order('nombre'),
     sb.from('sedes').select('*'),
-    sb.from('tasas_cambio').select('*').order('created_at',{ascending:false}).limit(20),
+    sb.from('tasas_diarias').select('*').order('fecha',{ascending:false}).limit(5),
     sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').in('categoria',['f1','f2']).order('categoria').order('nombre')
   ]);
 
   sedesData = sedes.data || [];
-  tasasData = tasas.data || [];
   productosData = prods.data || [];
+  proveedoresCache = (provs.data||[]).sort((a,b) => a.nombre.localeCompare(b.nombre));
+
+  // Crear tasasData backward-compatible para el código que busca por nombre
+  const latest = tasas.data?.[0];
+  tasasData = [];
+  if(latest) {
+    tasasData.push({ nombre: 'BCV', valor: latest.bcv, fecha: latest.fecha });
+    tasasData.push({ nombre: 'Paralelo', valor: latest.paralelo, fecha: latest.fecha });
+  }
   proveedoresCache = (provs.data||[]).sort((a,b) => a.nombre.localeCompare(b.nombre));
 
   const selProv = document.getElementById('c-proveedor-search');
@@ -4111,6 +4344,15 @@ async function guardarCompra() {
     condicion,
     status_pago: condicion === 'credito' ? 'pendiente' : 'pagada',
     total_usd: total_usd_bcv,
+    total_usd_paralelo: parseFloat(items.reduce((s, i) => {
+      const sub = i.cantidad_kg * i.precio;
+      const mo = i.moneda;
+      if(mo === 'usd') return s + sub;
+      if(mo === 'bs_bcv') return s + (tasaHoy.paralelo > 0 ? sub / tasaHoy.paralelo : sub / tasaHoy.bcv);
+      if(mo === 'bs_paralelo') return s + (tasaHoy.paralelo > 0 ? sub / tasaHoy.paralelo : 0);
+      if(mo === 'usd_efectivo') return s + sub;
+      return s + sub;
+    }, 0).toFixed(2)),
     saldo_pendiente: condicion === 'credito' ? total_usd_bcv : 0,
     sede_id: document.getElementById('c-sede')?.value || null,
     tipo_doc,
@@ -4122,15 +4364,28 @@ async function guardarCompra() {
 
   if(errC) { alert('Error al guardar compra: ' + errC.message); return; }
 
-  // 2. Insertar detalle
-  const detalles = items.map(i => ({
-    compra_id: compra.id,
-    producto_id: i.producto_id,
-    cantidad_kg: i.cantidad_kg,
-    precio: i.precio,
-    moneda: i.moneda.startsWith('bs') ? 'bs' : 'usd',
-    tasa_id: null
-  }));
+  // 2. Insertar detalle — con información completa de moneda
+  const detalles = items.map(i => {
+    const mo = i.moneda;
+    let moneda_original, tasa_pactada;
+    if(mo === 'usd')            { moneda_original = 'USD'; tasa_pactada = 'BCV'; }
+    else if(mo === 'bs_bcv')    { moneda_original = 'BS';  tasa_pactada = 'BCV'; }
+    else if(mo === 'bs_paralelo') { moneda_original = 'BS'; tasa_pactada = 'PARALELO'; }
+    else if(mo === 'usd_efectivo') { moneda_original = 'USD'; tasa_pactada = 'PARALELO'; }
+    else { moneda_original = 'USD'; tasa_pactada = 'BCV'; }
+    
+    return {
+      compra_id: compra.id,
+      producto_id: i.producto_id,
+      cantidad_kg: i.cantidad_kg,
+      precio: i.precio,
+      moneda: mo.startsWith('bs') ? 'bs' : 'usd',
+      moneda_original,
+      tasa_pactada,
+      tasa_bcv_dia: tasaHoy.bcv,
+      tasa_paralelo_dia: tasaHoy.paralelo
+    };
+  });
 
   const { error: errD } = await sb.from('compras_detalle').insert(detalles);
   if(errD) { alert('Error en detalle: ' + errD.message); return; }
@@ -4555,6 +4810,9 @@ async function confirmarCobro() {
     monto_usd: montoUSD,
     moneda:   esBs ? 'bs' : 'usd',
     tasa_tipo, tasa_valor, monto_nativo,
+    tasa_pactada: esBs ? tasa_tipo : 'BCV',
+    tasa_bcv_dia: tasaHoy.bcv,
+    tasa_paralelo_dia: tasaHoy.paralelo,
     contraparte: nota || null,
     status: 'registrado',
     venta_id: cobroVentaId,
@@ -4717,8 +4975,7 @@ async function abrirFactura(venta_id) {
 
     var correlativo = v.correlativo ? String(v.correlativo).padStart(4,'0') : '—';
     var subtotal = items.reduce(function(s,d){ return s + Number(d.cantidad)*Number(d.precio); }, 0);
-    var bcvTasa = (tasasData||[]).find(function(t){ return t.nombre==='BCV'; });
-    var tasaVal = bcvTasa ? Number(bcvTasa.valor) : null;
+    var tasaVal = tasaHoy.bcv || ((tasasData||[]).find(function(t){ return t.nombre==='BCV'; }) || {}).valor || null;
 
     var filaHTML = '';
     items.forEach(function(d) {
@@ -4958,6 +5215,9 @@ async function confirmarPagoCompra() {
     monto_usd: montoUSD,
     moneda:    monedaCuentaPc,
     tasa_tipo: tasa_tipo_pc, tasa_valor: tasa_valor_pc, monto_nativo: monto_nativo_pc,
+    tasa_pactada: esBs ? tasa_tipo_pc : 'BCV',
+    tasa_bcv_dia: tasaHoy.bcv,
+    tasa_paralelo_dia: tasaHoy.paralelo,
     contraparte: provNombre,
     status: 'registrado',
     compra_id: pagarCompraId,
@@ -5147,7 +5407,7 @@ async function cambiarEstadoLote(lote_id, nuevo_estado) {
 // ===== ANULACIONES =====
 async function anularVenta(venta_id, btn) {
   if(!confirm('¿Anular esta venta? Los productos volverán al inventario y se eliminará de CxC. Esta acción queda registrada en auditoría.')) return;
-  btn.disabled = true; btn.textContent = 'Anulando...';
+  if(btn) { btn.disabled = true; btn.textContent = 'Anulando...'; }
 
   // 1. Obtener detalle de la venta
   const { data: venta } = await sb.from('ventas').select('sede_id, status').eq('id', venta_id).single();
@@ -5160,24 +5420,26 @@ async function anularVenta(venta_id, btn) {
     await upsertInventario(item.producto_id, venta.sede_id, Number(item.cantidad));
   }
 
-  // 3. Anular movimientos de salida asociados (los auto-generados por la venta)
+  // 3. Anular movimientos de salida asociados a ESTA venta específica
   await sb.from('movimientos_inventario')
     .update({ referencia: '[ANULADO] ' })
     .eq('tipo', 'salida')
-    .like('referencia', '%Venta%');
+    .eq('venta_id', venta_id);
 
   // 4. Marcar venta como anulada
   await sb.from('ventas').update({ status: 'anulada', saldo_pendiente: 0 }).eq('id', venta_id);
 
   await registrarAuditoria('venta_anulada', 'ventas', venta_id, 'Venta anulada — productos revertidos al inventario');
   showToast('Venta anulada ✓');
-  document.getElementById('venta-detalle-panel').style.display = 'none';
+  const panel = document.getElementById('venta-detalle-panel');
+  if(panel) panel.style.display = 'none';
   loadVentas();
+  loadDashboard();
 }
 
 async function anularCompra(compra_id, btn) {
   if(!confirm('¿Anular esta compra? Se revertirá el inventario y se eliminará de CxP. Esta acción queda registrada en auditoría.')) return;
-  btn.disabled = true; btn.textContent = 'Anulando...';
+  if(btn) { btn.disabled = true; btn.textContent = 'Anulando...'; }
 
   const { data: compra } = await sb.from('compras').select('sede_id, status_pago').eq('id', compra_id).single();
   const { data: items }  = await sb.from('compras_detalle').select('producto_id, cantidad_kg').eq('compra_id', compra_id);
@@ -5293,7 +5555,7 @@ async function confirmarEditMovimiento(id, tipo) {
 
 async function anularMovimiento(mov_id, btn) {
   if(!confirm('¿Anular este movimiento? Se revertirá el efecto en inventario. Esta acción queda registrada en auditoría.')) return;
-  btn.disabled = true; btn.textContent = 'Anulando...';
+  if(btn) { btn.disabled = true; btn.textContent = 'Anulando...'; }
 
   const { data: m } = await sb.from('movimientos_inventario')
     .select('tipo, producto_id, cantidad_kg, sede_origen_id, sede_destino_id')
@@ -5328,13 +5590,14 @@ async function loadCicloOperativo() {
   document.getElementById('ciclo-actualizado').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-VE');
 
   const hoy = new Date().toISOString().split('T')[0];
+  const vistaLabel = vistaMoneda === 'bcv' ? 'USD BCV' : 'USD Real';
 
   // Cargar datos en paralelo
   const [comprasRes, lotesRes, movinvRes, ventasRes, movfinRes] = await Promise.all([
-    sb.from('compras').select('id,fecha,total_usd,saldo_pendiente,proveedores(nombre),condicion,status_pago').order('fecha',{ascending:false}).limit(100),
+    sb.from('compras').select('id,fecha,total_usd,total_usd_paralelo,saldo_pendiente,proveedores(nombre),condicion,status_pago').order('fecha',{ascending:false}).limit(100),
     sb.from('lotes').select('id,partida_id,fecha,num_animales,estado').order('fecha',{ascending:false}),
     sb.from('movimientos_inventario').select('lote_id,tipo,cantidad_kg,producto_id,fecha,productos(nombre)'),
-    sb.from('ventas').select('id,fecha,total_usd,saldo_pendiente,status,notas').order('fecha',{ascending:false}).limit(200),
+    sb.from('ventas').select('id,fecha,total_usd,total_usd_paralelo,saldo_pendiente,status,notas').order('fecha',{ascending:false}).limit(200),
     sb.from('movimientos_financieros').select('venta_id,monto_usd,monto,moneda,tipo').eq('tipo','ingreso')
   ]);
 
@@ -5344,11 +5607,21 @@ async function loadCicloOperativo() {
   const ventas   = ventasRes.data   || [];
   const cobros   = movfinRes.data   || [];
 
+  // Factor de conversión BCV→Paralelo para datos legacy sin total_usd_paralelo
+  const spreadFactor = (tasaHoy.bcv && tasaHoy.paralelo) ? tasaHoy.bcv / tasaHoy.paralelo : 1;
+
+  // Helper: obtener monto según vista
+  function cicloUSD(total_usd, total_usd_paralelo) {
+    const bcv = Number(total_usd || 0);
+    if(vistaMoneda === 'bcv') return bcv;
+    return Number(total_usd_paralelo) || (bcv * spreadFactor);
+  }
+
   // CxC y CxP consolidado
   const cxcVentas = ventas.filter(v => Number(v.saldo_pendiente) > 0 && v.status !== 'anulada');
-  const cxcTotal  = cxcVentas.reduce((s,v) => s + Number(v.saldo_pendiente||0), 0);
+  const cxcTotal  = cxcVentas.reduce((s,v) => s + cicloUSD(v.saldo_pendiente, null), 0);
   const cxpCompras = compras.filter(c => c.condicion === 'credito' && c.status_pago !== 'pagada' && c.status_pago !== 'anulada' && Number(c.saldo_pendiente||0) > 0);
-  const cxpTotal  = cxpCompras.reduce((s,c) => s + Number(c.saldo_pendiente||0), 0);
+  const cxpTotal  = cxpCompras.reduce((s,c) => s + cicloUSD(c.saldo_pendiente, null), 0);
   const posicion  = cxcTotal - cxpTotal;
 
   document.getElementById('ciclo-cxc').textContent = '$' + cxcTotal.toFixed(0);
@@ -5408,7 +5681,7 @@ async function loadCicloOperativo() {
     const diasDesdeCompra = Math.floor((new Date(hoy) - new Date(c.fecha)) / 86400000);
     const semColor = diasDesdeCompra <= 21 ? '#27a66a' : diasDesdeCompra <= 35 ? '#e8b84b' : '#e74c3c';
     const semLabel = diasDesdeCompra <= 21 ? '● Verde' : diasDesdeCompra <= 35 ? '● Amarillo' : '● Rojo';
-    const cxpViva = Number(c.saldo_pendiente || 0);
+    const cxpViva = cicloUSD(c.saldo_pendiente, null);
 
     if(diasDesdeCompra > 21 && cxpViva > 0) {
       alertas.push('⚠ Partida ' + (c.proveedores?.nombre||'?') + ' (' + c.fecha + ') lleva ' + diasDesdeCompra + ' días con CxP viva de $' + cxpViva.toFixed(0));
@@ -5418,7 +5691,7 @@ async function loadCicloOperativo() {
       '<td style="color:var(--text);font-weight:600">' + (c.proveedores?.nombre||'—') + '</td>' +
       '<td style="color:var(--text3)">' + c.fecha + '</td>' +
       '<td style="color:var(--azul)">' + lotesPartida.length + ' lote(s)</td>' +
-      '<td style="font-weight:600">$' + Number(c.total_usd||0).toFixed(0) + '</td>' +
+      '<td style="font-weight:600">$' + cicloUSD(c.total_usd, c.total_usd_paralelo).toFixed(0) + '</td>' +
       '<td style="font-weight:600;color:' + (cxpViva>0?'var(--danger)':'var(--success)') + '">' + (cxpViva>0?'$'+cxpViva.toFixed(0):'✓ Pagada') + '</td>' +
       '<td style="font-weight:600">' + diasDesdeCompra + 'd</td>' +
       '<td style="font-weight:600;color:' + semColor + '">' + semLabel + '</td>' +
@@ -5603,6 +5876,112 @@ function makeSortable(table) {
       rows.forEach(r => tbody.appendChild(r));
     });
   });
+}
+
+// PÉRDIDA CAMBIARIA — asiento mensual consolidado
+async function generarAsientoPerdidaCambiaria() {
+  const hoy = new Date();
+  const mesLabel = hoy.toLocaleDateString('es-VE', { month: 'long', year: 'numeric' });
+  const mesKey = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
+  const conceptoBuscar = `Pérdida cambiaria ${mesKey}`;
+
+  // 1. Verificar si ya existe asiento de este mes
+  const { data: existente } = await sb.from('movimientos_financieros')
+    .select('id')
+    .like('concepto', `%${conceptoBuscar}%`)
+    .limit(1);
+
+  if(existente?.length) {
+    if(!confirm(`Ya existe un asiento de pérdida cambiaria para ${mesLabel}. ¿Deseas generar uno nuevo? (El anterior NO se elimina)`)) return;
+  }
+
+  // 2. Obtener tasas del primer y último día del mes
+  const inicioMes = `${mesKey}-01`;
+  const { data: tasasMes } = await sb.from('tasas_diarias')
+    .select('fecha,bcv,paralelo')
+    .gte('fecha', inicioMes)
+    .order('fecha', { ascending: true });
+
+  if(!tasasMes?.length || tasasMes.length < 2) {
+    alert('Se necesitan al menos 2 registros de tasas en el mes para calcular la pérdida.');
+    return;
+  }
+
+  const tasaInicio = tasasMes[0];
+  const tasaFin = tasasMes[tasasMes.length - 1];
+
+  // 3. Obtener saldos Bs por cuenta
+  const { data: cuentasBs } = await sb.from('cuentas').select('*').eq('activo', true).eq('moneda', 'bs');
+  if(!cuentasBs?.length) { alert('No hay cuentas en Bs activas.'); return; }
+
+  const { data: movsBs } = await sb.from('movimientos_financieros')
+    .select('cuenta_id, tipo, monto')
+    .in('cuenta_id', cuentasBs.map(c => c.id));
+
+  const saldosPorCuenta = {};
+  cuentasBs.forEach(c => { saldosPorCuenta[c.id] = { nombre: c.nombre, saldo: 0 }; });
+  (movsBs||[]).forEach(m => {
+    if(!saldosPorCuenta[m.cuenta_id]) return;
+    saldosPorCuenta[m.cuenta_id].saldo += m.tipo === 'ingreso' ? Number(m.monto) : -Number(m.monto);
+  });
+
+  // 4. Calcular pérdida total
+  const parInicio = Number(tasaInicio.paralelo);
+  const parFin = Number(tasaFin.paralelo);
+
+  if(parFin <= parInicio) {
+    alert(`La tasa paralelo no subió este mes (${parInicio} → ${parFin}). No hay pérdida cambiaria que registrar.`);
+    return;
+  }
+
+  let perdidaTotal = 0;
+  const detalleCuentas = [];
+
+  Object.entries(saldosPorCuenta).forEach(([id, { nombre, saldo }]) => {
+    if(saldo <= 0) return; // Solo cuentas con saldo positivo en Bs generan pérdida
+    const usdAntes = saldo / parInicio;
+    const usdAhora = saldo / parFin;
+    const perdida = usdAntes - usdAhora;
+    perdidaTotal += perdida;
+    detalleCuentas.push(`${nombre}: -$${perdida.toFixed(2)}`);
+  });
+
+  if(perdidaTotal <= 0) {
+    alert('No hay pérdida cambiaria que registrar (saldos Bs ≤ 0).');
+    return;
+  }
+
+  const detalleStr = detalleCuentas.join(' | ');
+  const concepto = `${conceptoBuscar} | PAR ${parInicio.toFixed(0)}→${parFin.toFixed(0)} | ${detalleStr}`;
+
+  if(!confirm(`Pérdida cambiaria de ${mesLabel}:\n\n${detalleCuentas.join('\n')}\n\nTotal: -$${perdidaTotal.toFixed(2)} USD\n\n¿Registrar asiento?`)) return;
+
+  // 5. Insertar un solo movimiento consolidado
+  const { error } = await sb.from('movimientos_financieros').insert({
+    tipo: 'egreso',
+    cuenta_id: cuentasBs[0].id, // primera cuenta Bs como referencia
+    moneda: 'usd',
+    monto: parseFloat(perdidaTotal.toFixed(2)),
+    monto_usd: parseFloat(perdidaTotal.toFixed(2)),
+    monto_bs: null,
+    monto_nativo: null,
+    fecha: hoy.toISOString().split('T')[0],
+    concepto,
+    categoria: 'Pérdida cambiaria',
+    departamento: 'administracion',
+    tasa_pactada: 'PARALELO',
+    tasa_bcv_dia: tasaHoy.bcv,
+    tasa_paralelo_dia: tasaHoy.paralelo,
+    contraparte: 'Ajuste contable',
+    status: 'registrado',
+    usuario_id: currentUser?.id || null
+  });
+
+  if(error) { alert('Error: ' + error.message); return; }
+
+  showToast(`Pérdida cambiaria -$${perdidaTotal.toFixed(2)} registrada ✓`);
+  registrarAuditoria('perdida_cambiaria', 'movimientos_financieros', null, concepto);
+  loadDashboard();
 }
 
 function showToast(msg) {
