@@ -49,7 +49,7 @@
   .login-left {
     flex: 1;
     background: linear-gradient(to bottom, rgba(0,30,60,0.55) 0%, rgba(0,20,40,0.7) 100%),
-      url('./A02.png') center center / cover no-repeat;
+      url('../A02.png') center center / cover no-repeat;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
