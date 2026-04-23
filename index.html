@@ -2179,7 +2179,17 @@ function exportarEstadoCuenta(fmt) {
 }
 
 // ===== CATEGORÍAS FINANZAS =====
-const CATS_EGRESO  = ['Costos directos', 'Nómina', 'Gastos operativos', 'Gastos comerciales', 'Gastos financieros', 'Pérdida cambiaria', 'Fiscal', 'Seguros', 'Canje', 'Otros egresos'];
+const CATS_EGRESO = [
+  'Nomina',
+  'Alquiler',
+  'Flete y traslado',
+  'Consumible',
+  'Reparacion y Mantenimiento',
+  'Servicios',
+  'Impuesto y parafiscal',
+  'Int de Financiamiento - Comision bancaria',
+  'Otros Gastos'
+];
 const CATS_INGRESO = ['Ventas', 'Aporte de socio', 'Préstamo', 'Canje', 'Otros ingresos'];
 
 function editarMovFinanciero(id) {
