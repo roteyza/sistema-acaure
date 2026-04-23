@@ -565,14 +565,6 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Status pago</label>
-              <select id="v-status">
-                <option value="pendiente">Pendiente</option>
-                <option value="parcial">Pago parcial</option>
-                <option value="pagada">Pagada</option>
-              </select>
-            </div>
-            <div class="form-group">
               <label>Notas / referencia</label>
               <input type="text" id="v-notas" placeholder="Ej: Despacho RF semana 12, pedido #45...">
             </div>
@@ -2750,7 +2742,6 @@ function calcularTotalesVenta() {
 async function guardarVenta() {
   const canal    = document.getElementById('v-canal').value;
   const fecha    = document.getElementById('v-fecha').value;
-  const status   = document.getElementById('v-status').value;
   const notas    = document.getElementById('v-notas').value;
   const sede_id  = document.getElementById('v-sede').value;
 
@@ -2782,10 +2773,10 @@ async function guardarVenta() {
     cliente_nombre,
     sede_id,
     tipo,
-    status,
+    status: 'pendiente',
     total_usd,
     total_usd_paralelo: parseFloat(total_usd_par.toFixed(2)),
-    saldo_pendiente: status === 'pagada' ? 0 : total_usd,
+    saldo_pendiente: total_usd,
     usuario_id: currentUser?.id || null,
     notas: `${canal.replace('_',' ')}${notas?' | '+notas:''}${deliveryMonto>0?' | Delivery: $'+deliveryMonto.toFixed(2):''} | Total: $${total_usd.toFixed(2)} USD BCV`
   }).select().single();
