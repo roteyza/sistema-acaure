@@ -2562,6 +2562,19 @@ function toggleVentaCanal() {
     if(hiddenEl) hiddenEl.value = '';
   }
 
+  // Auto-seleccionar sede CCS1 cuando el canal es detal_ccs
+  if(canal === 'detal_ccs') {
+    const selSede = document.getElementById('v-sede');
+    if(selSede) {
+      const opt = [...selSede.options].find(o =>
+        o.textContent.trim().toLowerCase().startsWith('ccs1')
+      );
+      if(opt) selSede.value = opt.value;
+      else console.warn('[toggleVentaCanal] No se encontró sede CCS1. Opciones:',
+        [...selSede.options].map(o => o.textContent));
+    }
+  }
+
   // Refrescar productos al cambiar canal
   const container = document.getElementById('venta-items');
   if(container && ventaItems.length > 0) {
