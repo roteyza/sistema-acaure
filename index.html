@@ -3464,10 +3464,10 @@ async function upsertInventario(producto_id, sede_id, delta) {
     .single();
 
   if(existing) {
-    const nueva = Math.max(0, (existing.cantidad_kg || 0) + delta);
+    const nueva = (existing.cantidad_kg || 0) + delta;
     await sb.from('inventario').update({ cantidad_kg: nueva, actualizado_at: new Date().toISOString() }).eq('id', existing.id);
   } else {
-    await sb.from('inventario').insert({ producto_id, sede_id, cantidad_kg: Math.max(0, delta), actualizado_at: new Date().toISOString() });
+    await sb.from('inventario').insert({ producto_id, sede_id, cantidad_kg: delta, actualizado_at: new Date().toISOString() });
   }
 }
 
