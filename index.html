@@ -659,7 +659,7 @@
           <div class="form-row">
             <div class="form-group">
               <label>Tipo</label>
-              <select id="mf-tipo" onchange="actualizarCategoriasFinanzas()">
+              <select id="mf-tipo" onchange="actualizarCatsFinanzas()">
                 <option value="ingreso">Ingreso</option>
                 <option value="egreso">Egreso</option>
               </select>
@@ -1981,7 +1981,7 @@ function setFinPeriodo(dias) {
 
 async function initFinanzasFiltros() {
   // Inicializar categorías del formulario
-  actualizarCategoriasFinanzas();
+  actualizarCatsFinanzas();
   // Cargar cuentas en el filtro
   const sel = document.getElementById('fin-cuenta-filtro');
   if(sel && cuentasSelectData && cuentasSelectData.length) {
@@ -2398,7 +2398,7 @@ async function guardarMovFinanciero() {
   document.getElementById('mf-concepto').value = '';
   document.getElementById('mf-categoria').value = '';
   document.getElementById('mf-departamento').value = '';
-  actualizarCategoriasFinanzas();
+  actualizarCatsFinanzas();
   loadFinanzas();
 }
 
