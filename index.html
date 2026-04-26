@@ -1019,21 +1019,12 @@
           style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
       </div>
     </div>
-    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="form-group">
-        <label>Tipo</label>
-        <select id="ec-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-          <option value="b2b">B2B (Mayor)</option>
-          <option value="b2c">B2C (Detal)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Canal</label>
-        <select id="ec-canal" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-          <option value="mayor">Mayor</option>
-          <option value="detal">Detal</option>
-        </select>
-      </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Canal</label>
+      <select id="ec-canal" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+        <option value="mayor">Mayor</option>
+        <option value="detal">Detal</option>
+      </select>
     </div>
     <div class="form-group" style="margin-bottom:24px">
       <label>Dirección</label>
@@ -1064,21 +1055,12 @@
           style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
       </div>
     </div>
-    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-top:4px">
-      <div class="form-group">
-        <label>Tipo</label>
-        <select id="nc-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-          <option value="b2b">B2B (Mayor)</option>
-          <option value="b2c">B2C (Detal)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Canal</label>
-        <select id="nc-canal" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-          <option value="mayor">Mayor</option>
-          <option value="detal">Detal</option>
-        </select>
-      </div>
+    <div class="form-group" style="margin-top:4px">
+      <label>Canal</label>
+      <select id="nc-canal" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+        <option value="mayor">Mayor</option>
+        <option value="detal">Detal</option>
+      </select>
     </div>
     <div class="form-group" style="margin-top:4px">
       <label>Dirección</label>
@@ -1237,52 +1219,6 @@
     </div>
   </div>
 </div>
-
-<!-- MODAL EDITAR CLIENTE -->
-<div id="modal-editar-cli" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
-  <div style="background:white;width:500px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
-    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:24px">Editar cliente</div>
-    <input type="hidden" id="ec-id">
-    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="form-group">
-        <label>Nombre</label>
-        <input type="text" id="ec-nombre"
-          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-      </div>
-      <div class="form-group">
-        <label>Teléfono</label>
-        <input type="text" id="ec-telefono"
-          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-      </div>
-    </div>
-    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="form-group">
-        <label>Tipo</label>
-        <select id="ec-tipo" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-          <option value="b2b">B2B (Mayor)</option>
-          <option value="b2c">B2C (Detal)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Canal</label>
-        <select id="ec-canal" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-          <option value="mayor">Mayor</option>
-          <option value="detal">Detal</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group" style="margin-bottom:24px">
-      <label>Dirección</label>
-      <input type="text" id="ec-direccion"
-        style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
-    </div>
-    <div style="display:flex;gap:8px">
-      <button onclick="guardarEditarCliente()" class="btn-action" style="flex:1">Guardar cambios</button>
-      <button onclick="cerrarEditarCliente()" class="btn-secondary">Cancelar</button>
-    </div>
-  </div>
-</div>
-
 
 <!-- AREA OCULTA PARA PRINT -->
 <div id="factura-print-area" style="display:none;"></div>

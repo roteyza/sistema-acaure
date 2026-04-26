@@ -62,8 +62,9 @@ async function guardarEditarProveedor() {
 function abrirEditarCliente(id, nombre, tipo, canal, telefono, direccion) {
   document.getElementById('ec-id').value = id;
   document.getElementById('ec-nombre').value = nombre;
-  document.getElementById('ec-tipo').value = tipo;
-  document.getElementById('ec-canal').value = canal;
+  // tipo se deriva de canal al guardar; si no hay canal previo, inferirlo de tipo legacy
+  const canalEfectivo = canal || (tipo === 'b2c' ? 'detal' : 'mayor');
+  document.getElementById('ec-canal').value = canalEfectivo;
   document.getElementById('ec-telefono').value = telefono;
   document.getElementById('ec-direccion').value = direccion;
   document.getElementById('modal-editar-cli').style.display = 'flex';
@@ -76,8 +77,8 @@ function cerrarEditarCliente() {
 async function guardarEditarCliente() {
   const id        = document.getElementById('ec-id').value;
   const nombre    = document.getElementById('ec-nombre').value.trim();
-  const tipo      = document.getElementById('ec-tipo').value;
   const canal     = document.getElementById('ec-canal').value;
+  const tipo      = canal === 'detal' ? 'b2c' : 'b2b';
   const telefono  = document.getElementById('ec-telefono').value.trim();
   const direccion = document.getElementById('ec-direccion').value.trim();
   if(!nombre) { alert('El nombre no puede estar vacío.'); return; }
@@ -199,10 +200,9 @@ function abrirNuevoCliente() {
   document.getElementById('nc-nombre').value = '';
   document.getElementById('nc-telefono').value = '';
   document.getElementById('nc-direccion').value = '';
-  // Pre-seleccionar tipo y canal según el canal activo
+  // Pre-seleccionar canal según el canal activo (tipo se deriva al guardar)
   const canal = document.getElementById('v-canal')?.value || '';
   const esDetal = canal === 'detal_ccs' || canal === 'detal_acarigua';
-  if(document.getElementById('nc-tipo'))  document.getElementById('nc-tipo').value  = esDetal ? 'b2c' : 'b2b';
   if(document.getElementById('nc-canal')) document.getElementById('nc-canal').value = esDetal ? 'detal' : 'mayor';
   document.getElementById('modal-nuevo-cli').style.display = 'flex';
   setTimeout(() => document.getElementById('nc-nombre').focus(), 100);
@@ -214,8 +214,8 @@ function cerrarNuevoCliente() {
 
 async function guardarNuevoCliente() {
   const nombre = document.getElementById('nc-nombre').value.trim();
-  const tipo   = document.getElementById('nc-tipo').value;
   const canal  = document.getElementById('nc-canal').value;
+  const tipo   = canal === 'detal' ? 'b2c' : 'b2b';
   if(!nombre) { alert('Ingresá el nombre del cliente.'); return; }
 
   const telefono = document.getElementById('nc-telefono')?.value.trim() || null;
