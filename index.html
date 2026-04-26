@@ -92,8 +92,8 @@
             <span style="color:var(--text3);font-size:11px">Sin tasas del día</span>
           </div>
           <div onclick="toggleVistaMoneda()" style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 14px;user-select:none" title="Cambiar vista de moneda">
-            <div id="vista-moneda-dot" style="width:8px;height:8px;border-radius:50%;background:var(--azul);transition:background .2s"></div>
-            <span id="vista-moneda-label" style="font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0.5px">USD BCV</span>
+            <div class="vista-moneda-dot" style="width:8px;height:8px;border-radius:50%;background:var(--azul);transition:background .2s"></div>
+            <span class="vista-moneda-label" style="font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0.5px">USD BCV</span>
             <span style="font-size:10px;color:var(--text3)">⇄</span>
           </div>
         </div>
@@ -831,6 +831,15 @@
         </div>
         <div class="page-sub">Visibilidad de rotación y flujo de caja por partida</div>
 
+        <!-- TOGGLE VISTA MONEDA -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+          <div onclick="toggleVistaMoneda()" style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 14px;user-select:none" title="Cambiar vista de moneda">
+            <div class="vista-moneda-dot" style="width:8px;height:8px;border-radius:50%;background:var(--azul);transition:background .2s"></div>
+            <span class="vista-moneda-label" style="font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0.5px">USD BCV</span>
+            <span style="font-size:10px;color:var(--text3)">⇄</span>
+          </div>
+        </div>
+
         <!-- CONSOLIDADO -->
         <div class="cards-grid" style="margin-bottom:24px" id="ciclo-cards">
           <div class="stat-card">
@@ -1440,10 +1449,10 @@ async function guardarTasaDiaria() {
 
 function toggleVistaMoneda() {
   vistaMoneda = vistaMoneda === 'bcv' ? 'paralelo' : 'bcv';
-  const el = document.getElementById('vista-moneda-label');
-  if(el) el.textContent = vistaMoneda === 'bcv' ? 'USD BCV' : 'USD Real';
-  const dot = document.getElementById('vista-moneda-dot');
-  if(dot) dot.style.background = vistaMoneda === 'bcv' ? 'var(--azul)' : 'var(--naranja)';
+  const labelText = vistaMoneda === 'bcv' ? 'USD BCV' : 'USD Real';
+  const dotColor  = vistaMoneda === 'bcv' ? 'var(--azul)' : 'var(--naranja)';
+  document.querySelectorAll('.vista-moneda-label').forEach(el => el.textContent = labelText);
+  document.querySelectorAll('.vista-moneda-dot').forEach(dot => dot.style.background = dotColor);
   // Recargar vista activa
   if(document.getElementById('page-dashboard').classList.contains('active')) loadDashboard();
   if(document.getElementById('page-ciclo').classList.contains('active')) loadCicloOperativo();
