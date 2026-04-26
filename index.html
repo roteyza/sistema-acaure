@@ -3653,13 +3653,41 @@ async function confirmarCobro() {
 
 
 async function exportarVentas(fmt) {
-  const { data } = await sb.from('ventas')
-    .select('fecha, status, notas, clientes(nombre), sedes(codigo)')
+  const { data: ventas } = await sb.from('ventas')
+    .select('id, fecha, status, notas, total_usd, clientes(nombre), sedes(codigo)')
     .order('fecha', {ascending:false}).limit(500);
-  const flat = (data||[]).map(v => ({
-    fecha: v.fecha, cliente: v.clientes?.nombre||'Detal',
-    sede: v.sedes?.codigo||'—', status: v.status, notas: v.notas||''
+
+  const ventasArr = ventas || [];
+  const ventaIds  = ventasArr.map(v => v.id);
+
+  // Traer formas de pago desde movimientos financieros (cobros) asociados
+  const cobrosMap = {};
+  if(ventaIds.length > 0) {
+    const { data: cobros } = await sb.from('movimientos_financieros')
+      .select('venta_id, moneda, tasa_pactada')
+      .in('venta_id', ventaIds)
+      .eq('tipo', 'ingreso');
+    (cobros || []).forEach(c => {
+      if(!c.venta_id) return;
+      const fp = c.moneda === 'usd' ? 'USD'
+               : c.tasa_pactada === 'PARALELO' ? 'Bs Paralelo'
+               : 'Bs BCV';
+      if(!cobrosMap[c.venta_id]) cobrosMap[c.venta_id] = new Set();
+      cobrosMap[c.venta_id].add(fp);
+    });
+  }
+
+  const flat = ventasArr.map(v => ({
+    fecha:      v.fecha,
+    canal:      (v.notas || '').split(' | ')[0] || '—',
+    cliente:    v.clientes?.nombre || 'Detal',
+    sede:       v.sedes?.codigo || '—',
+    monto:      v.total_usd,
+    forma_pago: cobrosMap[v.id] ? [...cobrosMap[v.id]].join(' + ') : '—',
+    status:     v.status,
+    notas:      v.notas || ''
   }));
+
   if(fmt === 'xlsx') exportarXLSX(flat, 'ventas'); else exportarCSV(flat, 'ventas');
 }
 
