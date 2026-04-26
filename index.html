@@ -1531,15 +1531,20 @@ async function loadDashboard() {
     sb.from('compras').select('*, proveedores(nombre), sedes(codigo)').eq('condicion','credito').neq('status_pago','pagada').order('fecha',{ascending:false})
   ]);
 
-  // TASAS - mostrar historial reciente
+  // TASAS - mostrar solo la última registrada, etiquetada como "Hoy" o "Última registrada · fecha"
   const tasasEl = document.getElementById('dash-tasas');
   if(tasas.data?.length) {
-    tasasEl.innerHTML = tasas.data.slice(0,5).map(t => `
+    const t = tasas.data[0];
+    const hoyISO = new Date().toISOString().split('T')[0];
+    const esHoy = t.fecha === hoyISO;
+    const label = esHoy ? 'Hoy' : `Última registrada · ${t.fecha}`;
+    const labelColor = esHoy ? 'var(--accent2)' : 'var(--text3)';
+    tasasEl.innerHTML = `
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 16px;display:flex;gap:12px;align-items:center">
-        <span style="font-size:11px;color:var(--text3)">${t.fecha}</span>
+        <span style="font-size:11px;color:${labelColor};font-weight:600">${label}</span>
         <span style="font-size:11px;color:var(--text3)">BCV</span><span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent2)">${Number(t.bcv).toFixed(2)}</span>
         <span style="font-size:11px;color:var(--text3)">PAR</span><span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--naranja)">${Number(t.paralelo).toFixed(2)}</span>
-      </div>`).join('');
+      </div>`;
   } else {
     tasasEl.innerHTML = '<div style="color:var(--text3);font-size:12px">Sin tasas registradas</div>';
   }
