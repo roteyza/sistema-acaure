@@ -130,9 +130,9 @@ function seleccionarProveedor(id, nombre) {
 }
 
 function abrirNuevoProveedor() {
-  document.getElementById('np-nombre').value = '';
+  document.getElementById('npr-nombre').value = '';
   document.getElementById('modal-nuevo-prov').style.display = 'flex';
-  setTimeout(() => document.getElementById('np-nombre').focus(), 100);
+  setTimeout(() => document.getElementById('npr-nombre').focus(), 100);
 }
 
 function cerrarNuevoProveedor() {
@@ -140,8 +140,8 @@ function cerrarNuevoProveedor() {
 }
 
 async function guardarNuevoProveedor() {
-  const nombre = document.getElementById('np-nombre').value.trim();
-  const tipo   = document.getElementById('np-tipo').value;
+  const nombre = document.getElementById('npr-nombre').value.trim();
+  const tipo   = document.getElementById('npr-tipo').value;
   if(!nombre) { alert('Ingresá el nombre del proveedor.'); return; }
 
   const { data, error } = await sb.from('proveedores').insert({ nombre, tipo, activo: true }).select().single();
