@@ -3720,6 +3720,8 @@ async function abrirFactura(venta_id) {
 
     var correlativo = v.correlativo ? String(v.correlativo).padStart(4,'0') : '—';
     var subtotal = items.reduce(function(s,d){ return s + Number(d.cantidad)*Number(d.precio); }, 0);
+    var totalCabecera = Number(v.total_usd) || subtotal;
+    var deliveryMonto = Math.max(0, totalCabecera - subtotal);
     var tasaVal = tasaHoy.bcv || ((tasasData||[]).find(function(t){ return t.nombre==='BCV'; }) || {}).valor || null;
 
     var filaHTML = '';
@@ -3741,7 +3743,7 @@ async function abrirFactura(venta_id) {
 
     var tasaLinea = '';
     if (tasaVal) {
-      tasaLinea = '<p style="font-size:11px;color:#888;margin-top:8px">Tasa BCV: Bs ' + tasaVal.toFixed(2) + ' / $1 — Total Bs ref: Bs ' + (subtotal * tasaVal).toFixed(0) + '</p>';
+      tasaLinea = '<p style="font-size:11px;color:#888;margin-top:8px">Tasa BCV: Bs ' + tasaVal.toFixed(2) + ' / $1 — Total Bs ref: Bs ' + (totalCabecera * tasaVal).toFixed(0) + '</p>';
     }
 
     var out = '';
@@ -3768,7 +3770,10 @@ async function abrirFactura(venta_id) {
     out += '<div style="display:flex;justify-content:flex-end;margin-bottom:8px">';
     out += '<div style="min-width:220px">';
     out += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span>SUBTOTAL USD:</span><span style="font-weight:600">$' + subtotal.toFixed(2) + '</span></div>';
-    out += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-top:2px solid #111;font-size:15px;font-weight:700"><span>TOTAL USD:</span><span>$' + subtotal.toFixed(2) + '</span></div>';
+    if (deliveryMonto > 0) {
+      out += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#555"><span>Delivery:</span><span style="font-weight:600">$' + deliveryMonto.toFixed(2) + '</span></div>';
+    }
+    out += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-top:2px solid #111;font-size:15px;font-weight:700"><span>TOTAL USD:</span><span>$' + totalCabecera.toFixed(2) + '</span></div>';
     out += '</div></div>';
 
     out += tasaLinea;
