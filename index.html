@@ -1392,6 +1392,7 @@ function toggleVistaMoneda() {
   // Recargar vista activa
   if(document.getElementById('page-dashboard').classList.contains('active')) loadDashboard();
   if(document.getElementById('page-ciclo').classList.contains('active')) loadCicloOperativo();
+  if(document.getElementById('page-finanzas').classList.contains('active')) loadSaldosCuentas();
 }
 
 // NAV CONFIG por rol
@@ -1978,13 +1979,30 @@ async function loadSaldosCuentas() {
     saldos[m.cuenta_id] += m.tipo === 'ingreso' ? val : -val;
   });
 
+  // Tasa para equivalente USD en cuentas Bs (fallback a tasasData si tasaHoy no está)
+  const tasaBcv = tasaHoy?.bcv      || (typeof tasasData !== 'undefined' ? (tasasData.find(t => t.nombre === 'BCV')?.valor      || null) : null);
+  const tasaPar = tasaHoy?.paralelo || (typeof tasasData !== 'undefined' ? (tasasData.find(t => t.nombre === 'Paralelo')?.valor || null) : null);
+
   panel.innerHTML = cuentas.map(c => {
     const saldo = saldos[c.id] || 0;
     const color = saldo >= 0 ? 'var(--success)' : 'var(--danger)';
     const icon = c.moneda === 'usd' ? '$' : 'Bs';
+
+    // Equivalente USD para cuentas Bs según vistaMoneda
+    let equivLine = '';
+    if (c.moneda === 'bs') {
+      const tasa = vistaMoneda === 'paralelo' ? tasaPar : tasaBcv;
+      const label = vistaMoneda === 'paralelo' ? 'USD Real' : 'USD BCV';
+      if (tasa && tasa > 0) {
+        const equivUsd = saldo / tasa;
+        equivLine = `<div style="font-size:11px;color:var(--text3);margin-top:2px">≈ $${Math.abs(equivUsd).toFixed(2)} ${label}</div>`;
+      }
+    }
+
     return `<div style="background:white;border:1px solid var(--border);border-radius:10px;padding:14px 16px">
       <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">${c.nombre}</div>
       <div style="font-size:18px;font-weight:700;font-family:'Syne',sans-serif;color:${color}">${icon}${Math.abs(saldo).toFixed(2)}</div>
+      ${equivLine}
       <div style="font-size:10px;color:var(--text3);margin-top:2px">${c.moneda?.toUpperCase()} · ${c.tipo?.replace('_',' ')}</div>
     </div>`;
   }).join('');
