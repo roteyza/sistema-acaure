@@ -1978,11 +1978,10 @@ async function loadSaldosCuentas() {
     saldos[m.cuenta_id] += m.tipo === 'ingreso' ? val : -val;
   });
 
-  const monedaIcon = { banco_bs:'Bs', banco_usd:'$', efectivo_usd:'$', efectivo_bs:'Bs', zelle:'$' };
   panel.innerHTML = cuentas.map(c => {
     const saldo = saldos[c.id] || 0;
     const color = saldo >= 0 ? 'var(--success)' : 'var(--danger)';
-    const icon = monedaIcon[c.tipo] || '$';
+    const icon = c.moneda === 'usd' ? '$' : 'Bs';
     return `<div style="background:white;border:1px solid var(--border);border-radius:10px;padding:14px 16px">
       <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">${c.nombre}</div>
       <div style="font-size:18px;font-weight:700;font-family:'Syne',sans-serif;color:${color}">${icon}${Math.abs(saldo).toFixed(2)}</div>
