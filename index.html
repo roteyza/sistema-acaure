@@ -643,6 +643,15 @@
         <div class="page-title">Movimientos financieros</div>
         <div class="page-sub">Registro de ingresos y egresos</div>
 
+        <!-- TOGGLE VISTA MONEDA -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+          <div onclick="toggleVistaMoneda()" style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 14px;user-select:none" title="Cambiar vista de moneda">
+            <div class="vista-moneda-dot" style="width:8px;height:8px;border-radius:50%;background:var(--azul);transition:background .2s"></div>
+            <span class="vista-moneda-label" style="font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0.5px">USD BCV</span>
+            <span style="font-size:10px;color:var(--text3)">⇄</span>
+          </div>
+        </div>
+
         <!-- SALDOS POR CUENTA -->
         <div id="fin-saldos-panel" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px"></div>
 
