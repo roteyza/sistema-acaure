@@ -2807,7 +2807,6 @@ async function loadVentas(filtro) {
         <button onclick="verDetalleVenta('${v.id}','${v.clientes?.nombre||v.cliente_nombre||'Detal'} - ${v.fecha}')" style="background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Ver</button>
         <button onclick="abrirFactura('${v.id}')" style="background:rgba(0,58,112,0.08);border:1px solid rgba(0,58,112,0.3);color:var(--azul);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">🧾 Factura</button>
         ${(v.status !== 'pagada' && v.status !== 'anulada') || Number(v.saldo_pendiente) > 0 ? `<button data-vid="${v.id}" data-desc="${(v.clientes?.nombre||v.cliente_nombre||'Detal')+' — '+v.fecha}" data-total="${Number(v.saldo_pendiente||0).toFixed(2)}" onclick="abrirModalCobro(this.dataset.vid,this.dataset.desc,this.dataset.total)" style="background:rgba(39,166,106,0.1);border:1px solid #27a66a44;color:#27a66a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">$ Cobrar</button>` : ''}
-        ${v.status !== 'anulada' ? `<button onclick="anularVenta('${v.id}')" style="background:none;border:1px solid #e2dedd;color:#c0392b;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer">Anular</button>` : '<span style="font-size:11px;color:var(--text3)">Anulada</span>'}
       </td>
     </tr>`).join('')}
   </table>`;
