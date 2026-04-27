@@ -2834,6 +2834,8 @@ async function verDetalleVenta(venta_id, titulo) {
 
   const totalKG  = data.reduce((s,d) => s + Number(d.cantidad), 0);
   const totalUSD = data.reduce((s,d) => s + Number(d.cantidad)*Number(d.precio), 0);
+  const totalCabecera = Number(venta?.total_usd) || totalUSD;
+  const deliveryMonto = Math.max(0, totalCabecera - totalUSD);
 
   // Tabla de productos
   let html = `<table style="margin-bottom:20px">
@@ -2852,11 +2854,15 @@ async function verDetalleVenta(venta_id, titulo) {
         '<td style="font-weight:600;color:var(--azul)">$' + subtotal.toFixed(2) + '</td>' +
       '</tr>';
     }).join('')}
+    ${deliveryMonto > 0 ? `<tr>
+      <td colspan="4" style="color:var(--text3);font-size:12px;padding:6px 0;text-align:right">Delivery</td>
+      <td style="font-weight:600;color:var(--text2)">$${deliveryMonto.toFixed(2)}</td>
+    </tr>` : ''}
     <tr style="border-top:2px solid var(--border);background:var(--surface2)">
       <td colspan="2" style="color:var(--text3);font-size:12px;padding:8px 0">TOTALES</td>
       <td style="font-weight:700">${totalKG.toFixed(2)} kg</td>
       <td></td>
-      <td style="font-weight:700;color:var(--azul);font-size:15px">$${totalUSD.toFixed(2)}</td>
+      <td style="font-weight:700;color:var(--azul);font-size:15px">$${totalCabecera.toFixed(2)}</td>
     </tr>
   </table>`;
 
