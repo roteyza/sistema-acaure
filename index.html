@@ -2323,6 +2323,7 @@ async function guardarMovFinanciero() {
   document.getElementById('mf-concepto').value = '';
   document.getElementById('mf-categoria').value = '';
   document.getElementById('mf-departamento').value = '';
+  document.getElementById('mf-fecha').value = new Date().toISOString().split('T')[0];
   actualizarCatsFinanzas();
   loadFinanzas();
 }
@@ -3366,6 +3367,7 @@ async function guardarMovInventario() {
   if(document.getElementById('mi-costo-kg')) document.getElementById('mi-costo-kg').value = '';
   const loteEl = document.getElementById('mi-lote');
   if(loteEl) loteEl.value = '';
+  document.getElementById('mi-fecha').value = new Date().toISOString().split('T')[0];
   loadMovimientos();
   loadInventario();
 }

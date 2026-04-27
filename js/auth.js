@@ -42,7 +42,7 @@ async function loadApp(user) {
 
   // set today on date fields
   const today = new Date().toISOString().split('T')[0];
-  ['mf-fecha','t-fecha'].forEach(id => {
+  ['mf-fecha','mi-fecha','t-fecha'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = today;
   });
@@ -103,13 +103,21 @@ function navigate(pageId) {
     if(n.dataset.page === pageId) n.classList.add('active');
   });
 
-  if(pageId === 'movimientos') loadMovimientos();
+  // Setear fecha de hoy en formularios al entrar al módulo
+  const todayISO = new Date().toISOString().split('T')[0];
+  if(pageId === 'movimientos') {
+    const el = document.getElementById('mi-fecha'); if(el) el.value = todayISO;
+    loadMovimientos();
+  }
   if(pageId === 'compras') loadCompras();
   if(pageId === 'ventas') { loadVentasSelects(); loadVentas(); }
   if(pageId === 'dashboard') loadDashboard();
   if(pageId === 'inventario') loadInventario();
   if(pageId === 'productos') loadProductos();
-  if(pageId === 'finanzas') { initFinanzasFiltros(); loadFinanzas(); }
+  if(pageId === 'finanzas') {
+    const el = document.getElementById('mf-fecha'); if(el) el.value = todayISO;
+    initFinanzasFiltros(); loadFinanzas();
+  }
   if(pageId === 'tasas') { loadTasas(); initTasasForm(); }
   if(pageId === 'maestros') loadMaestros();
   if(pageId === 'precios') loadListaPrecios();
