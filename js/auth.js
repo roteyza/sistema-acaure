@@ -69,6 +69,7 @@ async function loadApp(user) {
   loadMovimientosSelects();
   loadComprasSelects();
   loadVentasSelects();
+  loadCxPSelects();
 }
 
 function buildNav() {
@@ -124,6 +125,10 @@ function navigate(pageId) {
   if(pageId === 'lotes') loadLotes();
   if(pageId === 'auditoria') loadAuditoria();
   if(pageId === 'ciclo') loadCicloOperativo();
+  if(pageId === 'cxp') {
+    const el = document.getElementById('cxp-fecha'); if(el) el.value = todayISO;
+    loadCxPSelects(); loadCxP();
+  }
 }
 
 async function doLogout() {

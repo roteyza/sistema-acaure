@@ -16,6 +16,7 @@
 <script src="js/lotes.js"></script>
 <script src="js/maestros.js"></script>
 <script src="js/productos.js"></script>
+<script src="js/cxp.js"></script>
 <script src="js/auth.js"></script>
 </head>
 <body>
@@ -781,6 +782,81 @@
         </div>
       </div>
 
+      <!-- CUENTAS POR PAGAR -->
+      <div class="page" id="page-cxp">
+        <div class="page-title">Cuentas por pagar</div>
+        <div class="page-sub">Obligaciones financieras: pasivos laborales, servicios, honorarios, impuestos, créditos</div>
+
+        <div class="form-card">
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:600;margin-bottom:16px;">Registrar CxP</div>
+          <div class="form-row">
+            <div class="form-group" style="position:relative">
+              <label>Acreedor</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <div style="flex:1;position:relative">
+                  <input type="text" id="cxp-proveedor-search" placeholder="Buscar acreedor..." autocomplete="off"
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;outline:none;"
+                    oninput="filtrarProveedoresCxP()" onfocus="mostrarProveedoresCxP()" onblur="setTimeout(()=>ocultarProveedoresCxP(),200)">
+                  <input type="hidden" id="cxp-proveedor">
+                  <div id="cxp-prov-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:200;max-height:200px;overflow-y:auto;margin-top:2px"></div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group" style="display:flex;align-items:flex-end">
+              <button type="button" onclick="abrirNuevoProveedor()"
+                style="background:var(--azul);color:white;border:none;border-radius:8px;padding:10px 16px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;width:100%">+ Nuevo acreedor</button>
+            </div>
+            <div class="form-group">
+              <label>Categoría</label>
+              <select id="cxp-categoria" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;"></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Concepto</label>
+              <input type="text" id="cxp-concepto" placeholder="Ej: Salario marzo 2026"
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            </div>
+            <div class="form-group">
+              <label>Monto USD</label>
+              <input type="number" id="cxp-monto" placeholder="0.00" step="0.01" min="0"
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            </div>
+            <div class="form-group">
+              <label>Fecha creación</label>
+              <input type="date" id="cxp-fecha"
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            </div>
+            <div class="form-group">
+              <label>Vencimiento <span style="font-size:10px;color:var(--text3)">(opcional)</span></label>
+              <input type="date" id="cxp-vencimiento"
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Notas</label>
+              <input type="text" id="cxp-notas" placeholder="Observaciones..."
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+            </div>
+          </div>
+          <button class="btn-action" onclick="guardarCxP()">Registrar CxP</button>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-head">
+            <div class="table-title">Listado de CxP</div>
+            <div style="display:flex;gap:6px">
+              <button id="cxp-tab-pendientes" onclick="filtrarCxP('pendientes')" style="background:var(--azul);border:1px solid var(--azul);color:white;border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer">Pendientes</button>
+              <button id="cxp-tab-todas"      onclick="filtrarCxP('todas')"      style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer">Todas</button>
+              <button id="cxp-tab-pagadas"    onclick="filtrarCxP('pagadas')"    style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer">Pagadas</button>
+              <button id="cxp-tab-anuladas"   onclick="filtrarCxP('anuladas')"   style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer">Anuladas</button>
+            </div>
+          </div>
+          <div id="cxp-table"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+
       <!-- TASAS -->
       <!-- LOTES -->
       <div class="page" id="page-lotes">
@@ -1177,6 +1253,69 @@
   </div>
 </div>
 
+<!-- MODAL PAGAR CXP -->
+<div id="modal-pagar-cxp" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
+  <div style="background:white;width:480px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
+    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px">Registrar pago de CxP</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:24px" id="pagar-cxp-desc">—</div>
+    <input type="hidden" id="pcxp-id">
+    <input type="hidden" id="pcxp-saldo-actual">
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="form-group">
+        <label>Monto pagado (USD)</label>
+        <input type="number" id="pcxp-monto" placeholder="0.00" step="0.01"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="pcxp-fecha"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Cuenta a debitar</label>
+      <select id="pcxp-cuenta" onchange="onCuentaChange('pcxp')" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;"></select>
+    </div>
+
+    <!-- Campos Bs pago cxp -->
+    <div id="pcxp-campos-bs" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Detalle en bolívares</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div>
+          <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Tipo de tasa</label>
+          <select id="pcxp-tasa-tipo" onchange="calcularUSDdesdeBs('pcxp')" style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px">
+            <option value="BCV">BCV (oficial)</option>
+            <option value="Paralelo">Paralelo / Binance</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Tasa (Bs por USD)</label>
+          <input type="number" id="pcxp-tasa-valor" placeholder="0.00" step="0.01" oninput="calcularUSDdesdeBs('pcxp')"
+            style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Monto Bs pagados</label>
+          <input type="number" id="pcxp-monto-bs" placeholder="0.00" step="0.01" oninput="calcularUSDdesdeBs('pcxp')"
+            style="width:100%;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Equivalente USD <span style="font-size:10px;color:var(--text3)">(calculado)</span></label>
+          <input type="number" id="pcxp-monto-usd-bs" placeholder="0.00" step="0.01" readonly
+            style="width:100%;background:#f0f4f8;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Sora',sans-serif;font-size:13px;outline:none;">
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Los Bs se debitan de la cuenta. El USD equivalente actualiza el saldo de la CxP.</div>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button onclick="guardarPagoCxP()" class="btn-action" style="flex:1">Confirmar pago</button>
+      <button onclick="cerrarPagarCxP()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL FACTURA -->
 <div id="modal-factura" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;overflow-y:auto;">
   <div style="background:white;border-radius:12px;width:100%;max-width:680px;margin:24px auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow-y:auto;height:auto;">
@@ -1439,6 +1578,7 @@ const NAV = {
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
+    { id: 'cxp', label: 'Cuentas por pagar', icon: '⊟' },
     { id: 'tasas', label: 'Tasas de cambio', icon: '₿' },
     { id: 'maestros', label: 'Datos maestros', icon: '◫' },
   ],
@@ -1464,6 +1604,7 @@ const NAV = {
     { id: 'ventas', label: 'Ventas', icon: '◐' },
     { id: 'productos', label: 'Productos', icon: '◉' },
     { id: 'finanzas', label: 'Finanzas', icon: '◎' },
+    { id: 'cxp', label: 'Cuentas por pagar', icon: '⊟' },
     { id: 'tasas', label: 'Tasas de cambio', icon: '₿' },
     { id: 'maestros', label: 'Datos maestros', icon: '◫' },
   ]

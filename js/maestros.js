@@ -124,10 +124,19 @@ function renderProvDropdown(lista) {
 }
 
 function seleccionarProveedor(id, nombre) {
-  document.getElementById('c-proveedor').value = id;
-  document.getElementById('c-proveedor-search').value = nombre;
-  document.getElementById('c-proveedor-search').style.borderColor = 'var(--azul)';
-  ocultarProveedores();
+  // Detectar contexto: si page-cxp esta activa, usar inputs cxp-*
+  const isCxP = document.getElementById('page-cxp')?.classList.contains('active');
+  const prefix = isCxP ? 'cxp' : 'c';
+
+  const hidden = document.getElementById(prefix + '-proveedor');
+  const search = document.getElementById(prefix + '-proveedor-search');
+  if (hidden) hidden.value = id;
+  if (search) {
+    search.value = nombre;
+    search.style.borderColor = 'var(--azul)';
+  }
+  if (isCxP && typeof ocultarProveedoresCxP === 'function') ocultarProveedoresCxP();
+  else ocultarProveedores();
 }
 
 function abrirNuevoProveedor() {
