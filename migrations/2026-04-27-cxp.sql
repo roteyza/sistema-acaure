@@ -29,7 +29,7 @@ CREATE TABLE cxp (
   tasa_bcv_dia        numeric(14,2),
   tasa_paralelo_dia   numeric(14,2),
   notas               text,
-  usuario_id          uuid REFERENCES users(id),
+  usuario_id          uuid REFERENCES usuarios(id),
   created_at          timestamptz NOT NULL DEFAULT now(),
   updated_at          timestamptz NOT NULL DEFAULT now(),
 
