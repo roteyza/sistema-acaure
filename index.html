@@ -2013,13 +2013,13 @@ async function loadSaldosCuentas() {
       const label = vistaMoneda === 'paralelo' ? 'USD Real' : 'USD BCV';
       if (tasa && tasa > 0) {
         const equivUsd = saldo / tasa;
-        equivLine = `<div style="font-size:11px;color:var(--text3);margin-top:2px">≈ $${Math.abs(equivUsd).toFixed(2)} ${label}</div>`;
+        equivLine = `<div style="font-size:11px;color:var(--text3);margin-top:2px">≈ $${Math.abs(equivUsd).toLocaleString('es-VE', {minimumFractionDigits:2, maximumFractionDigits:2})} ${label}</div>`;
       }
     }
 
     return `<div style="background:white;border:1px solid var(--border);border-radius:10px;padding:14px 16px">
       <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">${c.nombre}</div>
-      <div style="font-size:18px;font-weight:700;font-family:'Syne',sans-serif;color:${color}">${icon}${Math.abs(saldo).toFixed(2)}</div>
+      <div style="font-size:18px;font-weight:700;font-family:'Syne',sans-serif;color:${color}">${icon}${Math.abs(saldo).toLocaleString('es-VE', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
       ${equivLine}
       <div style="font-size:10px;color:var(--text3);margin-top:2px">${c.moneda?.toUpperCase()} · ${c.tipo?.replace('_',' ')}</div>
     </div>`;
