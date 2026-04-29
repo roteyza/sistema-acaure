@@ -4060,7 +4060,7 @@ function imprimirFactura() {
 var cuentasMonedaMap = {};
 
 function onCuentaChange(prefix) {
-  var selId = prefix === 'cobro' ? 'cobro-cuenta' : 'pc-cuenta';
+  var selId = prefix === 'cobro' ? 'cobro-cuenta' : prefix + '-cuenta';
   var sel = document.getElementById(selId);
   if(!sel) return;
   var cuentaId = sel.value;
@@ -4089,6 +4089,11 @@ function onCuentaChange(prefix) {
     var montoLabelPc = document.querySelector('label[for="pc-monto"], #modal-pagar-compra label');
     if(camposBsPc)   camposBsPc.style.display  = esBs ? 'block' : 'none';
     if(montoInputPc) montoInputPc.style.display = esBs ? 'none'  : 'block';
+  } else if(prefix === 'pcxp') {
+    var camposBsCxP   = document.getElementById('pcxp-campos-bs');
+    var montoInputCxP = document.getElementById('pcxp-monto');
+    if(camposBsCxP)   camposBsCxP.style.display  = esBs ? 'block' : 'none';
+    if(montoInputCxP) montoInputCxP.style.display = esBs ? 'none'  : 'block';
   }
 }
 
