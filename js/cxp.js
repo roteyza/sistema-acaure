@@ -376,6 +376,42 @@ async function anularCxP(cxp_id, btn) {
   if (document.getElementById('page-cxp')?.classList.contains('active')) loadCxP();
 }
 
+// ===== EXPORT CxP =====
+async function exportarCxP(fmt) {
+  // Aplicar mismo filtro que la vista activa (tab actual)
+  let query = sb.from('cxp')
+    .select('fecha_creacion, fecha_vencimiento, categoria, concepto, monto_usd, saldo_pendiente, status, proveedores(nombre)')
+    .order('fecha_creacion', { ascending: false })
+    .limit(1000);
+
+  if (cxpFiltroActual === 'pendientes') {
+    query = query.in('status', ['pendiente','parcial']);
+  } else if (cxpFiltroActual === 'pagadas') {
+    query = query.eq('status', 'pagada');
+  } else if (cxpFiltroActual === 'anuladas') {
+    query = query.eq('status', 'anulada');
+  }
+
+  const { data, error } = await query;
+  if (error) { alert('Error al exportar: ' + error.message); return; }
+  if (!data || !data.length) { alert('No hay CxP para exportar en este filtro.'); return; }
+
+  const flat = data.map(c => ({
+    fecha_creacion:    c.fecha_creacion,
+    fecha_vencimiento: c.fecha_vencimiento || '',
+    acreedor:          c.proveedores?.nombre || '',
+    categoria:         categoriaLabelCxP(c.categoria),
+    concepto:          c.concepto || '',
+    monto_usd:         Number(c.monto_usd || 0).toFixed(2),
+    saldo_pendiente:   Number(c.saldo_pendiente || 0).toFixed(2),
+    status:            c.status
+  }));
+
+  const filename = 'cxp_' + cxpFiltroActual;
+  if (fmt === 'xlsx') exportarXLSX(flat, filename);
+  else                exportarCSV(flat, filename);
+}
+
 async function loadCxP(filtro) {
   if (filtro) cxpFiltroActual = filtro;
 

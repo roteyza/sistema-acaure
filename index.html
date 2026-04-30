@@ -846,11 +846,14 @@
         <div class="table-wrap">
           <div class="table-head">
             <div class="table-title">Listado de CxP</div>
-            <div style="display:flex;gap:6px">
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
               <button id="cxp-tab-pendientes" onclick="filtrarCxP('pendientes')" style="background:var(--azul);border:1px solid var(--azul);color:white;border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer">Pendientes</button>
               <button id="cxp-tab-todas"      onclick="filtrarCxP('todas')"      style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer">Todas</button>
               <button id="cxp-tab-pagadas"    onclick="filtrarCxP('pagadas')"    style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer">Pagadas</button>
               <button id="cxp-tab-anuladas"   onclick="filtrarCxP('anuladas')"   style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:20px;padding:4px 12px;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer">Anuladas</button>
+              <span style="width:1px;height:18px;background:var(--border);margin:0 4px"></span>
+              <button onclick="exportarCxP('csv')"  style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ CSV</button>
+              <button onclick="exportarCxP('xlsx')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif">↓ Excel</button>
             </div>
           </div>
           <div id="cxp-table"><div class="loading">Cargando...</div></div>
