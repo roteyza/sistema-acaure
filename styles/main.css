@@ -513,6 +513,10 @@
   .badge-f2 { background: rgba(0,58,112,0.10);   color: var(--azul); }
   .badge-f3 { background: rgba(26,140,90,0.12);  color: #1a7a4a; }
   .badge-f4 { background: rgba(52,152,219,0.13); color: #2471a3; }
+  /* Badges categorias internas C1-C3 */
+  .badge-c1 { background: rgba(142,68,173,0.12); color: #6c3483; }   /* purpura — Consumibles */
+  .badge-c2 { background: rgba(212,172,13,0.15); color: #9a7d0a; }   /* mostaza — Condimentos */
+  .badge-c3 { background: rgba(127,140,141,0.18); color: #566573; }  /* gris    — Oficina */
 
   /* FORM */
   .form-card {

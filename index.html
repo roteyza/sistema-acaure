@@ -459,6 +459,9 @@
                 <option value="f2">F2 — Cortes</option>
                 <option value="f3">F3 — Preparados Casita1</option>
                 <option value="f4">F4 — Preparados Galpon1</option>
+                <option value="c1">C1 — Consumibles</option>
+                <option value="c2">C2 — Condimentos</option>
+                <option value="c3">C3 — Oficina</option>
               </select>
             </div>
             <div class="form-group">
@@ -505,6 +508,9 @@
                 <option value="f2">F2 — Cortes</option>
                 <option value="f3">F3 — Casita1</option>
                 <option value="f4">F4 — Galpon1</option>
+                <option value="c1">C1 — Consumibles</option>
+                <option value="c2">C2 — Condimentos</option>
+                <option value="c3">C3 — Oficina</option>
               </select>
               <button id="btn-nuevo-producto" onclick="document.getElementById('form-nuevo-producto').style.display='block';window.scrollTo(0,0)" style="display:none;background:var(--azul);color:white;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-family:'Sora',sans-serif;font-weight:600;cursor:pointer">+ Nuevo producto</button>
             </div>
@@ -2589,7 +2595,7 @@ async function loadVentasSelects() {
   const [clientes, sedes, prods, tasas, precios] = await Promise.all([
     sb.from('clientes').select('*').order('nombre'),
     sb.from('sedes').select('*'),
-    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').not('categoria','eq','f1').order('categoria').order('nombre'),
+    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').in('categoria',['f2','f3','f4']).order('categoria').order('nombre'),
     sb.from('tasas_diarias').select('*').order('fecha',{ascending:false}).limit(5),
     sb.from('lista_precios').select('producto_id,precio,fecha_desde').eq('activo',true).order('fecha_desde',{ascending:false})
   ]);
@@ -3091,7 +3097,7 @@ async function loadComprasSelects() {
     sb.from('proveedores').select('*').order('nombre'),
     sb.from('sedes').select('*'),
     sb.from('tasas_diarias').select('*').order('fecha',{ascending:false}).limit(5),
-    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').in('categoria',['f1','f2']).order('categoria').order('nombre')
+    sb.from('productos').select('id,nombre,tipo,categoria,unidad,precio_base').in('categoria',['f1','f2','c1','c2','c3']).order('categoria').order('nombre')
   ]);
 
   sedesData = sedes.data || [];

@@ -1,10 +1,16 @@
 // PRODUCTOS
-const FASE_LABELS = { f1:'F1 — Canal', f2:'F2 — Cortes', f3:'F3 — Casita1', f4:'F4 — Galpon1' };
+const FASE_LABELS = {
+  f1:'F1 — Canal', f2:'F2 — Cortes', f3:'F3 — Casita1', f4:'F4 — Galpon1',
+  c1:'C1 — Consumibles', c2:'C2 — Condimentos', c3:'C3 — Oficina'
+};
 const FASE_CANALES = {
   f1: 'Solo compras',
   f2: 'Compras · Detal Aca · Mayor Aca · Mayor CCS',
   f3: 'Detal Aca · Detal CCS',
-  f4: 'Detal Aca · Mayor Aca · Detal CCS · Mayor CCS'
+  f4: 'Detal Aca · Mayor Aca · Detal CCS · Mayor CCS',
+  c1: 'Uso interno',
+  c2: 'Uso interno',
+  c3: 'Uso interno'
 };
 
 async function loadProductos() {
@@ -91,6 +97,9 @@ async function editarProducto(id) {
         <option value="f2" ${p.categoria==='f2'?'selected':''}>F2 — Cortes</option>
         <option value="f3" ${p.categoria==='f3'?'selected':''}>F3 — Casita1</option>
         <option value="f4" ${p.categoria==='f4'?'selected':''}>F4 — Galpon1</option>
+        <option value="c1" ${p.categoria==='c1'?'selected':''}>C1 — Consumibles</option>
+        <option value="c2" ${p.categoria==='c2'?'selected':''}>C2 — Condimentos</option>
+        <option value="c3" ${p.categoria==='c3'?'selected':''}>C3 — Oficina</option>
       </select>
     </td>
     <td>
