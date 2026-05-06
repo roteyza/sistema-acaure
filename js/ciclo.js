@@ -8,7 +8,7 @@ async function loadCicloOperativo() {
   const [comprasRes, lotesRes, movinvRes, ventasRes, movfinRes] = await Promise.all([
     sb.from('compras').select('id,fecha,total_usd,total_usd_paralelo,saldo_pendiente,proveedores(nombre),condicion,status_pago').order('fecha',{ascending:false}).limit(100),
     sb.from('lotes').select('id,partida_id,fecha,num_animales,estado').order('fecha',{ascending:false}),
-    sb.from('movimientos_inventario').select('lote_id,tipo,cantidad_kg,producto_id,fecha,productos(nombre)'),
+    sb.from('movimientos_inventario').select('lote_id,tipo,cantidad_kg,producto_id,fecha,productos(nombre,unidad)'),
     sb.from('ventas').select('id,fecha,total_usd,total_usd_paralelo,saldo_pendiente,status,notas').order('fecha',{ascending:false}).limit(200),
     sb.from('movimientos_financieros').select('venta_id,monto_usd,monto,moneda,tipo').eq('tipo','ingreso')
   ]);
@@ -126,7 +126,11 @@ async function loadCicloOperativo() {
   const stockByProd = {};
   movinv.forEach(m => {
     if(!m.producto_id) return;
-    if(!stockByProd[m.producto_id]) stockByProd[m.producto_id] = { nombre: m.productos?.nombre||'—', entrada: 0, salida: 0, ultimaEntrada: null };
+    if(!stockByProd[m.producto_id]) stockByProd[m.producto_id] = {
+      nombre: m.productos?.nombre||'—',
+      unidad: unidadProd(m.productos),
+      entrada: 0, salida: 0, ultimaEntrada: null
+    };
     if(m.tipo === 'entrada') {
       stockByProd[m.producto_id].entrada += Number(m.cantidad_kg||0);
       if(!stockByProd[m.producto_id].ultimaEntrada || m.fecha > stockByProd[m.producto_id].ultimaEntrada)
@@ -143,12 +147,12 @@ async function loadCicloOperativo() {
   if(!stockParado.length) {
     document.getElementById('ciclo-rotacion').innerHTML = '<div class="empty" style="padding:16px;text-align:center;color:var(--success)">✓ Sin stock parado</div>';
   } else {
-    document.getElementById('ciclo-rotacion').innerHTML = '<table><tr><th>Producto</th><th>Stock (kg)</th><th>Días desde última entrada</th><th>Alerta</th></tr>' +
+    document.getElementById('ciclo-rotacion').innerHTML = '<table><tr><th>Producto</th><th>Stock</th><th>Días desde última entrada</th><th>Alerta</th></tr>' +
       stockParado.map(p => {
         const alert = !p.dias ? '' : p.dias > 21 ? '🔴 +21 días' : p.dias > 14 ? '🟡 +14 días' : '';
         return '<tr>' +
           '<td style="color:var(--text)">' + p.nombre + '</td>' +
-          '<td style="font-weight:600;color:var(--azul)">' + p.stock.toFixed(1) + ' kg</td>' +
+          '<td style="font-weight:600;color:var(--azul)">' + p.stock.toFixed(1) + ' ' + p.unidad + '</td>' +
           '<td style="color:var(--text3)">' + (p.dias !== null ? p.dias + ' días' : '—') + '</td>' +
           '<td>' + alert + '</td>' +
         '</tr>';

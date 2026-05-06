@@ -6,6 +6,19 @@ function showToast(msg) {
 }
 
 /**
+ * Devuelve la unidad real de un producto: 'kg' o 'ud'.
+ * Tolera variantes ('und', 'unidad') y cae a 'kg' por compat con
+ * datos viejos / productos sin unidad seteada.
+ *
+ * @param {{unidad?: string}} p - Objeto producto (puede ser null/undefined).
+ * @returns {string} 'kg' o 'ud'.
+ */
+function unidadProd(p) {
+  const u = (p && p.unidad || 'kg').toLowerCase();
+  return (u === 'und' || u === 'unidad' || u === 'ud') ? 'ud' : 'kg';
+}
+
+/**
  * Función central de conversión monetaria.
  * Convierte cualquier monto a USD según la vista seleccionada.
  * 

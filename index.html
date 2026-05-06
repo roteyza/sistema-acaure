@@ -1978,7 +1978,7 @@ async function loadInventario() {
   const sedeId = selSede?.value || '';
 
   let query = sb.from('inventario')
-    .select('*, productos(nombre,tipo,categoria), sedes(nombre,codigo)')
+    .select('*, productos(nombre,tipo,categoria,unidad), sedes(nombre,codigo)')
     .order('cantidad_kg', {ascending:false});
   if(sedeId) query = query.eq('sede_id', sedeId);
   const { data } = await query;
@@ -2015,24 +2015,25 @@ async function loadInventario() {
 
   if(totalBar) {
     totalBar.style.display = 'block';
-    totalBar.innerHTML = `Total stock: ${totalKg.toFixed(1)} kg${totalValor > 0 ? ' &nbsp;|&nbsp; Valor a costo: $'+totalValor.toFixed(2) : ''}`;
+    totalBar.innerHTML = `Total stock: ${totalKg.toFixed(1)}${totalValor > 0 ? ' &nbsp;|&nbsp; Valor a costo: $'+totalValor.toFixed(2) : ''}`;
   }
 
   tb.innerHTML = `<table>
-    <tr><th>Producto</th><th>Sede</th><th>Fase</th><th>Stock (kg)</th><th>Costo/kg</th><th>Valor a costo</th><th>Actualizado</th><th></th></tr>
+    <tr><th>Producto</th><th>Sede</th><th>Fase</th><th>Stock</th><th>Costo/und.</th><th>Valor a costo</th><th>Actualizado</th><th></th></tr>
     ${data.map(i => {
-      const kg = Number(i.cantidad_kg) || 0;
+      const cant = Number(i.cantidad_kg) || 0;
       const costo = Number(costoMap[i.producto_id]) || 0;
-      const valor = kg * costo;
+      const valor = cant * costo;
+      const u = unidadProd(i.productos);
       return `<tr id="inv-row-${i.id}">
         <td style="color:var(--text)">${i.productos?.nombre || '—'}</td>
         <td><span style="color:var(--text3)">${i.sedes?.codigo || '—'}</span></td>
         <td>${i.productos?.categoria ? `<span class="badge badge-${i.productos.categoria}">${i.productos.categoria.toUpperCase()}</span>` : '—'}</td>
-        <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--azul)">${kg.toFixed(1)} kg</td>
+        <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--azul)">${cant.toFixed(1)} ${u}</td>
         <td style="color:var(--text3)">${costo > 0 ? '$'+costo.toFixed(4) : '—'}</td>
         <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--success)">${valor > 0 ? '$'+valor.toFixed(2) : '—'}</td>
         <td style="color:var(--text3);font-size:12px">${i.actualizado_at ? new Date(i.actualizado_at).toLocaleDateString('es-VE') : '—'}</td>
-        <td><button onclick="ajustarInventario('${i.id}', ${kg}, ${costo})" title="Ajustar" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;color:var(--text3)">✎</button></td>
+        <td><button onclick="ajustarInventario('${i.id}', ${cant}, ${costo})" title="Ajustar" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;color:var(--text3)">✎</button></td>
       </tr>`;
     }).join('')}
   </table>`;
@@ -3676,7 +3677,7 @@ async function upsertInventario(producto_id, sede_id, delta) {
 
 async function loadMovimientos() {
   const { data } = await sb.from('movimientos_inventario')
-    .select('*, productos(nombre,categoria), sedes_origen:sede_origen_id(codigo), sedes_destino:sede_destino_id(codigo)')
+    .select('*, productos(nombre,categoria,unidad), sedes_origen:sede_origen_id(codigo), sedes_destino:sede_destino_id(codigo)')
     .order('created_at', { ascending: false })
     .limit(200);
 
@@ -3689,17 +3690,18 @@ async function loadMovimientos() {
   const colorTipo = { entrada: '#27a66a', salida: '#e74c3c', traslado: '#5dade2', merma: '#af7ac5', venta: '#FF671D' };
 
   tb.innerHTML = `<table>
-    <tr><th>#</th><th>Fecha</th><th>Tipo</th><th>Producto</th><th>Cantidad</th><th>Costo/kg</th><th>Sede</th><th>Referencia</th><th></th></tr>
+    <tr><th>#</th><th>Fecha</th><th>Tipo</th><th>Producto</th><th>Cantidad</th><th>Costo/und.</th><th>Sede</th><th>Referencia</th><th></th></tr>
     ${data.map((m, idx) => {
       const num = String(data.length - idx).padStart(4, '0');
       const sede = m.tipo === 'entrada' ? (m.sedes_destino?.codigo||'—') : (m.sedes_origen?.codigo||'—');
       const color = colorTipo[m.tipo] || '#888';
+      const u = unidadProd(m.productos);
       return `<tr>
         <td style="font-family:monospace;color:var(--text3);font-size:11px">MOV-${num}</td>
         <td style="color:var(--text3)">${m.fecha}</td>
         <td><span class="badge" style="background:${color}22;color:${color}">${m.tipo}</span></td>
         <td style="color:var(--text)">${m.productos?.nombre || '—'}</td>
-        <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--azul)">${Number(m.cantidad_kg).toFixed(1)} kg</td>
+        <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--azul)">${Number(m.cantidad_kg).toFixed(1)} ${u}</td>
         <td style="color:var(--text3)">${m.costo_usd_kg ? '$'+Number(m.costo_usd_kg).toFixed(4) : '—'}</td>
         <td style="color:var(--text3)">${sede}</td>
         <td style="color:var(--text3);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.referencia || '—'}</td>
@@ -3715,14 +3717,15 @@ async function loadMovimientos() {
 
 async function verMovimiento(id) {
   const { data: m } = await sb.from('movimientos_inventario')
-    .select('*, productos(nombre,categoria,tipo), sedes_origen:sede_origen_id(codigo,nombre), sedes_destino:sede_destino_id(codigo,nombre), lotes(nomenclatura,fecha,num_animales)')
+    .select('*, productos(nombre,categoria,tipo,unidad), sedes_origen:sede_origen_id(codigo,nombre), sedes_destino:sede_destino_id(codigo,nombre), lotes(nomenclatura,fecha,num_animales)')
     .eq('id', id).single();
   if(!m) return;
 
   const colorTipo = { entrada: '#27a66a', salida: '#e74c3c', traslado: '#5dade2', merma: '#af7ac5', venta: '#FF671D' };
   const color = colorTipo[m.tipo] || '#888';
-  const kg = Number(m.cantidad_kg) || 0;
+  const cant = Number(m.cantidad_kg) || 0;
   const costo = Number(m.costo_usd_kg) || 0;
+  const u = unidadProd(m.productos);
 
   const btnAnular = `<div style="margin-top:20px"><button onclick="anularMovimiento('${m.id}', this)" style="background:#fdecea;color:var(--danger);border:1px solid #e74c3c44;border-radius:8px;padding:8px 18px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Anular movimiento</button></div>`;
 
@@ -3742,9 +3745,9 @@ async function verMovimiento(id) {
           ['Fecha', m.fecha],
           ['Producto', m.productos?.nombre || '—'],
           ['Fase', m.productos?.categoria?.toUpperCase() || '—'],
-          ['Cantidad', kg.toFixed(2) + ' kg'],
-          ['Costo/kg', costo > 0 ? '$'+costo.toFixed(4) : '—'],
-          ['Valor a costo', costo > 0 ? '$'+(kg*costo).toFixed(2) : '—'],
+          ['Cantidad', cant.toFixed(2) + ' ' + u],
+          ['Costo/und.', costo > 0 ? '$'+costo.toFixed(4) : '—'],
+          ['Valor a costo', costo > 0 ? '$'+(cant*costo).toFixed(2) : '—'],
           ['Sede origen', m.sedes_origen?.codigo || '—'],
           ['Sede destino', m.sedes_destino?.codigo || '—'],
           ['Lote', m.lotes?.nomenclatura || '—'],
@@ -4416,9 +4419,10 @@ async function anularCompra(compra_id, btn) {
 async function editarMovimiento(id) {
   // Cargar datos del movimiento
   const { data: m } = await sb.from('movimientos_inventario')
-    .select('*, productos(nombre,categoria), sedes_origen:sede_origen_id(id,codigo), sedes_destino:sede_destino_id(id,codigo), lotes(id,nomenclatura)')
+    .select('*, productos(nombre,categoria,unidad), sedes_origen:sede_origen_id(id,codigo), sedes_destino:sede_destino_id(id,codigo), lotes(id,nomenclatura)')
     .eq('id', id).single();
   if(!m) return;
+  const uMov = unidadProd(m.productos);
 
   // Cargar sedes y lotes para selects
   const [{ data: sedes }, { data: lotes }] = await Promise.all([
@@ -4452,12 +4456,12 @@ async function editarMovimiento(id) {
           <input type="date" id="em-fecha" value="${m.fecha||''}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px;box-sizing:border-box">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Cantidad (kg)</label>
+          <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Cantidad (${uMov})</label>
           <input type="number" id="em-cantidad" value="${Number(m.cantidad_kg)||0}" step="0.01" min="0" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px;box-sizing:border-box">
         </div>
       </div>
       <div style="margin-bottom:12px">
-        <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Costo/kg (USD)</label>
+        <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Costo/und. (USD)</label>
         <input type="number" id="em-costo" value="${Number(m.costo_usd_kg)||''}" step="0.0001" min="0" placeholder="Solo aplica a entradas" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Sora',sans-serif;font-size:13px;box-sizing:border-box">
       </div>
       <div style="margin-bottom:12px">
