@@ -611,6 +611,13 @@
                   style="width:70px;background:white;border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-family:'Sora',sans-serif;font-size:13px;outline:none;"
                   oninput="calcularTotalesVenta()">
               </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-left:12px;padding-left:12px;border-left:1px solid var(--border)">
+                <span style="font-size:13px;color:var(--text2)">Descuento</span>
+                <input type="number" id="v-descuento-pct" value="0" step="0.5" min="0" max="100"
+                  style="width:64px;background:white;border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-family:'Sora',sans-serif;font-size:13px;outline:none;"
+                  oninput="calcularTotalesVenta()">
+                <span style="font-size:12px;color:var(--text3)">%</span>
+              </div>
             </div>
           </div>
 
@@ -2836,15 +2843,25 @@ function calcularTotalesVenta() {
   const subtotal = items.reduce((s,i) => s+(i.usd_bcv_equiv||0), 0);
   const totalKG  = items.reduce((s,i) => s+(i.cantidad||0), 0);
 
+  // Descuento (aplicado sobre el subtotal de items, antes del delivery)
+  const descPctRaw    = parseFloat(document.getElementById('v-descuento-pct')?.value) || 0;
+  const descPct       = Math.min(Math.max(descPctRaw, 0), 100);
+  const descuentoUSD  = subtotal * (descPct / 100);
+
   // Delivery
   const delivery      = document.getElementById('v-delivery')?.checked || false;
   const deliveryMonto = delivery ? (parseFloat(document.getElementById('v-delivery-monto')?.value) || 0) : 0;
-  const totalUSD      = subtotal + deliveryMonto;
+  const totalUSD      = subtotal - descuentoUSD + deliveryMonto;
 
   const tasaRef = parseFloat(document.getElementById('v-tasa-ref')?.value) || 0;
   const totalBS = tasaRef > 0 ? totalUSD * tasaRef : 0;
 
-  document.getElementById('v-total-usd').textContent = totalUSD > 0 ? '$' + totalUSD.toFixed(2) + ' USD' + (deliveryMonto > 0 ? ' (+$' + deliveryMonto.toFixed(2) + ' delivery)' : '') : '—';
+  const sufijos = [];
+  if (descuentoUSD > 0) sufijos.push('-$' + descuentoUSD.toFixed(2) + ' desc');
+  if (deliveryMonto > 0) sufijos.push('+$' + deliveryMonto.toFixed(2) + ' delivery');
+  const sufijoStr = sufijos.length ? ' (' + sufijos.join(', ') + ')' : '';
+
+  document.getElementById('v-total-usd').textContent = totalUSD > 0 ? '$' + totalUSD.toFixed(2) + ' USD' + sufijoStr : '—';
   document.getElementById('v-total-bs').textContent  = totalBS  > 0 ? 'Bs ' + totalBS.toFixed(0) : '—';
   document.getElementById('v-total-kg').textContent  = totalKG  > 0 ? totalKG.toFixed(1) + ' kg' : '—';
 }
@@ -2872,7 +2889,14 @@ async function guardarVenta() {
 
   const delivery      = document.getElementById('v-delivery')?.checked || false;
   const deliveryMonto = delivery ? (parseFloat(document.getElementById('v-delivery-monto')?.value) || 0) : 0;
-  const total_usd     = items.reduce((s,i) => s+(i.usd_bcv_equiv||0), 0) + deliveryMonto;
+  const subtotalItems = items.reduce((s,i) => s+(i.usd_bcv_equiv||0), 0);
+
+  // Descuento (sobre subtotal, antes de delivery)
+  const descPctRaw    = parseFloat(document.getElementById('v-descuento-pct')?.value) || 0;
+  const descuento_pct = Math.min(Math.max(descPctRaw, 0), 100);
+  const descuento_usd = parseFloat((subtotalItems * descuento_pct / 100).toFixed(2));
+
+  const total_usd     = parseFloat((subtotalItems - descuento_usd + deliveryMonto).toFixed(2));
   const total_usd_par = tasaHoy.paralelo > 0 ? total_usd * (tasaHoy.bcv / tasaHoy.paralelo) : total_usd;
   const tipo = canal.startsWith('mayor') ? 'mayor' : 'detal';
 
@@ -2887,8 +2911,10 @@ async function guardarVenta() {
     total_usd,
     total_usd_paralelo: parseFloat(total_usd_par.toFixed(2)),
     saldo_pendiente: total_usd,
+    descuento_pct,
+    descuento_usd,
     usuario_id: currentUser?.id || null,
-    notas: `${canal.replace('_',' ')}${notas?' | '+notas:''}${deliveryMonto>0?' | Delivery: $'+deliveryMonto.toFixed(2):''} | Total: $${total_usd.toFixed(2)} USD BCV`
+    notas: `${canal.replace('_',' ')}${notas?' | '+notas:''}${descuento_usd>0?' | Descuento: '+descuento_pct+'% (-$'+descuento_usd.toFixed(2)+')':''}${deliveryMonto>0?' | Delivery: $'+deliveryMonto.toFixed(2):''} | Total: $${total_usd.toFixed(2)} USD BCV`
   }).select().single();
 
   if(errV) { alert('Error al guardar venta: ' + errV.message); return; }
@@ -2935,6 +2961,8 @@ async function guardarVenta() {
   document.getElementById('v-notas').value = '';
   const deliveryEl = document.getElementById('v-delivery');
   if(deliveryEl) deliveryEl.checked = false;
+  const descEl = document.getElementById('v-descuento-pct');
+  if(descEl) descEl.value = '0';
   agregarItemVenta();
   loadVentas();
 }
@@ -3002,7 +3030,7 @@ async function verDetalleVenta(venta_id, titulo) {
   const [detRes, pagosRes, ventaRes] = await Promise.all([
     sb.from('ventas_detalle').select('id,cantidad,precio,moneda,producto_id,productos(nombre,tipo,unidad)').eq('venta_id', venta_id),
     sb.from('movimientos_financieros').select('fecha,monto,monto_bs,monto_usd,moneda,concepto,cuentas(nombre)').eq('venta_id', venta_id).order('fecha',{ascending:true}),
-    sb.from('ventas').select('total_usd,saldo_pendiente,status').eq('id', venta_id).maybeSingle()
+    sb.from('ventas').select('total_usd,saldo_pendiente,status,descuento_pct,descuento_usd').eq('id', venta_id).maybeSingle()
   ]);
 
   document.getElementById('venta-detalle-titulo').textContent = titulo;
@@ -3020,7 +3048,10 @@ async function verDetalleVenta(venta_id, titulo) {
   const totalKG  = data.reduce((s,d) => s + Number(d.cantidad), 0);
   const totalUSD = data.reduce((s,d) => s + Number(d.cantidad)*Number(d.precio), 0);
   const totalCabecera = Number(venta?.total_usd) || totalUSD;
-  const deliveryMonto = Math.max(0, totalCabecera - totalUSD);
+  const descuentoUSD  = Number(venta?.descuento_usd || 0);
+  const descuentoPct  = Number(venta?.descuento_pct || 0);
+  // Delivery por diferencia: total = subtotal_items - descuento + delivery
+  const deliveryMonto = Math.max(0, totalCabecera - (totalUSD - descuentoUSD));
 
   // Tabla de productos
   let html = `<table style="margin-bottom:20px">
@@ -3039,6 +3070,10 @@ async function verDetalleVenta(venta_id, titulo) {
         '<td style="font-weight:600;color:var(--azul)">$' + subtotal.toFixed(2) + '</td>' +
       '</tr>';
     }).join('')}
+    ${descuentoUSD > 0 ? `<tr>
+      <td colspan="4" style="color:var(--text3);font-size:12px;padding:6px 0;text-align:right">Descuento (${descuentoPct}%)</td>
+      <td style="font-weight:600;color:var(--danger)">-$${descuentoUSD.toFixed(2)}</td>
+    </tr>` : ''}
     ${deliveryMonto > 0 ? `<tr>
       <td colspan="4" style="color:var(--text3);font-size:12px;padding:6px 0;text-align:right">Delivery</td>
       <td style="font-weight:600;color:var(--text2)">$${deliveryMonto.toFixed(2)}</td>
@@ -3973,7 +4008,10 @@ async function abrirFactura(venta_id) {
     var correlativo = v.correlativo ? String(v.correlativo).padStart(4,'0') : '—';
     var subtotal = items.reduce(function(s,d){ return s + Number(d.cantidad)*Number(d.precio); }, 0);
     var totalCabecera = Number(v.total_usd) || subtotal;
-    var deliveryMonto = Math.max(0, totalCabecera - subtotal);
+    var descuentoUSD  = Number(v.descuento_usd || 0);
+    var descuentoPct  = Number(v.descuento_pct || 0);
+    // Delivery por diferencia: total = subtotal - descuento + delivery
+    var deliveryMonto = Math.max(0, totalCabecera - (subtotal - descuentoUSD));
     var tasaVal = tasaHoy.bcv || ((tasasData||[]).find(function(t){ return t.nombre==='BCV'; }) || {}).valor || null;
 
     var filaHTML = '';
@@ -4020,8 +4058,11 @@ async function abrirFactura(venta_id) {
     out += '<tbody>' + filaHTML + '</tbody></table>';
 
     out += '<div style="display:flex;justify-content:flex-end;margin-bottom:8px">';
-    out += '<div style="min-width:220px">';
+    out += '<div style="min-width:240px">';
     out += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span>SUBTOTAL USD:</span><span style="font-weight:600">$' + subtotal.toFixed(2) + '</span></div>';
+    if (descuentoUSD > 0) {
+      out += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#c0392b"><span>Descuento (' + descuentoPct + '%):</span><span style="font-weight:600">-$' + descuentoUSD.toFixed(2) + '</span></div>';
+    }
     if (deliveryMonto > 0) {
       out += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#555"><span>Delivery:</span><span style="font-weight:600">$' + deliveryMonto.toFixed(2) + '</span></div>';
     }
