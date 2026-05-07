@@ -3119,10 +3119,126 @@ async function verDetalleVenta(venta_id, titulo) {
   const anulada = venta?.status === 'anulada';
   if(anulada) html = '<div style="background:#fdecea;border:1px solid #e74c3c44;border-radius:8px;padding:10px 14px;margin-bottom:16px;color:#c0392b;font-weight:600;font-size:13px">⚠ Esta venta está anulada</div>' + html;
 
-  const btnAnular = anulada ? '' : `<button onclick="anularVenta('${venta_id}', this)" style="background:#fdecea;color:var(--danger);border:1px solid #e74c3c44;border-radius:8px;padding:8px 18px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-top:20px">Anular venta</button>`;
+  // Detección para "Editar descuento":
+  // - editable: la venta no esta anulada y NO tiene cobros (pagos.length === 0)
+  // - aviso: solo cuando hay cobros y descuento_pct === 0 (queda explicito porque no aparece el boton)
+  const tieneCobros = pagos.length > 0;
+  const editable    = !anulada && !tieneCobros;
+  const mostrarAviso = tieneCobros && descuentoPct === 0 && !anulada;
 
-  document.getElementById('venta-detalle-contenido').innerHTML = html + btnAnular;
+  const tituloEsc = (titulo || '').replace(/"/g,'&quot;');
+
+  const btnEditarDesc = editable
+    ? `<button data-vid="${venta_id}" data-titulo="${tituloEsc}" data-desc-pct="${descuentoPct}" data-subtotal="${totalUSD}" data-delivery="${deliveryMonto}" data-total="${totalCabecera}" onclick="abrirEditarDescuentoVenta(this.dataset.vid, this.dataset.titulo, parseFloat(this.dataset.descPct), parseFloat(this.dataset.subtotal), parseFloat(this.dataset.delivery), parseFloat(this.dataset.total))" style="background:rgba(0,58,112,0.08);color:var(--azul);border:1px solid rgba(0,58,112,0.3);border-radius:8px;padding:8px 18px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Editar descuento</button>`
+    : '';
+
+  const btnAnular = anulada ? '' : `<button onclick="anularVenta('${venta_id}', this)" style="background:#fdecea;color:var(--danger);border:1px solid #e74c3c44;border-radius:8px;padding:8px 18px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Anular venta</button>`;
+
+  const avisoHTML = mostrarAviso
+    ? `<div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px 14px;margin-top:16px;color:#7c5a00;font-size:12px">El descuento solo se puede modificar antes de registrar cobros.</div>`
+    : '';
+
+  const accionesHTML = (btnEditarDesc || btnAnular)
+    ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px">${btnEditarDesc}${btnAnular}</div>`
+    : '';
+
+  document.getElementById('venta-detalle-contenido').innerHTML = html + avisoHTML + accionesHTML;
 }
+
+// Form inline para editar descuento de una venta sin cobros.
+// Se invoca desde el modal "Ver". Reemplaza el contenido del modal
+// por un mini-form con preview en vivo del nuevo descuento y total.
+function abrirEditarDescuentoVenta(venta_id, titulo, descPctActual, subtotalItems, deliveryMonto, totalActual) {
+  const contenido = document.getElementById('venta-detalle-contenido');
+  if (!contenido) return;
+  const tituloEsc = (titulo || '').replace(/"/g,'&quot;');
+
+  contenido.innerHTML = `
+    <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:700;color:var(--azul);margin-bottom:6px">Editar descuento</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:18px">
+        Subtotal items: <strong style="color:var(--text2)">$${subtotalItems.toFixed(2)}</strong>
+        ${deliveryMonto > 0 ? ` · Delivery: <strong style="color:var(--text2)">$${deliveryMonto.toFixed(2)}</strong>` : ''}
+        · Total actual: <strong style="color:var(--text2)">$${totalActual.toFixed(2)}</strong>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap">
+        <div>
+          <label style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px">Descuento %</label>
+          <input type="number" id="ed-desc-pct" value="${descPctActual}" step="0.5" min="0" max="100"
+            style="width:120px;padding:8px 12px;border:1.5px solid var(--azul);border-radius:8px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+        </div>
+        <div id="ed-preview" style="font-size:13px;color:var(--text3);flex:1;min-width:240px"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button data-vid="${venta_id}" data-titulo="${tituloEsc}" data-subtotal="${subtotalItems}" data-delivery="${deliveryMonto}" data-desc-pct-viejo="${descPctActual}" data-total-viejo="${totalActual}"
+        onclick="guardarEditarDescuentoVenta(this.dataset.vid, this.dataset.titulo, parseFloat(this.dataset.subtotal), parseFloat(this.dataset.delivery), parseFloat(this.dataset.descPctViejo), parseFloat(this.dataset.totalViejo))"
+        class="btn-action" style="flex:1">Guardar</button>
+      <button data-vid="${venta_id}" data-titulo="${tituloEsc}"
+        onclick="verDetalleVenta(this.dataset.vid, this.dataset.titulo)"
+        class="btn-secondary">Cancelar</button>
+    </div>
+  `;
+
+  // Preview en vivo del nuevo descuento y total
+  const input   = document.getElementById('ed-desc-pct');
+  const preview = document.getElementById('ed-preview');
+  function updatePreview() {
+    const pct = Math.min(Math.max(parseFloat(input.value) || 0, 0), 100);
+    const newDesc  = subtotalItems * pct / 100;
+    const newTotal = subtotalItems - newDesc + deliveryMonto;
+    preview.innerHTML = `Nuevo descuento: <strong style="color:var(--danger)">-$${newDesc.toFixed(2)}</strong> &nbsp;→&nbsp; Nuevo total: <strong style="color:var(--azul)">$${newTotal.toFixed(2)}</strong>`;
+  }
+  if (input && preview) {
+    input.addEventListener('input', updatePreview);
+    updatePreview();
+    setTimeout(() => input.focus(), 100);
+  }
+}
+
+async function guardarEditarDescuentoVenta(venta_id, titulo, subtotalItems, deliveryMonto, descPctViejo, totalViejo) {
+  const input = document.getElementById('ed-desc-pct');
+  const nuevoPctRaw = parseFloat(input?.value);
+  if (isNaN(nuevoPctRaw)) { alert('Ingresá un porcentaje válido.'); return; }
+  const nuevoPct = Math.min(Math.max(nuevoPctRaw, 0), 100);
+
+  if (nuevoPct === descPctViejo) {
+    showToast('Sin cambios');
+    verDetalleVenta(venta_id, titulo);
+    return;
+  }
+
+  // Defensa contra race: re-verificar que sigue sin cobros antes de aplicar
+  const { count } = await sb.from('movimientos_financieros')
+    .select('id', { count: 'exact', head: true })
+    .eq('venta_id', venta_id)
+    .eq('tipo', 'ingreso');
+  if (count && count > 0) {
+    alert('No se puede editar el descuento: la venta ya tiene cobros registrados.');
+    verDetalleVenta(venta_id, titulo);
+    return;
+  }
+
+  const nuevoDescUsd  = parseFloat((subtotalItems * nuevoPct / 100).toFixed(2));
+  const nuevoTotalUsd = parseFloat((subtotalItems - nuevoDescUsd + deliveryMonto).toFixed(2));
+
+  const { error } = await sb.from('ventas').update({
+    descuento_pct:   nuevoPct,
+    descuento_usd:   nuevoDescUsd,
+    total_usd:       nuevoTotalUsd,
+    saldo_pendiente: nuevoTotalUsd
+  }).eq('id', venta_id);
+
+  if (error) { alert('Error al guardar: ' + error.message); return; }
+
+  showToast('Descuento actualizado ✓');
+  registrarAuditoria('venta_descuento_editado', 'ventas', venta_id,
+    `Descuento editado: ${descPctViejo}% → ${nuevoPct}% | Total: $${Number(totalViejo).toFixed(2)} → $${nuevoTotalUsd.toFixed(2)}`);
+
+  loadVentas();
+  verDetalleVenta(venta_id, titulo);
+}
+
 let compraItems = [];
 let sedesData = [];
 let tasasData = [];
