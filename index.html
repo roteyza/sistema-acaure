@@ -674,9 +674,10 @@
           <div class="form-row">
             <div class="form-group">
               <label>Tipo</label>
-              <select id="mf-tipo" onchange="actualizarCatsFinanzas()">
+              <select id="mf-tipo" onchange="onTipoFinanzasChange()">
                 <option value="ingreso">Ingreso</option>
                 <option value="egreso">Egreso</option>
+                <option value="transferencia">Transferencia</option>
               </select>
             </div>
             <div class="form-group">
@@ -1328,6 +1329,55 @@
     <div style="display:flex;gap:8px">
       <button onclick="guardarPagoCxP()" class="btn-action" style="flex:1">Confirmar pago</button>
       <button onclick="cerrarPagarCxP()" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TRANSFERENCIA ENTRE CUENTAS -->
+<div id="modal-transferencia" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:550;align-items:center;justify-content:center;">
+  <div style="background:white;width:520px;border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fadeUp 0.25s ease">
+    <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px">Transferencia entre cuentas</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:24px">Mueve fondos entre dos cuentas de la misma moneda. Se registra un egreso en origen y un ingreso en destino.</div>
+
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="form-group">
+        <label>Cuenta origen</label>
+        <select id="tr-origen" onchange="onTransferenciaOrigenChange()"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <option value="">— Seleccionar —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cuenta destino</label>
+        <select id="tr-destino"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+          <option value="">— Seleccionar origen primero —</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="form-group">
+        <label>Monto</label>
+        <input type="number" id="tr-monto" placeholder="0.00" step="0.01" min="0"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="tr-fecha"
+          style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:24px">
+      <label>Concepto <span style="font-size:10px;color:var(--text3)">(opcional)</span></label>
+      <input type="text" id="tr-concepto" placeholder="Ej: traspaso para pagar nómina"
+        style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Sora',sans-serif;font-size:14px;outline:none;">
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button onclick="guardarTransferencia()" class="btn-action" style="flex:1">Confirmar transferencia</button>
+      <button onclick="cerrarTransferencia()" class="btn-secondary">Cancelar</button>
     </div>
   </div>
 </div>
@@ -2452,6 +2502,130 @@ function toggleTasaFinanzas() {
     if(fieldEquiv)    fieldEquiv.style.display    = 'none';
     document.getElementById('mf-equiv-usd').value = '—';
   }
+}
+
+// ===== TRANSFERENCIA ENTRE CUENTAS =====
+// Wrapper del onchange de mf-tipo: si el usuario elige "transferencia",
+// abre el modal y revierte el select a "egreso" para que el form de
+// abajo quede usable; si elige ingreso/egreso, comportamiento normal.
+function onTipoFinanzasChange() {
+  const sel = document.getElementById('mf-tipo');
+  if (!sel) return;
+  if (sel.value === 'transferencia') {
+    abrirTransferencia();
+    sel.value = 'egreso';
+  }
+  actualizarCatsFinanzas();
+}
+
+async function abrirTransferencia() {
+  // Cargar cuentas si el cache esta vacio
+  if (!cuentasSelectData || !cuentasSelectData.length) {
+    const { data } = await sb.from('cuentas').select('*').eq('activo', true);
+    cuentasSelectData = data || [];
+  }
+  const selOrigen = document.getElementById('tr-origen');
+  const selDest   = document.getElementById('tr-destino');
+  if (selOrigen) {
+    selOrigen.innerHTML = '<option value="">— Seleccionar —</option>' +
+      cuentasSelectData.map(c => `<option value="${c.id}">${c.nombre} (${(c.moneda||'').toUpperCase()})</option>`).join('');
+  }
+  if (selDest) {
+    selDest.innerHTML = '<option value="">— Seleccionar origen primero —</option>';
+  }
+  const fechaEl = document.getElementById('tr-fecha');
+  if (fechaEl) fechaEl.value = new Date().toISOString().split('T')[0];
+  const montoEl = document.getElementById('tr-monto');   if (montoEl) montoEl.value = '';
+  const concEl  = document.getElementById('tr-concepto'); if (concEl) concEl.value = '';
+
+  document.getElementById('modal-transferencia').style.display = 'flex';
+}
+
+function onTransferenciaOrigenChange() {
+  const origenId = document.getElementById('tr-origen').value;
+  const selDest  = document.getElementById('tr-destino');
+  if (!selDest) return;
+  if (!origenId) {
+    selDest.innerHTML = '<option value="">— Seleccionar origen primero —</option>';
+    return;
+  }
+  const origen = cuentasSelectData.find(c => c.id === origenId);
+  if (!origen) return;
+  const candidatas = cuentasSelectData.filter(c => c.id !== origenId && c.moneda === origen.moneda);
+  if (!candidatas.length) {
+    selDest.innerHTML = '<option value="">— Sin otras cuentas en ' + (origen.moneda||'').toUpperCase() + ' —</option>';
+    return;
+  }
+  selDest.innerHTML = '<option value="">— Seleccionar —</option>' +
+    candidatas.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+}
+
+function cerrarTransferencia() {
+  document.getElementById('modal-transferencia').style.display = 'none';
+}
+
+async function guardarTransferencia() {
+  const origen_id    = document.getElementById('tr-origen').value;
+  const destino_id   = document.getElementById('tr-destino').value;
+  const monto        = parseFloat(document.getElementById('tr-monto').value);
+  const fecha        = document.getElementById('tr-fecha').value;
+  const conceptoExtra = document.getElementById('tr-concepto').value.trim();
+
+  if (!origen_id)                { alert('Seleccioná la cuenta origen.'); return; }
+  if (!destino_id)               { alert('Seleccioná la cuenta destino.'); return; }
+  if (origen_id === destino_id)  { alert('La cuenta origen y destino deben ser distintas.'); return; }
+  if (!monto || monto <= 0)      { alert('Ingresá un monto válido.'); return; }
+  if (!fecha)                    { alert('Seleccioná una fecha.'); return; }
+
+  const cOrigen  = cuentasSelectData.find(c => c.id === origen_id);
+  const cDestino = cuentasSelectData.find(c => c.id === destino_id);
+  if (!cOrigen || !cDestino)            { alert('Error al resolver cuentas.'); return; }
+  if (cOrigen.moneda !== cDestino.moneda) { alert('Ambas cuentas deben tener la misma moneda.'); return; }
+
+  const conceptoPrefix = `Transferencia: ${cOrigen.nombre} → ${cDestino.nombre}`;
+  const concepto = conceptoExtra ? `${conceptoPrefix} | ${conceptoExtra}` : conceptoPrefix;
+
+  // Conversion segun moneda de las cuentas (ambas iguales por validacion)
+  const moneda = cOrigen.moneda || 'usd';
+  const esBs   = moneda === 'bs';
+  const tasaBcv = tasaHoy?.bcv || null;
+  const monto_usd    = esBs ? (tasaBcv ? parseFloat((monto / tasaBcv).toFixed(2)) : null) : monto;
+  const monto_bs     = esBs ? monto : null;
+  const monto_nativo = esBs ? monto : null;
+  const tasa_tipo    = esBs ? 'BCV' : 'USD';
+  const tasa_valor   = esBs ? tasaBcv : null;
+
+  const baseFields = {
+    fecha,
+    moneda,
+    monto,
+    monto_bs,
+    monto_usd,
+    monto_nativo,
+    tasa_tipo,
+    tasa_valor,
+    tasa_pactada:      'BCV',
+    tasa_bcv_dia:      tasaHoy?.bcv || null,
+    tasa_paralelo_dia: tasaHoy?.paralelo || null,
+    concepto,
+    status:            'registrado'
+  };
+
+  // Insert egreso (origen) e ingreso (destino) en una sola operacion
+  const filas = [
+    { ...baseFields, tipo: 'egreso',  cuenta_id: origen_id,  contraparte: cDestino.nombre },
+    { ...baseFields, tipo: 'ingreso', cuenta_id: destino_id, contraparte: cOrigen.nombre }
+  ];
+
+  const { error } = await sb.from('movimientos_financieros').insert(filas);
+  if (error) { alert('Error al guardar transferencia: ' + error.message); return; }
+
+  cerrarTransferencia();
+  showToast('Transferencia registrada ✓');
+  registrarAuditoria('transferencia', 'movimientos_financieros', null,
+    `${conceptoPrefix} | $${monto.toFixed(2)} ${(moneda||'').toUpperCase()}`);
+
+  if (document.getElementById('page-finanzas')?.classList.contains('active')) loadFinanzas();
 }
 
 function calcularEquivFinanzas() {
