@@ -274,7 +274,7 @@
               <select id="mi-producto"></select>
             </div>
             <div class="form-group">
-              <label>Cantidad (kg)</label>
+              <label>Cantidad</label>
               <input type="number" id="mi-cantidad" placeholder="0.00" step="0.01" min="0.01">
             </div>
           </div>
@@ -2952,7 +2952,7 @@ function onProductoChange(idx) {
   const lblPrecio = document.getElementById(`vitem-lbl-precio-${idx}`);
   const inputKg  = document.getElementById(`vitem-kg-${idx}`);
 
-  if(lblCant) lblCant.textContent = esUnidad ? 'Cantidad (und.)' : 'Cantidad (kg)';
+  if(lblCant) lblCant.textContent = esUnidad ? 'Cantidad (und.)' : 'Cantidad';
   if(lblPrecio) lblPrecio.textContent = esUnidad ? 'Precio / und. (USD)' : 'Precio / kg (USD)';
   if(inputKg) inputKg.step = esUnidad ? '1' : '0.01';
 
@@ -3495,7 +3495,7 @@ function agregarItemCompra() {
         </select>
       </div>
       <div class="form-group">
-        <label>Cantidad (kg)</label>
+        <label>Cantidad</label>
         <input type="number" id="item-kg-${idx}" placeholder="0.00" step="0.01" min="0.01" oninput="updateItem(${idx})">
       </div>
       <div class="form-group">
@@ -3794,7 +3794,7 @@ async function verDetalleCompra(compra_id, titulo) {
   var html = '';
   if(anulada) html += '<div style="background:#fdecea;border:1px solid #e74c3c44;border-radius:8px;padding:10px 14px;margin-bottom:16px;color:#c0392b;font-weight:600;font-size:13px">⚠ Esta compra está anulada</div>';
 
-  html += '<table style="margin-bottom:20px"><tr><th>Producto</th><th>Tipo</th><th>Cantidad (kg)</th><th>Precio unit.</th><th>Moneda</th></tr>';
+  html += '<table style="margin-bottom:20px"><tr><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Precio unit.</th><th>Moneda</th></tr>';
   data.forEach(function(d) {
     html += '<tr>' +
       '<td style="color:var(--text)">' + (d.productos?.nombre||'—') + '</td>' +
