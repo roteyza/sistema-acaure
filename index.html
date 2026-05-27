@@ -4322,7 +4322,7 @@ async function abrirFactura(venta_id) {
       var cant = Number(d.cantidad);
       var precio = Number(d.precio);
       var total = cant * precio;
-      var cantStr = esUnd ? (Math.round(cant) + ' Und.') : (cant.toFixed(2) + ' Kg');
+      var cantStr = esUnd ? (Math.round(cant) + ' Und.') : cant.toFixed(2);
       filaHTML += '<tr style="border-bottom:1px solid #eee">';
       filaHTML += '<td style="padding:8px 6px">' + cantStr + '</td>';
       filaHTML += '<td style="padding:8px 6px">' + (prod.nombre || '—') + '</td>';
