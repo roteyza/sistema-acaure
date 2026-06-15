@@ -3421,6 +3421,7 @@ async function guardarEditarDescuentoVenta(venta_id, titulo, subtotalItems, deli
 }
 
 let compraItems = [];
+let compraItemSeq = 0;
 let sedesData = [];
 let tasasData = [];
 let productosData = [];
@@ -3459,6 +3460,7 @@ async function loadComprasSelects() {
 
   // init items
   compraItems = [];
+  compraItemSeq = 0;
   agregarItemCompra();
 }
 
@@ -3470,8 +3472,8 @@ function toggleCreditoFields() {
 }
 
 function agregarItemCompra() {
-  const idx = compraItems.length;
-  compraItems.push({ producto_id:'', cantidad_kg:0, precio:0, moneda:'usd', tipo_tasa:'BCV', valor_tasa:0 });
+  const idx = compraItemSeq++;
+  compraItems[idx] = { producto_id:'', cantidad_kg:0, precio:0, moneda:'usd', tipo_tasa:'BCV', valor_tasa:0 };
 
   const container = document.getElementById('compra-items');
   const div = document.createElement('div');
@@ -3678,6 +3680,7 @@ async function guardarCompra() {
 
   // reset form
   compraItems = [];
+  compraItemSeq = 0;
   document.getElementById('compra-items').innerHTML = '';
   document.getElementById('c-num-doc').value = '';
   document.getElementById('c-notas').value = '';
