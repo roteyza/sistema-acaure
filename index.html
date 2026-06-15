@@ -3425,6 +3425,7 @@ let compraItemSeq = 0;
 let sedesData = [];
 let tasasData = [];
 let productosData = [];
+let productosCompraData = [];
 
 async function loadComprasSelects() {
   const [provs, sedes, tasas, prods] = await Promise.all([
@@ -3435,7 +3436,7 @@ async function loadComprasSelects() {
   ]);
 
   sedesData = sedes.data || [];
-  productosData = prods.data || [];
+  productosCompraData = prods.data || [];
   proveedoresCache = (provs.data||[]).sort((a,b) => a.nombre.localeCompare(b.nombre));
 
   // Crear tasasData backward-compatible para el código que busca por nombre
@@ -3493,7 +3494,7 @@ function agregarItemCompra() {
       <div class="form-group">
         <label>Producto</label>
         <select id="item-prod-${idx}" onchange="updateItem(${idx})">
-          ${productosData.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('')}
+          ${productosCompraData.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
